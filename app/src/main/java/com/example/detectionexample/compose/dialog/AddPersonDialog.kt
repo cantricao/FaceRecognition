@@ -17,6 +17,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.DialogProperties
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.detectionexample.config.Util
 import com.example.detectionexample.models.TrackedRecognition
 import com.example.detectionexample.viewmodels.DetectionViewModel
 
@@ -39,7 +40,7 @@ fun AddPersonDialog(
         initialValue = mutableListOf(), trackedObjectsState
     ) {
         value = trackedObjectsState.map {
-            val face = viewModel.getCropBitmapByCPU(it.location)
+            val face = Util.getCropBitmapByCPU(it.location, viewModel.processBitmap)
             Pair(face, it)
         }
     }

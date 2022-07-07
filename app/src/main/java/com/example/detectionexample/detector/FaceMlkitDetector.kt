@@ -11,7 +11,7 @@ import com.google.mlkit.vision.face.FaceDetectorOptions
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 
-class FaceMlkitDetector() {
+class FaceMlkitDetector {
     // Real-time contour detection
     private val realTimeOpts by lazy {
         FaceDetectorOptions.Builder()

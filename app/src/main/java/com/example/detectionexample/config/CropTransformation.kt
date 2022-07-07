@@ -38,7 +38,7 @@ class CropTransformation(val rectF: RectF) : BitmapTransformation() {
 //            RectF(0f, 0f, rectF.width(), rectF.height()),
 //            paint
 //        )
-        return bitmap;
+        return bitmap
     }
 
     override fun toString(): String {

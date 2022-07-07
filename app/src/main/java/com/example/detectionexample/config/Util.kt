@@ -5,10 +5,7 @@ import android.app.Notification
 import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.content.Context
-import android.graphics.Bitmap
-import android.graphics.Canvas
-import android.graphics.ImageDecoder
-import android.graphics.RectF
+import android.graphics.*
 import android.net.Uri
 import android.os.Build
 import android.provider.MediaStore
@@ -19,6 +16,40 @@ import com.example.detectionexample.models.TrackedRecognition
 import java.util.*
 
 object Util {
+
+    fun getCropBitmapByCPU(cropRectF: RectF, srcBitmap: Bitmap): Bitmap {
+        val resultBitmap = Bitmap.createBitmap(
+            cropRectF.width().toInt(),
+            cropRectF.height().toInt(),
+            Bitmap.Config.ARGB_8888
+        )
+        val resultCanvas = Canvas(resultBitmap)
+        val resultMatrix = Matrix()
+            .apply {
+                postTranslate(-cropRectF.left, -cropRectF.top)
+            }
+        val processBitmapShader =
+            BitmapShader(
+                srcBitmap,
+                Shader.TileMode.CLAMP,
+                Shader.TileMode.CLAMP
+            )
+        processBitmapShader.setLocalMatrix(resultMatrix)
+
+        val paintProcess = Paint(Paint.FILTER_BITMAP_FLAG)
+            .apply {
+                color = Color.WHITE
+                shader = processBitmapShader
+            }
+//        resultCanvas.drawBitmap(srcBitmap, resultMatrix, paintProcess)
+        resultCanvas.drawRect(
+            RectF(0f, 0f, cropRectF.width(), cropRectF.height()),
+            paintProcess
+        )
+
+        return resultBitmap
+    }
+
     fun drawBitmapOverlay(
         trackedObjectsState: List<TrackedRecognition>,
         screenWith: Int,

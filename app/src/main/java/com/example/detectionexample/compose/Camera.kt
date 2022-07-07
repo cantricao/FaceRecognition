@@ -6,6 +6,7 @@ import android.hardware.display.DisplayManager
 import android.net.Uri
 import android.os.Build
 import android.provider.MediaStore
+import android.util.AttributeSet
 import android.util.Log
 import androidx.camera.core.*
 import androidx.camera.extensions.ExtensionMode
@@ -117,8 +118,6 @@ fun CameraPreview(viewModel: DetectionViewModel = viewModel()) {
                         Log.e(CameraConfig.TAG, "Photo capture failed: ${exception.message}", exception)
                         value = Uri.EMPTY
                         viewModel.isCaptureImage = false
-
-
                     }
 
                     override fun onImageSaved(outputFileResults: ImageCapture.OutputFileResults) {
@@ -196,7 +195,6 @@ fun CameraPreview(viewModel: DetectionViewModel = viewModel()) {
 
     DisposableEffect(lifecycleOwner) {
         onDispose {
-            viewModel.analysisExecutor.shutdown()
             cameraProvider.unbindAll()
             cameraExecutor.shutdown()
             displayManager.unregisterDisplayListener(displayListener)

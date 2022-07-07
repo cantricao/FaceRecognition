@@ -13,6 +13,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.detectionexample.view.BitmapOverlayVideoProcessor
 import com.example.detectionexample.view.VideoProcessingGLSurfaceView
 import com.example.detectionexample.viewmodels.DetectionViewModel
+import com.google.android.exoplayer2.C
 import com.google.android.exoplayer2.ExoPlayer
 import com.google.android.exoplayer2.MediaItem
 import com.google.android.exoplayer2.ui.AspectRatioFrameLayout
@@ -26,13 +27,16 @@ fun VideoPlayer(viewModel: DetectionViewModel = viewModel()) {
     val context = LocalContext.current
     val lifecycleOwner: LifecycleOwner = LocalLifecycleOwner.current
     val exoPlayer = ExoPlayer.Builder(context).build()
+        .apply {
+            videoScalingMode = C.VIDEO_SCALING_MODE_SCALE_TO_FIT_WITH_CROPPING
+        }
     val playerView = StyledPlayerView(context).apply {
         resizeMode = AspectRatioFrameLayout.RESIZE_MODE_FILL
         player = exoPlayer
     }
     viewModel.needUpdateTrackerImageSourceInfo = true
     val videoProcessingGLSurfaceView = VideoProcessingGLSurfaceView(
-        context, false, BitmapOverlayVideoProcessor(context, viewModel.videoAnalyzer))
+        context, false, BitmapOverlayVideoProcessor(context, viewModel.videoAnalyzer, viewModel.analysisExecutor))
     LaunchedEffect(exoPlayer, viewModel.isProcessingFrame) {
         val mediaItem = MediaItem.fromUri(viewModel.sampleVideoUri)
         exoPlayer.setMediaItem(mediaItem)
