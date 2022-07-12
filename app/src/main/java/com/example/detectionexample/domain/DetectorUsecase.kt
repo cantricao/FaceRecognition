@@ -9,7 +9,7 @@ import javax.inject.Inject
 
 class DetectorUsecase @Inject constructor(private val mlkitRepository: MlkitRepository, private val opencvRepository: OpencvRepository, private val tfliteRepository: TfliteRepository) {
     operator fun invoke(modelname: String): DetectorRepository {
-        return when(modelname){
+        return when (modelname) {
             ModelConfig.MLKIT_CODENAME -> mlkitRepository
             ModelConfig.OPENCV_CODENAME -> opencvRepository
             else -> tfliteRepository

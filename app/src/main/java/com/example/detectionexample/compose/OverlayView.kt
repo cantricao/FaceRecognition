@@ -16,8 +16,9 @@ fun OverlayView(viewModel: DetectionViewModel = viewModel()) {
     val context = LocalContext.current
     OverlayViewConfig.setContextToFixTextSize(context)
     val trackedObjectsState by viewModel.trackedObserver.collectAsState(initial = listOf())
-    Canvas(modifier = OverlayViewConfig.modifier){
-        val bitmap = Util.drawBitmapOverlay(trackedObjectsState, size.width.toInt(), size.height.toInt())
+    Canvas(modifier = OverlayViewConfig.modifier) {
+        val bitmap =
+            Util.drawBitmapOverlay(trackedObjectsState, size.width.toInt(), size.height.toInt())
         drawImage(
             bitmap.asImageBitmap()
         )

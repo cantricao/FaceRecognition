@@ -16,7 +16,7 @@ import kotlinx.serialization.encoding.Encoder
 object PointFSerializer : KSerializer<PointF> {
     override fun deserialize(decoder: Decoder): PointF {
         val stringFloatArray = decoder.decodeString().split(',')
-        return PointF(stringFloatArray[0].toFloat(),stringFloatArray[1].toFloat())
+        return PointF(stringFloatArray[0].toFloat(), stringFloatArray[1].toFloat())
     }
 
     override val descriptor: SerialDescriptor

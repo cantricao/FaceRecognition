@@ -19,7 +19,7 @@ import java.nio.ByteBuffer
 abstract class TfliteDetector(context: Context, modelPath: String, labelPath: String,
                               device: Model.Device) : Closeable, DetectorDataSource {
 
-    private val numberOfThread = if(device == Model.Device.CPU) 4 else 1
+    private val numberOfThread = if (device == Model.Device.CPU) 4 else 1
     protected val imageDetector: Model by lazy {
         Model.createModel(
             context,
@@ -28,7 +28,8 @@ abstract class TfliteDetector(context: Context, modelPath: String, labelPath: St
                 .setDevice(device)
                 .setNumThreads(numberOfThread)
                 .setTfLiteRuntime(InterpreterApi.Options.TfLiteRuntime.PREFER_SYSTEM_OVER_APPLICATION)
-                .build())
+                .build()
+        )
     }
 
     protected val imageSizeX: Int by lazy { imageDetector.getInputTensor(0).shape()[1] }
@@ -51,14 +52,14 @@ abstract class TfliteDetector(context: Context, modelPath: String, labelPath: St
         setImageSize(image)
         val inputImage = TensorImage.fromBitmap(image)
         val processedImage = imageProcessor.process(inputImage)
-        outputMapBuffer.forEach { (_, buffer) -> buffer.rewind()}
+        outputMapBuffer.forEach { (_, buffer) -> buffer.rewind() }
         imageDetector.run(arrayOf(processedImage.buffer), outputMapBuffer)
         outputMapBuffer.forEach { (_, buffer) -> buffer.flip() }
         return getResult()
     }
 
 
-    private fun setImageSize(image: Bitmap){
+    private fun setImageSize(image: Bitmap) {
         imageWidth = image.width
         imageHeight = image.height
     }
@@ -79,7 +80,7 @@ abstract class TfliteDetector(context: Context, modelPath: String, labelPath: St
     var threshold = 50.0f
     abstract val outputMapBuffer: Map<Int, ByteBuffer>
 
-    companion object{
+    companion object {
         const val TAG = "Detector"
     }
 }

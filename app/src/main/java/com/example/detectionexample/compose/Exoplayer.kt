@@ -36,7 +36,8 @@ fun VideoPlayer(viewModel: DetectionViewModel = viewModel()) {
     }
     viewModel.needUpdateTrackerImageSourceInfo = true
     val videoProcessingGLSurfaceView = VideoProcessingGLSurfaceView(
-        context, false, BitmapOverlayVideoProcessor(context, viewModel.videoAnalyzer, viewModel.analysisExecutor))
+        context, false,
+        BitmapOverlayVideoProcessor(context, viewModel.videoAnalyzer, viewModel.analysisExecutor))
     LaunchedEffect(exoPlayer, viewModel.isProcessingFrame) {
         val mediaItem = MediaItem.fromUri(viewModel.sampleVideoUri)
         exoPlayer.setMediaItem(mediaItem)

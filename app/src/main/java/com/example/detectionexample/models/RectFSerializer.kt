@@ -13,7 +13,7 @@ object RectFSerializer : KSerializer<RectF> {
 
     override fun deserialize(decoder: Decoder): RectF {
         val coordinates = decoder.decodeSerializableValue(delegateSerializer)
-        return RectF(coordinates[0],coordinates[1], coordinates[2], coordinates[3])
+        return RectF(coordinates[0], coordinates[1], coordinates[2], coordinates[3])
     }
 
     @OptIn(ExperimentalSerializationApi::class)

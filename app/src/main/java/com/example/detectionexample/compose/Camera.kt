@@ -44,6 +44,7 @@ fun CameraPreview(viewModel: DetectionViewModel = viewModel()) {
     var lensFacing =  remember { CameraSelector.LENS_FACING_BACK }
     val imageCapture = remember { ImageCapture.Builder()
         .setCaptureMode(ImageCapture.CAPTURE_MODE_MAXIMIZE_QUALITY)
+        .setTargetAspectRatio(AspectRatio.RATIO_16_9)
         .build() }
 
     val cameraProviderFuture =  ProcessCameraProvider.getInstance(context)
@@ -53,6 +54,7 @@ fun CameraPreview(viewModel: DetectionViewModel = viewModel()) {
             .setBackpressureStrategy(ImageAnalysis.STRATEGY_KEEP_ONLY_LATEST)
             .setOutputImageFormat(ImageAnalysis.OUTPUT_IMAGE_FORMAT_RGBA_8888)
             .setOutputImageRotationEnabled(true)
+            .setTargetAspectRatio(AspectRatio.RATIO_16_9)
             .build()
             .apply {
                 setAnalyzer(viewModel.analysisExecutor, viewModel.analyzer)
@@ -107,7 +109,9 @@ fun CameraPreview(viewModel: DetectionViewModel = viewModel()) {
                 }
 
                 // Create output options object which contains file + metadata
-                val outputOptions = ImageCapture.OutputFileOptions.Builder(context.contentResolver, MediaStore.Images.Media.EXTERNAL_CONTENT_URI, contentValues)
+                val outputOptions = ImageCapture.OutputFileOptions.Builder(
+                    context.contentResolver,
+                    MediaStore.Images.Media.EXTERNAL_CONTENT_URI, contentValues)
                     .setMetadata(metadata)
                     .build()
 

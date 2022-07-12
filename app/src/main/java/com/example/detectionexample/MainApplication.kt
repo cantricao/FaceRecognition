@@ -11,7 +11,7 @@ import java.util.concurrent.Executors
 import javax.inject.Inject
 
 @HiltAndroidApp
-class MainApplication : Application() , CameraXConfig.Provider,  Configuration.Provider{
+class MainApplication : Application() , CameraXConfig.Provider,  Configuration.Provider {
 
     @Inject
     lateinit var workerFactory: HiltWorkerFactory
@@ -23,8 +23,8 @@ class MainApplication : Application() , CameraXConfig.Provider,  Configuration.P
 
     override fun getWorkManagerConfiguration() =
         Configuration.Builder()
-        .setExecutor(Executors.newSingleThreadExecutor())
-        .setMinimumLoggingLevel(Log.VERBOSE)
-        .setWorkerFactory(workerFactory)
-        .build()
+            .setExecutor(Executors.newSingleThreadExecutor())
+            .setMinimumLoggingLevel(Log.VERBOSE)
+            .setWorkerFactory(workerFactory)
+            .build()
 }

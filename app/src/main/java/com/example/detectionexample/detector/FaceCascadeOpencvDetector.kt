@@ -20,10 +20,11 @@ import java.io.FileOutputStream
 import java.io.InputStream
 
 
-class FaceCascadeOpencvDetector(val context: Context) :DetectorDataSource{
+class FaceCascadeOpencvDetector(val context: Context) :DetectorDataSource {
 
     private val imageDetector: CascadeClassifier? by lazy {
-        val `is`: InputStream = context.resources.openRawResource(R.raw.lbpcascade_frontalface_improved)
+        val `is`: InputStream =
+            context.resources.openRawResource(R.raw.lbpcascade_frontalface_improved)
         val cascadeDir: File = context.getDir(ModelConfig.CASCADE_DIRNAME, Context.MODE_PRIVATE)
         val caseFile = File(cascadeDir, ModelConfig.CASCADE_FILENAME)
         val fos = FileOutputStream(caseFile)
@@ -74,6 +75,4 @@ class FaceCascadeOpencvDetector(val context: Context) :DetectorDataSource{
             )
         })
     }
-
-
 }

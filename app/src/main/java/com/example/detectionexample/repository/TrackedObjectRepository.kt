@@ -42,14 +42,16 @@ class TrackedObjectRepository @Inject constructor() {
     }
 
     private fun processResults(results: Flow<List<Recognition>>) {
-        _trackedObjects = results.map { it.mapIndexed { index, potential ->
-            TrackedRecognition(
-                location = RectF(potential.location),
-                detectionConfidence = potential.confidence,
-                color = COLORS[index],
-                title = potential.title,
-                landmark = potential.landmark
-            )
-        } }
+        _trackedObjects = results.map {
+            it.mapIndexed { index, potential ->
+                TrackedRecognition(
+                    location = RectF(potential.location),
+                    detectionConfidence = potential.confidence,
+                    color = COLORS[index],
+                    title = potential.title,
+                    landmark = potential.landmark
+                )
+            }
+        }
     }
 }

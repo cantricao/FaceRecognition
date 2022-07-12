@@ -49,7 +49,7 @@ class MobilenetSSDTfliteDetector(context: Context, modelPath: String, device: Mo
 
     // numDetections: array of shape [Batchsize]
     // contains the number of detected boxes
-    private val numberOfDetections  by lazy {
+    private val numberOfDetections by lazy {
         imageDetector.getOutputTensor(3).let {
             TensorBuffer.createFixedSize(
                 it.shape(),
@@ -72,17 +72,17 @@ class MobilenetSSDTfliteDetector(context: Context, modelPath: String, device: Mo
     override fun getResult(): Flow<List<Recognition>> {
         //get detection result
         return MutableStateFlow((0 until numDetections).map {
-                Recognition(
-                    "$it",
-                    labels[category.getIntValue(it)],
-                    score.getFloatValue(it) * 100,
-                    RectF(
-                        (location.getFloatValue(4 * it + 1) * imageWidth),
-                        (location.getFloatValue(4 * it + 0) * imageHeight),
-                        (location.getFloatValue(4 * it + 3) * imageWidth),
-                        (location.getFloatValue(4 * it + 2) * imageHeight)
-                    )
+            Recognition(
+                "$it",
+                labels[category.getIntValue(it)],
+                score.getFloatValue(it) * 100,
+                RectF(
+                    (location.getFloatValue(4 * it + 1) * imageWidth),
+                    (location.getFloatValue(4 * it + 0) * imageHeight),
+                    (location.getFloatValue(4 * it + 3) * imageWidth),
+                    (location.getFloatValue(4 * it + 2) * imageHeight)
                 )
-            }.filter { it.confidence >= threshold})
+            )
+        }.filter { it.confidence >= threshold })
     }
 }

@@ -25,32 +25,33 @@ import kotlin.math.pow
 import kotlin.math.sqrt
 
 @Singleton
-class RecognizedPersonRepository @Inject constructor(private val dataStore: DataStore<Preferences>){
+class RecognizedPersonRepository @Inject constructor(private val dataStore: DataStore<Preferences>) {
 
-    private object PreferencesKeys{
+    private object PreferencesKeys {
         val REGISTER = stringPreferencesKey("registered_person")
     }
+
     private val registeredPerson = mutableListOf<Person>()
 
     fun registerPerson(person: Person) {
         registeredPerson.add(person)
     }
 
-    fun clear(){
+    fun clear() {
         registeredPerson.clear()
     }
 
     fun findNearest(emb: FloatArray, threshold: Float): Pair<String, Float>? {
         return registeredPerson.map {
             val knownEmb = it.embeddings
-            val distance = sqrt(emb.zip(knownEmb).sumOf { (i , j) -> (i - j).pow( 2).toDouble() }).toFloat()
+            val distance =
+                sqrt(emb.zip(knownEmb).sumOf { (i, j) -> (i - j).pow(2).toDouble() }).toFloat()
             Pair(it.name, distance)
         }
             .filter { it.second <= threshold }
             .minByOrNull { it.second }
 
     }
-
 
 
     fun isEmpty(): Boolean {
@@ -62,9 +63,11 @@ class RecognizedPersonRepository @Inject constructor(private val dataStore: Data
         registeredPerson.clear()
         dataStore.edit { it.clear() }
     }
+
     fun removeRegisteredPerson(person: Person) {
         registeredPerson.remove(person)
     }
+
     suspend fun saveAllToDatastore() {
         val jsonString = Json.encodeToString(registeredPerson)
         dataStore.edit { registered ->

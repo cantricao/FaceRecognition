@@ -57,7 +57,7 @@ object Util {
     ): Bitmap {
         val bitmapOverlay = Bitmap.createBitmap(screenWith, screenHeight, Bitmap.Config.ARGB_8888)
         val canvas = Canvas(bitmapOverlay)
-        var labelString:String
+        var labelString: String
         val frameToCanvasMatrix =
             OverlayViewConfig.getTransformationMatrix(screenWith.toFloat(), screenHeight.toFloat())
         trackedObjectsState.forEach {
@@ -76,12 +76,28 @@ object Util {
             else ""
             val width = OverlayViewConfig.exteriorPaint.measureText(labelString)
             val textSize = OverlayViewConfig.exteriorPaint.textSize
-            canvas.drawRect(trackedPos.left + cornerSize, trackedPos.top + textSize, trackedPos.left + cornerSize + width, trackedPos.top, OverlayViewConfig.rectTextBox)
-            canvas.drawText(labelString,trackedPos.left + cornerSize,trackedPos.top + textSize, OverlayViewConfig.interiorPaint)
-            it.landmark.forEach{ pointF ->
+            canvas.drawRect(
+                trackedPos.left + cornerSize,
+                trackedPos.top + textSize,
+                trackedPos.left + cornerSize + width,
+                trackedPos.top,
+                OverlayViewConfig.rectTextBox
+            )
+            canvas.drawText(
+                labelString,
+                trackedPos.left + cornerSize,
+                trackedPos.top + textSize,
+                OverlayViewConfig.interiorPaint
+            )
+            it.landmark.forEach { pointF ->
                 val point = floatArrayOf(pointF.x, pointF.y)
                 frameToCanvasMatrix.mapPoints(point)
-                canvas.drawCircle(point[0], point[1], OverlayViewConfig.LANDMARK_RADIUS_SIZE, OverlayViewConfig.rectTextBox)
+                canvas.drawCircle(
+                    point[0],
+                    point[1],
+                    OverlayViewConfig.LANDMARK_RADIUS_SIZE,
+                    OverlayViewConfig.rectTextBox
+                )
             }
 
         }
@@ -107,7 +123,11 @@ object Util {
         return bitmap
     }
 
-    fun createNotification(context: Context, workRequestId: UUID, notificationTitle: String): Notification {
+    fun createNotification(
+        context: Context,
+        workRequestId: UUID,
+        notificationTitle: String
+    ): Notification {
         val channelId = context.getString(R.string.notification_channel_id)
         val cancelText = context.getString(R.string.cancel_processing)
         val name = context.getString(R.string.channel_name)

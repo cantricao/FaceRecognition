@@ -37,19 +37,21 @@ fun BottomSheet(viewModel: DetectionViewModel = viewModel()) {
 
     val drawerState = rememberBottomDrawerState(BottomDrawerValue.Closed)
     BottomDrawer(
-        modifier = Modifier.pointerInput(Unit){
-        detectTapGestures(
-            onLongPress = {
-                if(!viewModel.isCaptureImage){
-                    Toast.makeText(context, "Capture image is processing", Toast.LENGTH_SHORT).show()
-                    viewModel.isCaptureImage = true
-                } else {
-                    Toast.makeText(context, "Wait for Capture image ", Toast.LENGTH_SHORT).show()
-                }
+        modifier = Modifier.pointerInput(Unit) {
+            detectTapGestures(
+                onLongPress = {
+                    if (!viewModel.isCaptureImage) {
+                        Toast.makeText(context, "Capture image is processing", Toast.LENGTH_SHORT)
+                            .show()
+                        viewModel.isCaptureImage = true
+                    } else {
+                        Toast.makeText(context, "Wait for Capture image ", Toast.LENGTH_SHORT)
+                            .show()
+                    }
 
-            },
-        )
-    },
+                },
+            )
+        },
         drawerState = drawerState,
         drawerContent = {
             Column {

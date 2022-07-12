@@ -25,7 +25,7 @@ class TfliteRepository @Inject constructor(@ApplicationContext val context: Cont
     }
 
     @Synchronized
-    fun createModel(){
+    fun createModel() {
         _detector?.close()
         _detector = when (modelName) {
             ModelConfig.BLAZEFACE_MODEL_NAME -> BlazeFaceTfliteDetector(context, modelName, device)
@@ -33,12 +33,12 @@ class TfliteRepository @Inject constructor(@ApplicationContext val context: Cont
         }
     }
 
-    override fun setThreshold(threshold: Float){
+    override fun setThreshold(threshold: Float) {
         _detector!!.threshold = threshold
     }
 
     @Synchronized
-    override fun detectInImage(bitmap: Bitmap): Flow<List<Recognition>>{
+    override fun detectInImage(bitmap: Bitmap): Flow<List<Recognition>> {
         return _detector!!.detectInImage(bitmap)
     }
 
@@ -48,7 +48,7 @@ class TfliteRepository @Inject constructor(@ApplicationContext val context: Cont
     }
 
     override fun setModelDevice(name: String) {
-        device = when(name){
+        device = when (name) {
             "CPU" -> Model.Device.CPU
             "GPU" -> Model.Device.GPU
             else -> Model.Device.NNAPI

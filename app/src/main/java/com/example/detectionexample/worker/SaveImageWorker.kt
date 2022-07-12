@@ -32,8 +32,12 @@ class SaveImageWorker @AssistedInject constructor(
     }
 
     override suspend fun getForegroundInfo(): ForegroundInfo {
-        return ForegroundInfo(NOTIFICATION_ID, createNotification(applicationContext, id,
-            applicationContext.getString(R.string.notification_title_filtering_image)))
+        return ForegroundInfo(
+            NOTIFICATION_ID, createNotification(
+                applicationContext, id,
+                applicationContext.getString(R.string.notification_title_filtering_image)
+            )
+        )
     }
 
     override suspend fun doWork(): Result = withContext(Dispatchers.IO) {
@@ -73,13 +77,12 @@ class SaveImageWorker @AssistedInject constructor(
             )
             canvas.drawBitmap(overlayBitmap, Matrix(), Paint(Paint.FILTER_BITMAP_FLAG))
             applicationContext.contentResolver.openOutputStream(uri).use { bitmapByteArray ->
-                rotatedBitmap.compress(Bitmap.CompressFormat.JPEG, 95, bitmapByteArray)
-            }
+                    rotatedBitmap.compress(Bitmap.CompressFormat.JPEG, 95, bitmapByteArray)
+                }
             Result.success()
         } catch (t: Throwable) {
             Result.failure()
-        }
-        catch (ex: Exception) {
+        } catch (ex: Exception) {
             Result.failure()
         }
     }

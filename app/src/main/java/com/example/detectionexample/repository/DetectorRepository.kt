@@ -7,7 +7,7 @@ import javax.inject.Singleton
 
 @Singleton
 interface DetectorRepository {
-    fun setThreshold(threshold: Float){
+    fun setThreshold(threshold: Float) {
     }
 
     fun detectInImage(bitmap: Bitmap): Flow<List<Recognition>>

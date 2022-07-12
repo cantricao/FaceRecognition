@@ -8,7 +8,7 @@ import javax.inject.Inject
 import javax.inject.Singleton
 
 @Singleton
-class MlkitRepository @Inject constructor() :DetectorRepository{
+class MlkitRepository @Inject constructor() :DetectorRepository {
     private var _detector: FaceMlkitDetector = FaceMlkitDetector()
 
     override fun detectInImage(bitmap: Bitmap): Flow<List<Recognition>> {

@@ -16,7 +16,7 @@ import java.nio.ByteBuffer
 
 open class TfliteExtractor(val context: Context, modelPath: String, device: Model.Device): Closeable {
 
-    private val numberOfThread = if(device == Model.Device.CPU) 4 else 1
+    private val numberOfThread = if (device == Model.Device.CPU) 4 else 1
 
     private val embeddings by lazy {
         imageDetector.getOutputTensor(0).let {
@@ -58,14 +58,14 @@ open class TfliteExtractor(val context: Context, modelPath: String, device: Mode
         setImageSize(image)
         val inputImage = TensorImage.fromBitmap(image)
         val processedImage = imageProcessor.process(inputImage)
-        outputMapBuffer.forEach { (_, buffer) -> buffer.rewind()}
+        outputMapBuffer.forEach { (_, buffer) -> buffer.rewind() }
         imageDetector.run(arrayOf(processedImage.buffer), outputMapBuffer)
         outputMapBuffer.forEach { (_, buffer) -> buffer.flip() }
         return getResult()
     }
 
 
-    private fun setImageSize(image: Bitmap){
+    private fun setImageSize(image: Bitmap) {
         imageWidth = image.width
         imageHeight = image.height
     }
@@ -91,7 +91,7 @@ open class TfliteExtractor(val context: Context, modelPath: String, device: Mode
     }
 
 
-    companion object{
+    companion object {
         const val TAG = "Extractor"
     }
 }

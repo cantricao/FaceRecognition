@@ -64,12 +64,16 @@ class DetectionViewModel @Inject constructor(
     var threshold by mutableStateOf(1F)
     private var detectedTime by mutableStateOf(0L)
     private var statedTime = System.currentTimeMillis()
-    var needUpdateTrackerImageSourceInfo by  mutableStateOf(true)
+    var needUpdateTrackerImageSourceInfo by mutableStateOf(true)
 
-    fun observeTrackedObject(timestamp: Long, isRecognizedFace : Boolean, srcBitmap: Bitmap = processBitmap) {
+    fun observeTrackedObject(
+        timestamp: Long,
+        isRecognizedFace: Boolean,
+        srcBitmap: Bitmap = processBitmap
+    ) {
         viewModelScope.launch {
             var result = repository.detectInImage(srcBitmap)
-            if(isRecognizedFace) {
+            if (isRecognizedFace) {
                 result = result.map { recognitions ->
                     recognitions.parallelStream().map { recognize ->
                         val faces = Util.getCropBitmapByCPU(recognize.location, processBitmap)
@@ -83,7 +87,8 @@ class DetectionViewModel @Inject constructor(
                 }
             }
             trackedObjectRepository.trackResults(result)
-            _trackedObjects.value = trackedObjectRepository.trackedObjects.stateIn(viewModelScope).value
+            _trackedObjects.value =
+                trackedObjectRepository.trackedObjects.stateIn(viewModelScope).value
             detectedTime = System.currentTimeMillis() - statedTime
             statedTime = System.currentTimeMillis()
             Log.d(
@@ -163,6 +168,7 @@ class DetectionViewModel @Inject constructor(
             recognizedPersonRepository.clearRegisteredPerson()
         }
     }
+
     fun removeRegisteredPerson(person: Person) =
         recognizedPersonRepository.removeRegisteredPerson(person)
 

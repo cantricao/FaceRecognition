@@ -10,11 +10,11 @@ import javax.inject.Inject
 import javax.inject.Singleton
 
 @Singleton
-class OpencvRepository @Inject constructor(@ApplicationContext val context: Context): DetectorRepository{
+class OpencvRepository @Inject constructor(@ApplicationContext val context: Context): DetectorRepository {
 
     private val _detector: FaceCascadeOpencvDetector by lazy { FaceCascadeOpencvDetector(context) }
 
-    override fun setThreshold(threshold: Float){
+    override fun setThreshold(threshold: Float) {
     }
 
     override fun detectInImage(bitmap: Bitmap): Flow<List<Recognition>> {

@@ -139,7 +139,8 @@ class BitmapOverlayVideoProcessor(
         analysisExecutor.execute {
             for (i in 0 until mImageHeight) {
                 for (j in 0 until mImageWidth) {
-                    bitmapSource[(mImageHeight - i - 1) * mImageWidth + j] = bitmapBuffer[i * mImageWidth + j]
+                    bitmapSource[(mImageHeight - i - 1) * mImageWidth + j] =
+                        bitmapBuffer[i * mImageWidth + j]
                 }
             }
             mPixelSource.rewind()

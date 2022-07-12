@@ -22,17 +22,18 @@ object BitmapSerializer: KSerializer<Bitmap> {
         )
     }
 
-    override val descriptor: SerialDescriptor = PrimitiveSerialDescriptor("Bitmap", PrimitiveKind.STRING)
+    override val descriptor: SerialDescriptor =
+        PrimitiveSerialDescriptor("Bitmap", PrimitiveKind.STRING)
 
     override fun serialize(encoder: Encoder, value: Bitmap) {
         val bitmapByteArray = ByteArrayOutputStream()
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
             value.compress(Bitmap.CompressFormat.WEBP_LOSSY, 0, bitmapByteArray)
         } else {
+            @Suppress("DEPRECATION")
             value.compress(Bitmap.CompressFormat.WEBP, 0, bitmapByteArray)
         }
         val bitmapString = Base64.encodeToString(bitmapByteArray.toByteArray(), Base64.DEFAULT)
         encoder.encodeString(bitmapString)
     }
-
 }

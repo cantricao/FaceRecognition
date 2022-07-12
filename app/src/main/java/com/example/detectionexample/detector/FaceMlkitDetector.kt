@@ -33,12 +33,12 @@ class FaceMlkitDetector {
     private fun getResult(): Flow<List<Recognition>> {
         return MutableStateFlow(
             faceResult.map { face ->
-            Recognition(
-                "${face.trackingId}",
-                "",
-                100.0f,
-                RectF(face.boundingBox)
-            )
-        })
+                Recognition(
+                    "${face.trackingId}",
+                    "",
+                    100.0f,
+                    RectF(face.boundingBox)
+                )
+            })
     }
 }
