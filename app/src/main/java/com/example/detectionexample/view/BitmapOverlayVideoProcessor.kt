@@ -7,6 +7,15 @@ import android.graphics.Color
 import android.graphics.Paint
 import android.opengl.GLES31
 import android.opengl.GLUtils
+import android.os.Build
+import android.os.Handler
+import android.os.HandlerThread
+import android.util.Log
+import android.view.PixelCopy
+import android.view.PixelCopy.OnPixelCopyFinishedListener
+import android.view.Surface
+import android.view.SurfaceView
+import androidx.annotation.RequiresApi
 import com.example.detectionexample.models.BitmapProxy
 import com.example.detectionexample.view.VideoProcessingGLSurfaceView.VideoProcessor
 import com.google.android.exoplayer2.C
@@ -26,15 +35,14 @@ import javax.microedition.khronos.opengles.GL10
  */
 /* package */
 class BitmapOverlayVideoProcessor(
-    context: Context,
+    private val context: Context,
     private val analyzer: Analyzer,
     private val analysisExecutor: ExecutorService
 ) :
     VideoProcessor {
     private var mImageWidth: Int = 0
     private var mImageHeight: Int = 0
-    private val context: Context
-    private val paint: Paint
+    private val paint: Paint = Paint()
     private val textures: IntArray
     private lateinit var overlayBitmap: Bitmap
     private lateinit var overlayCanvas: Canvas
@@ -46,9 +54,33 @@ class BitmapOverlayVideoProcessor(
     private lateinit var bitmapSource: IntArray
     private lateinit var mPixelSource: IntBuffer
     private lateinit var mPixelBuf: IntBuffer
+    @RequiresApi(Build.VERSION_CODES.N)
+    private var copyHelper = SynchronousPixelCopy()
+    private var dest: Bitmap? = null
 
     interface Analyzer {
-        fun analyze(image: BitmapProxy)
+        fun analyze(image: Bitmap, timestamp: Long)
+    }
+
+
+    class SynchronousPixelCopy {
+        private val sHandler: Handler
+
+        init {
+            val thread = HandlerThread("PixelCopyHelper")
+            thread.start()
+            sHandler = Handler(thread.looper)
+        }
+
+        @RequiresApi(Build.VERSION_CODES.N)
+        fun request(source: Surface?, dest: Bitmap?, listener: OnPixelCopyFinishedListener) {
+            PixelCopy.request(
+                source!!,
+                dest!!,
+                listener,
+                sHandler
+            )
+        }
     }
 
 
@@ -56,7 +88,7 @@ class BitmapOverlayVideoProcessor(
 
         program = try {
             GlProgram(
-                context,  /* vertexShaderFilePath= */
+                context.applicationContext,  /* vertexShaderFilePath= */
                 "bitmap_overlay_video_processor_vertex.glsl",
                 "bitmap_overlay_video_processor_fragment.glsl"
             )
@@ -100,11 +132,17 @@ class BitmapOverlayVideoProcessor(
         mPixelSource = IntBuffer.wrap(bitmapSource)
         overlayBitmap = Bitmap.createBitmap(mImageWidth, mImageHeight, Bitmap.Config.ARGB_8888)
         overlayCanvas = Canvas(overlayBitmap)
+        dest = Bitmap.createBitmap(mImageWidth, mImageHeight, Bitmap.Config.ARGB_8888)
         GLUtils.texImage2D(GL10.GL_TEXTURE_2D,  /* level= */0, overlayBitmap,  /* border= */0)
     }
 
 
-    override fun draw(frameTexture: Int, frameTimestampUs: Long, transformMatrix: FloatArray?) {
+    override fun draw(
+        frameTexture: Int,
+        frameTimestampUs: Long,
+        transformMatrix: FloatArray?,
+        surface: Surface?
+    ) {
         // Draw to the canvas and store it in a texture.
         val text =
             String.format(Locale.US, "%.02f", frameTimestampUs / C.MICROS_PER_SECOND.toFloat())
@@ -129,30 +167,30 @@ class BitmapOverlayVideoProcessor(
         GlUtil.checkGlError()
 
         mPixelBuf.rewind()
-        GLES31.glReadPixels(
-            0, 0,
-            mImageWidth, mImageHeight, GLES31.GL_RGBA, GLES31.GL_UNSIGNED_BYTE,
-            mPixelBuf
-        )
-        mPixelBuf.rewind()
+        analyzerFrame(surface, frameTimestampUs)
+    }
 
-        analysisExecutor.execute {
+    private fun analyzerFrame(surface: Surface?, frameTimestampUs: Long) {
+        if ((Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) && (surface != null)) {
+            val listener = OnPixelCopyFinishedListener {
+                analyzer.analyze(dest!!, frameTimestampUs)
+            }
+            copyHelper.request(surface, dest, listener)
+        } else {
+            GLES31.glReadPixels(
+                0, 0,
+                mImageWidth, mImageHeight, GLES31.GL_RGBA, GLES31.GL_UNSIGNED_BYTE,
+                mPixelBuf
+            )
+            mPixelBuf.rewind()
             for (i in 0 until mImageHeight) {
                 for (j in 0 until mImageWidth) {
                     bitmapSource[(mImageHeight - i - 1) * mImageWidth + j] =
                         bitmapBuffer[i * mImageWidth + j]
                 }
             }
-            mPixelSource.rewind()
-            val bitmapProxy = BitmapProxy(
-                mPixelSource,
-                width = mImageWidth,
-                height = mImageHeight,
-                rotationDegrees = 0,
-                frameTimestampUs,
-                flipY = false
-            )
-            analyzer.analyze(bitmapProxy)
+            dest?.setPixels(bitmapSource, 0, mImageWidth, 0, 0, mImageWidth, mImageHeight)
+            analyzer.analyze(dest!!, frameTimestampUs)
         }
     }
 
@@ -168,8 +206,6 @@ class BitmapOverlayVideoProcessor(
     }
 
     init {
-        this.context = context.applicationContext
-        paint = Paint()
         paint.textSize = 64f
         paint.isAntiAlias = true
         paint.setARGB(0xFF, 0xFF, 0xFF, 0xFF)

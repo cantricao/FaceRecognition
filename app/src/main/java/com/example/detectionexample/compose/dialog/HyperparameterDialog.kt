@@ -3,9 +3,9 @@ package com.example.detectionexample.compose.dialog
 import android.os.Build
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowDropDown
+import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
@@ -13,10 +13,9 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.detectionexample.config.ModelConfig
 import com.example.detectionexample.viewmodels.DetectionViewModel
-import com.google.mlkit.common.sdkinternal.model.ModelLoader
 import org.tensorflow.lite.gpu.CompatibilityList
 
-@OptIn(ExperimentalMaterialApi::class)
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun HyperparameterDialog(
     viewModel: DetectionViewModel = viewModel(),
@@ -67,7 +66,7 @@ fun HyperparameterDialog(
                     )
                 )
                 ListItem(
-                    text = {
+                    headlineText = {
                         OutlinedButton(
                             onClick = { expandedModelSlider = true },
                         ) {
@@ -84,14 +83,14 @@ fun HyperparameterDialog(
                                     DropdownMenuItem(onClick = {
                                         viewModel.setModelName(filename)
                                         expandedModelSlider = false
-                                    }, content = {
+                                    }, text = {
                                         Text(filename.split(".")[0])
                                     })
                                 }
                             }
                         }
                     },
-                    icon = {
+                    leadingContent = {
                         Icon(
                             painter = painterResource(
                                 id =
@@ -107,7 +106,7 @@ fun HyperparameterDialog(
                 )
 
                 ListItem(
-                    text = {
+                    headlineText = {
                         OutlinedButton(
                             onClick = { expandedDeviceSlider = true },
                         ) {
@@ -125,7 +124,7 @@ fun HyperparameterDialog(
                                         viewModel.setModelDevice(name)
                                         expandedDeviceSlider = false
                                     }, enabled = isEnable,
-                                        content = {
+                                        text = {
                                             Text(name)
                                         })
                                 }
@@ -133,7 +132,7 @@ fun HyperparameterDialog(
 
                         }
                     },
-                    icon = {
+                    leadingContent = {
                         Icon(
                             painter = painterResource(
                                 id = context.resources.getIdentifier(

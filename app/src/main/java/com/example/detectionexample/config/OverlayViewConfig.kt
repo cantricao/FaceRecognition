@@ -11,13 +11,6 @@ import androidx.compose.ui.graphics.drawscope.Stroke
 import javax.inject.Inject
 
 object OverlayViewConfig  {
-    // bounding box
-    val boxPaintStroke = Stroke(
-        10.0f,
-        100f,
-        StrokeCap.Round,
-        StrokeJoin.Round
-        )
 
     val boxPaint = android.graphics.Paint().apply {
         style = android.graphics.Paint.Style.STROKE
@@ -94,7 +87,7 @@ object OverlayViewConfig  {
         val matrix = Matrix()
         val scaleFactorX = screenWidth / frameWidth.toFloat()
         val scaleFactorY = screenHeight / frameHeight.toFloat()
-        matrix.postScale(scaleFactorX, scaleFactorY, )
+        matrix.postScale(scaleFactorX, scaleFactorY )
         return matrix
     }
 }

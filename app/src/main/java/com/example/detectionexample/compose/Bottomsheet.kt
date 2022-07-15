@@ -4,7 +4,11 @@ import android.widget.Toast
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Column
-import androidx.compose.material.*
+import androidx.compose.material.BottomDrawer
+import androidx.compose.material.BottomDrawerValue
+import androidx.compose.material.ExperimentalMaterialApi
+import androidx.compose.material.rememberBottomDrawerState
+import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.pointer.pointerInput
@@ -16,7 +20,7 @@ import com.example.detectionexample.viewmodels.DetectionViewModel
 import kotlinx.coroutines.launch
 
 
-@OptIn(ExperimentalMaterialApi::class)
+@OptIn(ExperimentalMaterialApi::class, ExperimentalMaterial3Api::class)
 @Composable
 @Preview
 fun BottomSheet(viewModel: DetectionViewModel = viewModel()) {
@@ -56,16 +60,16 @@ fun BottomSheet(viewModel: DetectionViewModel = viewModel()) {
         drawerContent = {
             Column {
                 actions.forEachIndexed { index, action ->
-                    ListItem(Modifier.clickable {
+                    ListItem (modifier = Modifier.clickable {
                         chooseAction = index
                         scope.launch {
                             viewModel.isProcessingFrame = false
                             drawerState.close()
                             chooseAction = index
                         }
-                    }) {
+                    }, headlineText =  {
                         Text(text = action)
-                    }
+                    })
                 }
             }
         },

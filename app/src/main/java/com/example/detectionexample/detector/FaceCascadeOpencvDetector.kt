@@ -2,6 +2,7 @@ package com.example.detectionexample.detector
 
 import android.content.Context
 import android.graphics.Bitmap
+import android.graphics.PointF
 import android.graphics.RectF
 import android.util.Log
 import com.example.detectionexample.R
@@ -13,6 +14,7 @@ import org.opencv.android.OpenCVLoader
 import org.opencv.android.Utils
 import org.opencv.core.Mat
 import org.opencv.core.MatOfRect
+import org.opencv.core.Rect
 import org.opencv.imgproc.Imgproc
 import org.opencv.objdetect.CascadeClassifier
 import java.io.File
@@ -41,8 +43,28 @@ class FaceCascadeOpencvDetector(val context: Context) :DetectorDataSource {
             .takeUnless { it.empty() }
             .also { cascadeDir.delete() }
     }
+    private val eyesCascade: CascadeClassifier? by lazy {
+        val `is`: InputStream =
+            context.resources.openRawResource(R.raw.haarcascade_eye_tree_eyeglasses)
+        val cascadeDir: File = context.getDir(ModelConfig.CASCADE_DIRNAME, Context.MODE_PRIVATE)
+        val caseFile = File(cascadeDir, ModelConfig.CASCADE_FILENAME)
+        val fos = FileOutputStream(caseFile)
+
+        val buffer = ByteArray(4096)
+        var bytesRead: Int
+
+        while (`is`.read(buffer).also { bytesRead = it } != -1) {
+            fos.write(buffer, 0, bytesRead)
+        }
+        `is`.close()
+        fos.close()
+        CascadeClassifier(caseFile.absolutePath)
+            .takeUnless { it.empty() }
+            .also { cascadeDir.delete() }
+    }
     private val result: MatOfRect = MatOfRect()
     private val inputImage = Mat()
+    private val listOfPoints = mutableListOf<PointF>()
 
     companion object {
         init {
@@ -56,7 +78,21 @@ class FaceCascadeOpencvDetector(val context: Context) :DetectorDataSource {
     override fun detectInImage(image: Bitmap): Flow<List<Recognition>> {
         Utils.bitmapToMat(image, inputImage)
         Imgproc.cvtColor(inputImage, inputImage, Imgproc.COLOR_BGR2GRAY)
+        Imgproc.equalizeHist(inputImage, inputImage)
         imageDetector?.detectMultiScale(inputImage, result)
+        listOfPoints.clear()
+        result.toList().forEach { face ->
+            val faceROI: Mat = inputImage.submat(face)
+            val eyes = MatOfRect()
+            eyesCascade?.detectMultiScale(faceROI, eyes)
+            eyes.toList().forEach { eye ->
+                listOfPoints.add(
+                    PointF(face.x + eye.x + eye.width / 2f, face.y + eye.y + eye.height / 2f)
+                )
+
+            }
+        }
+
         return getResult()
     }
 
@@ -71,7 +107,8 @@ class FaceCascadeOpencvDetector(val context: Context) :DetectorDataSource {
                     (it.tl().y.toFloat()),
                     (it.br().x.toFloat()),
                     (it.br().y.toFloat())
-                )
+                ),
+                listOfPoints
             )
         })
     }

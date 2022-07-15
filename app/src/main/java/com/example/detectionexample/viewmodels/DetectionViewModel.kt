@@ -15,6 +15,7 @@ import com.example.detectionexample.config.Util
 import com.example.detectionexample.domain.DetectorUsecase
 import com.example.detectionexample.models.BitmapProxy
 import com.example.detectionexample.models.Person
+import com.example.detectionexample.models.Recognition
 import com.example.detectionexample.models.TrackedRecognition
 import com.example.detectionexample.repository.ExtractorRepository
 import com.example.detectionexample.repository.RecognizedPersonRepository
@@ -22,10 +23,7 @@ import com.example.detectionexample.repository.TrackedObjectRepository
 import com.example.detectionexample.view.BitmapOverlayVideoProcessor
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.map
-import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import java.util.*
 import java.util.concurrent.ExecutorService
@@ -55,7 +53,7 @@ class DetectionViewModel @Inject constructor(
 
     val analysisExecutor: ExecutorService = Executors.newSingleThreadExecutor()
 
-    var isStaringCamera by mutableStateOf(false)
+    var isStaringCamera by mutableStateOf(true)
     var isProcessingFrame by mutableStateOf(true)
 
     lateinit var processBitmap: Bitmap
@@ -69,12 +67,11 @@ class DetectionViewModel @Inject constructor(
     fun observeTrackedObject(
         timestamp: Long,
         isRecognizedFace: Boolean,
-        srcBitmap: Bitmap = processBitmap
+        result: Flow<List<Recognition>>
     ) {
         viewModelScope.launch {
-            var result = repository.detectInImage(srcBitmap)
             if (isRecognizedFace) {
-                result = result.map { recognitions ->
+                val resultWithRegister = result.map { recognitions ->
                     recognitions.parallelStream().map { recognize ->
                         val faces = Util.getCropBitmapByCPU(recognize.location, processBitmap)
                         val emb = extractorRepository.extractImage(faces)
@@ -85,8 +82,10 @@ class DetectionViewModel @Inject constructor(
                         }
                     }.toList()
                 }
+                trackedObjectRepository.trackResults(resultWithRegister)
+            } else {
+                trackedObjectRepository.trackResults(result)
             }
-            trackedObjectRepository.trackResults(result)
             _trackedObjects.value =
                 trackedObjectRepository.trackedObjects.stateIn(viewModelScope).value
             detectedTime = System.currentTimeMillis() - statedTime
@@ -119,7 +118,7 @@ class DetectionViewModel @Inject constructor(
     }
 
     var videoAnalyzer = object : BitmapOverlayVideoProcessor.Analyzer {
-        override fun analyze(image: BitmapProxy) {
+        override fun analyze(image: Bitmap, timestamp: Long) {
             if (!isProcessingFrame) {
                 return
             }
@@ -132,8 +131,10 @@ class DetectionViewModel @Inject constructor(
                 )
                 needUpdateTrackerImageSourceInfo = false
             }
-            processBitmap.copyPixelsFromBuffer(image.buffer)
-            observeTrackedObject(image.timestamp, !recognizedPersonRepository.isEmpty())
+            processBitmap = Bitmap.createBitmap(image)
+            observeTrackedObject(timestamp,
+                !recognizedPersonRepository.isEmpty(),
+                detectInImage(processBitmap))
         }
     }
 
@@ -157,7 +158,10 @@ class DetectionViewModel @Inject constructor(
             needUpdateTrackerImageSourceInfo = false
         }
         processBitmap.copyPixelsFromBuffer(imageProxy.planes[0].buffer)
-        observeTrackedObject(imageProxy.imageInfo.timestamp, !recognizedPersonRepository.isEmpty())
+        observeTrackedObject(
+            imageProxy.imageInfo.timestamp,
+            !recognizedPersonRepository.isEmpty(),
+            detectInImage(processBitmap))
         imageProxy.close()
     }
 
@@ -167,6 +171,10 @@ class DetectionViewModel @Inject constructor(
         viewModelScope.launch(Dispatchers.IO) {
             recognizedPersonRepository.clearRegisteredPerson()
         }
+    }
+
+    fun detectInImage(srcBitmap: Bitmap): Flow<List<Recognition>> {
+        return repository.detectInImage(srcBitmap)
     }
 
     fun removeRegisteredPerson(person: Person) =

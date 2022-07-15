@@ -11,6 +11,7 @@ buildscript {
         tfliteVersion = '2.9.0'
         opencv_version = '4.5.3.0'
         work_version= '2.7.1'
+        appsearch_version = "1.1.0-alpha01"
     }
     repositories {
         google()

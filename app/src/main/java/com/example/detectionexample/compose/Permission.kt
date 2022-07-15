@@ -4,16 +4,20 @@ import android.content.Intent
 import android.net.Uri
 import android.provider.Settings
 import androidx.compose.foundation.layout.Column
-import androidx.compose.material.AlertDialog
-import androidx.compose.material.Button
-import androidx.compose.material.Snackbar
-import androidx.compose.material.Text
+import androidx.compose.foundation.layout.wrapContentHeight
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.Button
+import androidx.compose.material3.Snackbar
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.ExperimentalComposeUiApi
+import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.window.DialogProperties
 import androidx.core.content.ContextCompat.startActivity
 import com.google.accompanist.permissions.*
 
@@ -48,6 +52,7 @@ fun Permission(permission: List<String>,
 
 
 
+@OptIn(ExperimentalComposeUiApi::class)
 @Composable
 private fun Rationale(
     onDoNotShowRationale: () -> Unit,
@@ -56,6 +61,8 @@ private fun Rationale(
 ) {
     Column {
         AlertDialog(
+            properties = DialogProperties(usePlatformDefaultWidth = false),
+            modifier = Modifier.wrapContentHeight(),
             onDismissRequest = onDoNotShowRationale,
             title = {
                 Text(text = "Permission")

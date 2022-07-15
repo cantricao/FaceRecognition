@@ -1,10 +1,7 @@
 package com.example.detectionexample.view
 
-import android.annotation.TargetApi
-import android.app.Activity
+import android.annotation.SuppressLint
 import android.content.Context
-import android.graphics.Bitmap
-import android.graphics.Rect
 import android.graphics.SurfaceTexture
 import android.media.MediaFormat
 import android.opengl.EGL14
@@ -12,10 +9,7 @@ import android.opengl.GLES31
 import android.opengl.GLSurfaceView
 import android.os.Handler
 import android.os.Looper
-import android.view.PixelCopy
-import android.view.PixelCopy.OnPixelCopyFinishedListener
 import android.view.Surface
-import android.view.View
 import com.example.detectionexample.view.VideoProcessingGLSurfaceView.VideoProcessor
 import com.google.android.exoplayer2.C
 import com.google.android.exoplayer2.ExoPlayer
@@ -39,41 +33,10 @@ import javax.microedition.khronos.opengles.GL10
  */
 
 
+@SuppressLint("ViewConstructor")
 class VideoProcessingGLSurfaceView(
     context: Context, requireSecureContext: Boolean, videoProcessor: VideoProcessor?
 ) : GLSurfaceView(context) {
-
-    interface PostTake {
-        fun onSuccess(bitmap: Bitmap?)
-        fun onFailure(error: Int)
-    }
-
-    @TargetApi(26)
-    fun take(view: View, activity: Activity, callback: PostTake?) {
-        requireNotNull(callback) { "Screenshot request without a callback" }
-        val bitmap = Bitmap.createBitmap(view.width, view.height, Bitmap.Config.ARGB_8888)
-        val location = IntArray(2)
-        view.getLocationInWindow(location)
-        val rect = Rect(
-            location[0],
-            location[1],
-            location[0] + view.width,
-            location[1] + view.height
-        )
-        val listener =
-            OnPixelCopyFinishedListener { copyResult ->
-                if (copyResult == PixelCopy.SUCCESS) {
-                    callback.onSuccess(bitmap)
-                } else {
-                    callback.onFailure(copyResult)
-                }
-            }
-        try {
-            PixelCopy.request(activity.window, rect, bitmap, listener, Handler())
-        } catch (e: IllegalArgumentException) {
-            e.printStackTrace()
-        }
-    }
 
     /** Processes video frames, provided via a GL texture.  */
     interface VideoProcessor {
@@ -90,7 +53,12 @@ class VideoProcessingGLSurfaceView(
          * @param frameTimestampUs The presentation timestamp of the frame, in microseconds.
          * @param transformMatrix The 4 * 4 transform matrix to be applied to the texture.
          */
-        fun draw(frameTexture: Int, frameTimestampUs: Long, transformMatrix: FloatArray?)
+        fun draw(
+            frameTexture: Int,
+            frameTimestampUs: Long,
+            transformMatrix: FloatArray?,
+            surface: Surface?
+        )
 
         /** Releases any resources associated with this [VideoProcessor].  */
         fun release()
@@ -206,7 +174,7 @@ class VideoProcessingGLSurfaceView(
                 }
                 surfaceTexture.getTransformMatrix(transformMatrix)
             }
-            videoProcessor.draw(texture, frameTimestampUs, transformMatrix)
+            videoProcessor.draw(texture, frameTimestampUs, transformMatrix, surface)
         }
 
         override fun onVideoFrameAboutToBeRendered(
@@ -240,10 +208,6 @@ class VideoProcessingGLSurfaceView(
      * Creates a new instance. Pass `true` for `requireSecureContext` if the [ ] associated GL context should handle secure content (if the
      * device supports it).
      *
-     * @param context The [Context].
-     * @param requireSecureContext Whether a GL context supporting protected content should be
-     * created, if supported by the device.
-     * @param videoProcessor Processor that draws to the view.
      */
     init {
         renderer = VideoRenderer(videoProcessor)

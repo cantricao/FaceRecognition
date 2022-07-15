@@ -6,7 +6,6 @@ import android.hardware.display.DisplayManager
 import android.net.Uri
 import android.os.Build
 import android.provider.MediaStore
-import android.util.AttributeSet
 import android.util.Log
 import androidx.camera.core.*
 import androidx.camera.extensions.ExtensionMode
@@ -21,7 +20,10 @@ import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.viewmodel.compose.viewModel
-import androidx.work.*
+import androidx.work.ExistingWorkPolicy
+import androidx.work.OneTimeWorkRequestBuilder
+import androidx.work.WorkManager
+import androidx.work.workDataOf
 import com.example.detectionexample.config.CameraConfig
 import com.example.detectionexample.viewmodels.DetectionViewModel
 import com.example.detectionexample.worker.SaveImageWorker
@@ -54,7 +56,7 @@ fun CameraPreview(viewModel: DetectionViewModel = viewModel()) {
             .setBackpressureStrategy(ImageAnalysis.STRATEGY_KEEP_ONLY_LATEST)
             .setOutputImageFormat(ImageAnalysis.OUTPUT_IMAGE_FORMAT_RGBA_8888)
             .setOutputImageRotationEnabled(true)
-            .setTargetAspectRatio(AspectRatio.RATIO_16_9)
+//            .setTargetAspectRatio(AspectRatio.RATIO_16_9)
             .build()
             .apply {
                 setAnalyzer(viewModel.analysisExecutor, viewModel.analyzer)

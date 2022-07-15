@@ -17,7 +17,7 @@ import javax.inject.Singleton
 @Singleton
 class TfliteRepository @Inject constructor(@ApplicationContext val context: Context): DetectorRepository, Closeable {
     private var device = ModelConfig.DETECTOR_DEFAULT_DEVICE
-    private var modelName = ModelConfig.DETECTOR_DEFAULT_MODEL
+    private var modelName = ModelConfig.BLAZEFACE_MODEL_NAME
     private var _detector: TfliteDetector? = null
 
     init {

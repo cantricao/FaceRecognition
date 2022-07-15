@@ -5,7 +5,7 @@ import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
-import androidx.compose.material.*
+import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
@@ -16,7 +16,7 @@ import androidx.compose.ui.window.DialogProperties
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.detectionexample.viewmodels.DetectionViewModel
 
-@OptIn(ExperimentalComposeUiApi::class, ExperimentalMaterialApi::class)
+@OptIn(ExperimentalComposeUiApi::class, ExperimentalMaterial3Api::class)
 @Composable
 fun DisplayNameListViewDialog(
     viewModel: DetectionViewModel = viewModel(),
@@ -38,13 +38,13 @@ fun DisplayNameListViewDialog(
         text = {
             LazyColumn {
                 itemsIndexed(listOfPerson) { index ,person ->
-                    ListItem( icon = {
+                    ListItem( leadingContent = {
                         Image(
                             bitmap = person.face.asImageBitmap(),
                             contentDescription = "Face Icon"
                         ) },
-                        text = { Text(text = person.name) },
-                        trailing = {
+                        headlineText = { Text(text = person.name) },
+                        trailingContent = {
                             if(canEdit)
                                 Checkbox(
                                     checked = checkedItems[index],
