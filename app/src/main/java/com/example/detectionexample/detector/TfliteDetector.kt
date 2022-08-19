@@ -2,9 +2,11 @@ package com.example.detectionexample.detector
 
 import android.content.Context
 import android.graphics.Bitmap
+import android.media.Image
 import android.util.Log
 import com.example.detectionexample.models.Recognition
 import kotlinx.coroutines.flow.Flow
+import org.tensorflow.lite.DataType
 import org.tensorflow.lite.InterpreterApi
 import org.tensorflow.lite.support.common.FileUtil
 import org.tensorflow.lite.support.common.ops.NormalizeOp
@@ -36,6 +38,8 @@ abstract class TfliteDetector(context: Context, modelPath: String, labelPath: St
 
     protected val imageSizeY: Int by lazy { imageDetector.getInputTensor(0).shape()[2] }
 
+    protected val inputDataType: DataType by lazy { imageDetector.getInputTensor(0).dataType() }
+
     protected var imageWidth: Int = 0
     protected var imageHeight: Int = 0
 
@@ -49,7 +53,9 @@ abstract class TfliteDetector(context: Context, modelPath: String, labelPath: St
     }
 
     override fun detectInImage(image: Bitmap): Flow<List<Recognition>> {
-        setImageSize(image)
+        imageWidth = image.width
+        imageHeight = image.height
+
         val inputImage = TensorImage.fromBitmap(image)
         val processedImage = imageProcessor.process(inputImage)
         outputMapBuffer.forEach { (_, buffer) -> buffer.rewind() }
@@ -58,11 +64,19 @@ abstract class TfliteDetector(context: Context, modelPath: String, labelPath: St
         return getResult()
     }
 
-
-    private fun setImageSize(image: Bitmap) {
+    override fun detectInImage(image: Image): Flow<List<Recognition>> {
         imageWidth = image.width
         imageHeight = image.height
+
+        val inputImage = TensorImage(inputDataType)
+        inputImage.load(image)
+        val processedImage = imageProcessor.process(inputImage)
+        outputMapBuffer.forEach { (_, buffer) -> buffer.rewind() }
+        imageDetector.run(arrayOf(processedImage.buffer), outputMapBuffer)
+        outputMapBuffer.forEach { (_, buffer) -> buffer.flip() }
+        return getResult()
     }
+
 
     override fun close() {
         Log.d(TAG, "close invoke")

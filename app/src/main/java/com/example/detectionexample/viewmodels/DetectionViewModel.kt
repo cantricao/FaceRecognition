@@ -13,14 +13,13 @@ import com.example.detectionexample.config.ModelConfig
 import com.example.detectionexample.config.OverlayViewConfig
 import com.example.detectionexample.config.Util
 import com.example.detectionexample.domain.DetectorUsecase
-import com.example.detectionexample.models.BitmapProxy
 import com.example.detectionexample.models.Person
 import com.example.detectionexample.models.Recognition
 import com.example.detectionexample.models.TrackedRecognition
 import com.example.detectionexample.repository.ExtractorRepository
 import com.example.detectionexample.repository.RecognizedPersonRepository
 import com.example.detectionexample.repository.TrackedObjectRepository
-import com.example.detectionexample.view.BitmapOverlayVideoProcessor
+import com.example.detectionexample.customexoplayer.VideoView
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.*
@@ -53,7 +52,7 @@ class DetectionViewModel @Inject constructor(
 
     val analysisExecutor: ExecutorService = Executors.newSingleThreadExecutor()
 
-    var isStaringCamera by mutableStateOf(true)
+    var isStaringCamera by mutableStateOf(false)
     var isProcessingFrame by mutableStateOf(true)
 
     lateinit var processBitmap: Bitmap
@@ -117,7 +116,7 @@ class DetectionViewModel @Inject constructor(
         Log.d(TAG, "Register: ${person.name}")
     }
 
-    var videoAnalyzer = object : BitmapOverlayVideoProcessor.Analyzer {
+    var videoAnalyzer = object : VideoView.Analyzer {
         override fun analyze(image: Bitmap, timestamp: Long) {
             if (!isProcessingFrame) {
                 return

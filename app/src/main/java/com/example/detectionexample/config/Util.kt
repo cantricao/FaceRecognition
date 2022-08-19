@@ -13,6 +13,7 @@ import androidx.core.app.NotificationCompat
 import androidx.work.WorkManager
 import com.example.detectionexample.R
 import com.example.detectionexample.models.TrackedRecognition
+import jp.co.cyberagent.android.gpuimage.GPUImageNativeLibrary
 import java.util.*
 
 object Util {
@@ -165,5 +166,18 @@ object Util {
         ).also { channel ->
             notificationManager.createNotificationChannel(channel)
         }
+    }
+
+    fun yuvToRgb(yuvBuffer: ByteArray, output: Bitmap, imageFormat: Int){
+        val outputBuffer = IntArray(output.width * output.height)
+        when(imageFormat){
+            ImageFormat.NV21 ->
+                GPUImageNativeLibrary.YUVtoARBG(yuvBuffer, output.width, output.height, outputBuffer)
+            ImageFormat.YUV_420_888 ->
+                GPUImageNativeLibrary.YUVtoRBGA(yuvBuffer, output.width, output.height, outputBuffer)
+            else -> throw UnsupportedOperationException()
+        }
+
+        output.setPixels(outputBuffer, 0, output.width, 0, 0, output.width, output.height)
     }
 }

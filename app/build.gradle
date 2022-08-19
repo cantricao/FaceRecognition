@@ -7,12 +7,12 @@ plugins {
 }
 
 android {
-    compileSdk 32
+    compileSdk 33
 
     defaultConfig {
         applicationId "com.example.detectionexample"
         minSdk 23
-        targetSdk 32
+        targetSdk 33
         versionCode 1
         versionName "1.0"
 
@@ -35,8 +35,8 @@ android {
     }
     kotlinOptions {
         jvmTarget = '11'
-        useIR = true
-        freeCompilerArgs += "-Xopt-in=kotlin.RequiresOptIn"
+//        useIR = true
+//        freeCompilerArgs += "-Xopt-in=kotlin.RequiresOptIn"
     }
     buildFeatures {
         viewBinding true
@@ -55,22 +55,22 @@ android {
 dependencies {
 
     implementation 'androidx.core:core-ktx:1.8.0'
-    implementation 'androidx.appcompat:appcompat:1.4.2'
+    implementation 'androidx.appcompat:appcompat:1.5.0'
     implementation 'com.google.android.material:material:1.6.1'
-    implementation "androidx.compose.ui:ui:1.3.0-alpha01"
-    implementation "androidx.compose.ui:ui-text-google-fonts:1.3.0-alpha01"
-    implementation "androidx.compose.material:material:$compose_version"
+    implementation "androidx.compose.ui:ui:1.3.0-alpha03"
+    implementation "androidx.compose.ui:ui-text-google-fonts:1.3.0-alpha03"
+    implementation "androidx.compose.material:material:$compose_version_v2"
 
-    implementation "androidx.compose.ui:ui-tooling-preview:$compose_version"
+    implementation "androidx.compose.ui:ui-tooling-preview:$compose_version_v2"
     implementation "androidx.lifecycle:lifecycle-runtime-ktx:$lifecycle_version"
-    implementation 'androidx.activity:activity-compose:1.5.0'
+    implementation 'androidx.activity:activity-compose:1.5.1'
     implementation 'androidx.startup:startup-runtime:1.1.1'
-    implementation 'androidx.compose.material3:material3:1.0.0-alpha14'
+    implementation 'androidx.compose.material3:material3:1.0.0-alpha16'
     testImplementation 'junit:junit:4.13.2'
     androidTestImplementation 'androidx.test.ext:junit:1.1.3'
     androidTestImplementation 'androidx.test.espresso:espresso-core:3.4.0'
-    androidTestImplementation "androidx.compose.ui:ui-test-junit4:$compose_version"
-    debugImplementation "androidx.compose.ui:ui-tooling:$compose_version"
+    androidTestImplementation "androidx.compose.ui:ui-test-junit4:$compose_version_v2"
+    debugImplementation "androidx.compose.ui:ui-tooling:$compose_version_v2"
 
     implementation "com.google.accompanist:accompanist-permissions:0.17.0"
 
@@ -82,12 +82,12 @@ dependencies {
     // Tensorflow lite dependencies
     implementation "org.tensorflow:tensorflow-lite:$tfliteVersion"
     implementation "org.tensorflow:tensorflow-lite-gpu:$tfliteVersion"
-    implementation 'org.tensorflow:tensorflow-lite-support:0.4.0'
+    implementation 'org.tensorflow:tensorflow-lite-support:0.4.1'
     implementation "org.tensorflow:tensorflow-lite-select-tf-ops:$tfliteVersion"
 
     // Hilt
     implementation "com.google.dagger:hilt-android:$hilt_version"
-    debugImplementation "androidx.compose.ui:ui-test-manifest:$compose_version"
+    debugImplementation "androidx.compose.ui:ui-test-manifest:$compose_version_v2"
     kapt "com.google.dagger:hilt-android-compiler:$hilt_version"
     implementation "com.quickbirdstudios:opencv-contrib:$opencv_version"
     implementation("androidx.hilt:hilt-work:1.0.0")
@@ -122,8 +122,18 @@ dependencies {
 
     implementation "androidx.work:work-runtime-ktx:$work_version"
 
-    implementation 'com.google.android.exoplayer:exoplayer-core:2.18.0'
-    implementation 'com.google.android.exoplayer:exoplayer-ui:2.18.0'
+//    implementation 'com.google.android.exoplayer:exoplayer-core:2.18.1'
+//    implementation 'com.google.android.exoplayer:exoplayer-ui:2.18.1'
+
+    // For media playback using ExoPlayer
+    implementation("androidx.media3:media3-exoplayer:$media3_version")
+    // For building media playback UIs
+    implementation("androidx.media3:media3-ui:$media3_version")
+    // For transforming media files
+    implementation("androidx.media3:media3-transformer:$media3_version")
+
+    implementation 'jp.co.cyberagent.android:gpuimage:2.1.0'
+
     implementation 'org.jetbrains.kotlinx:kotlinx-coroutines-guava:1.6.1'
 
 

@@ -4,6 +4,7 @@ import android.content.Context
 import android.graphics.Bitmap
 import android.graphics.PointF
 import android.graphics.RectF
+import android.media.Image
 import android.util.Log
 import com.example.detectionexample.R
 import com.example.detectionexample.config.ModelConfig
@@ -13,13 +14,15 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import org.opencv.android.OpenCVLoader
 import org.opencv.android.Utils
 import org.opencv.core.Mat
+import org.opencv.core.MatOfByte
 import org.opencv.core.MatOfRect
-import org.opencv.core.Rect
+import org.opencv.imgcodecs.Imgcodecs
 import org.opencv.imgproc.Imgproc
 import org.opencv.objdetect.CascadeClassifier
 import java.io.File
 import java.io.FileOutputStream
 import java.io.InputStream
+import java.nio.ByteBuffer
 
 
 class FaceCascadeOpencvDetector(val context: Context) :DetectorDataSource {
@@ -63,7 +66,7 @@ class FaceCascadeOpencvDetector(val context: Context) :DetectorDataSource {
             .also { cascadeDir.delete() }
     }
     private val result: MatOfRect = MatOfRect()
-    private val inputImage = Mat()
+    private var inputImage = Mat()
     private val listOfPoints = mutableListOf<PointF>()
 
     companion object {
@@ -78,6 +81,33 @@ class FaceCascadeOpencvDetector(val context: Context) :DetectorDataSource {
     override fun detectInImage(image: Bitmap): Flow<List<Recognition>> {
         Utils.bitmapToMat(image, inputImage)
         Imgproc.cvtColor(inputImage, inputImage, Imgproc.COLOR_BGR2GRAY)
+        Imgproc.equalizeHist(inputImage, inputImage)
+        imageDetector?.detectMultiScale(inputImage, result)
+        listOfPoints.clear()
+        result.toList().forEach { face ->
+            val faceROI: Mat = inputImage.submat(face)
+            val eyes = MatOfRect()
+            eyesCascade?.detectMultiScale(faceROI, eyes)
+            eyes.toList().forEach { eye ->
+                listOfPoints.add(
+                    PointF(face.x + eye.x + eye.width / 2f, face.y + eye.y + eye.height / 2f)
+                )
+
+            }
+        }
+
+        return getResult()
+    }
+
+
+    override fun detectInImage(image: Image): Flow<List<Recognition>> {
+        val bb: ByteBuffer = image.planes[0].buffer
+        val buf = ByteArray(bb.remaining())
+        bb.get(buf)
+        inputImage = Imgcodecs.imdecode(MatOfByte(*buf), Imgcodecs.IMREAD_GRAYSCALE)
+        val b = Bitmap.createBitmap(image.width, image.height, Bitmap.Config.ARGB_8888)
+        Utils.matToBitmap(inputImage, b)
+//        Imgproc.cvtColor(inputImage, inputImage, Imgproc.COLOR_YUV2GRAY_I420)
         Imgproc.equalizeHist(inputImage, inputImage)
         imageDetector?.detectMultiScale(inputImage, result)
         listOfPoints.clear()

@@ -20,7 +20,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.detectionexample.config.Util
 import com.example.detectionexample.viewmodels.DetectionViewModel
 
-@OptIn(ExperimentalComposeUiApi::class)
+@OptIn(ExperimentalComposeUiApi::class, ExperimentalMaterial3Api::class)
 @Composable
 fun AddPersonDialog(
     viewModel: DetectionViewModel = viewModel(),

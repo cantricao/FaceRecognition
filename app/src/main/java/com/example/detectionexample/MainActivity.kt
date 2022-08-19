@@ -21,14 +21,14 @@ class MainActivity : ComponentActivity() {
             DetectionExampleTheme {
                 Surface {
                     Permission(listPermission, explanation, {
-                            CameraPreview()
-                            VideoPlayer()
-                            OverlayView()
-                            BottomSheet()
-                        },
-                        {
-                            PermissionNotAvailableContent()
-                        })
+                        CameraPreview()
+                        VideoPlayer()
+//                        OverlayView()
+//                        BottomSheet()
+                    },
+                    {
+                        PermissionNotAvailableContent()
+                    })
                 }
             }
         }

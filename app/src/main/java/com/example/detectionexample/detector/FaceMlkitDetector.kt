@@ -3,6 +3,7 @@ package com.example.detectionexample.detector
 import android.graphics.Bitmap
 import android.graphics.PointF
 import android.graphics.RectF
+import android.media.Image
 import androidx.annotation.WorkerThread
 import com.example.detectionexample.models.Recognition
 import com.google.android.gms.tasks.Tasks
@@ -14,7 +15,7 @@ import com.google.mlkit.vision.face.FaceLandmark
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 
-class FaceMlkitDetector {
+class FaceMlkitDetector: DetectorDataSource{
     // Real-time contour detection
     private val realTimeOpts by lazy {
         FaceDetectorOptions.Builder()
@@ -28,8 +29,15 @@ class FaceMlkitDetector {
     private var faceResult: List<Face> = listOf()
 
     @WorkerThread
-    fun detectInImage(image: Bitmap): Flow<List<Recognition>> {
+    override fun detectInImage(image: Bitmap): Flow<List<Recognition>> {
         val inputImage = InputImage.fromBitmap(image, 0)
+        val result = detector.process(inputImage)
+        faceResult = Tasks.await(result)
+        return getResult()
+    }
+
+    override fun detectInImage(image: Image): Flow<List<Recognition>> {
+        val inputImage = InputImage.fromMediaImage(image, 0)
         val result = detector.process(inputImage)
         faceResult = Tasks.await(result)
         return getResult()
