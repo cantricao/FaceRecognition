@@ -1,4 +1,4 @@
-package com.example.detectionexample.customexoplayer
+package com.example.detectionexample.custom
 
 import android.content.Context
 import android.media.MediaFormat
@@ -14,11 +14,11 @@ import androidx.media3.exoplayer.video.MediaCodecVideoRenderer
 import androidx.media3.exoplayer.video.VideoRendererEventListener
 import java.nio.ByteBuffer
 
-class CustomRenderersFactory(context: Context) :
+class ExoplayerCustomRenderersFactory(context: Context) :
     DefaultRenderersFactory(context) {
     private var videoFrameDataListener: VideoFrameDataListener? = null
 
-    fun setVideoFrameDataListener(videoFrameDataListener: VideoFrameDataListener?): CustomRenderersFactory {
+    fun setVideoFrameDataListener(videoFrameDataListener: VideoFrameDataListener?): ExoplayerCustomRenderersFactory {
         this.videoFrameDataListener = videoFrameDataListener
         return this
     }
@@ -94,6 +94,7 @@ class CustomRenderersFactory(context: Context) :
                 eventListener,
                 MAX_DROPPED_VIDEO_FRAME_COUNT_TO_NOTIFY
             ) as Renderer
+            @Suppress("UNUSED_CHANGED_VALUE")
             out.add(extensionRendererIndex++, renderer)
             Log.i(TAG, "Loaded Libgav1VideoRenderer.")
         } catch (e: ClassNotFoundException) {
@@ -115,7 +116,7 @@ class CustomRenderersFactory(context: Context) :
     ) :
         MediaCodecVideoRenderer(
             context,
-            CustomMediaCodecAdapter.Factory(),
+            ExoplayerCustomMediaCodecAdapter.Factory(),
             mediaCodecSelector,
             allowedJoiningTimeMs,
             enableDecoderFallback,
@@ -137,6 +138,7 @@ class CustomRenderersFactory(context: Context) :
             isLastBuffer: Boolean,
             format: Format
         ): Boolean {
+
             codec?.let { videoFrameDataListener?.onFrame(buffer, it.outputFormat, format) }
             return super.processOutputBuffer(
                 positionUs,
@@ -163,6 +165,6 @@ class CustomRenderersFactory(context: Context) :
     }
 
     companion object {
-        private val TAG = CustomRenderersFactory::class.java.name
+        private val TAG = ExoplayerCustomRenderersFactory::class.java.name
     }
 }

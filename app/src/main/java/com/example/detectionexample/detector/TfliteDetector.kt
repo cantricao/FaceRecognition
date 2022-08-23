@@ -64,19 +64,6 @@ abstract class TfliteDetector(context: Context, modelPath: String, labelPath: St
         return getResult()
     }
 
-    override fun detectInImage(image: Image): Flow<List<Recognition>> {
-        imageWidth = image.width
-        imageHeight = image.height
-
-        val inputImage = TensorImage(inputDataType)
-        inputImage.load(image)
-        val processedImage = imageProcessor.process(inputImage)
-        outputMapBuffer.forEach { (_, buffer) -> buffer.rewind() }
-        imageDetector.run(arrayOf(processedImage.buffer), outputMapBuffer)
-        outputMapBuffer.forEach { (_, buffer) -> buffer.flip() }
-        return getResult()
-    }
-
 
     override fun close() {
         Log.d(TAG, "close invoke")

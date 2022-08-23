@@ -14,15 +14,17 @@ import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.window.DialogProperties
 import androidx.lifecycle.viewmodel.compose.viewModel
-import com.example.detectionexample.viewmodels.DetectionViewModel
+import com.example.detectionexample.viewmodels.AnalysisViewModel
+import com.example.detectionexample.viewmodels.DatastoreViewModel
 
 @OptIn(ExperimentalComposeUiApi::class, ExperimentalMaterial3Api::class)
 @Composable
 fun DisplayNameListViewDialog(
-    viewModel: DetectionViewModel = viewModel(),
+    viewModel: AnalysisViewModel = viewModel(),
+    datastoreViewModel: DatastoreViewModel = viewModel()
 ){
     var canEdit by remember { mutableStateOf(false)}
-    val listOfPerson = remember { viewModel.getRegisteredPerson().toMutableStateList() }
+    val listOfPerson = remember { datastoreViewModel.getRegisteredPerson().toMutableStateList() }
     val checkedItems = remember { List(listOfPerson.size) { false }.toMutableStateList() }
     AlertDialog(
         properties = DialogProperties(usePlatformDefaultWidth = false),
@@ -56,7 +58,7 @@ fun DisplayNameListViewDialog(
             }
         },
         title = {
-            if(viewModel.isRegisteredPersonEmpty())
+            if(datastoreViewModel.isRegisteredPersonEmpty())
                 Text(text = "No Faces Added!!")
             else {
                 if (canEdit)
@@ -70,12 +72,12 @@ fun DisplayNameListViewDialog(
                 if(canEdit){
                     val listDeletedPerson = listOfPerson.zip(checkedItems).filter { (_, checkedItem) -> checkedItem }
                     listDeletedPerson.forEach { (person, checkedItem) ->
-                        viewModel.removeRegisteredPerson(person)
+                        datastoreViewModel.removeRegisteredPerson(person)
                         listOfPerson.remove(person)
                         checkedItems.remove(checkedItem)
                     }
                 }
-                if(!viewModel.isRegisteredPersonEmpty())
+                if(!datastoreViewModel.isRegisteredPersonEmpty())
                     canEdit = !canEdit
                 else
                     viewModel.isProcessingFrame = true

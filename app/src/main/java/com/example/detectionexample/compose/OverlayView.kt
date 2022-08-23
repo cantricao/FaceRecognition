@@ -9,10 +9,10 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.detectionexample.config.OverlayViewConfig
 import com.example.detectionexample.config.Util
-import com.example.detectionexample.viewmodels.DetectionViewModel
+import com.example.detectionexample.viewmodels.AnalysisViewModel
 
 @Composable
-fun OverlayView(viewModel: DetectionViewModel = viewModel()) {
+fun OverlayView(viewModel: AnalysisViewModel = viewModel()) {
     val context = LocalContext.current
     OverlayViewConfig.setContextToFixTextSize(context)
     val trackedObjectsState by viewModel.trackedObserver.collectAsState(initial = listOf())

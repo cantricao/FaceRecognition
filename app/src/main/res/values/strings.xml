@@ -6,4 +6,11 @@
     <string name="cancel_processing">Cancel processing</string>
     <string name="channel_name">WorkManager Sample</string>
     <string name="title_activity_main2">MainActivity2</string>
+
+    <string name="camera_mode_none">None</string>
+    <string name="camera_mode_auto">Auto</string>
+    <string name="camera_mode_bokeh">Bokeh</string>
+    <string name="camera_mode_hdr">HDR</string>
+    <string name="camera_mode_night">Night</string>
+    <string name="camera_mode_face_retouch">Face Retouch</string>
 </resources>

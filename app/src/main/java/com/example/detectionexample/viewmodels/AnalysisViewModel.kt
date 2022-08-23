@@ -1,6 +1,7 @@
 package com.example.detectionexample.viewmodels
 
 import android.graphics.Bitmap
+import android.media.Image
 import android.net.Uri
 import android.util.Log
 import androidx.camera.core.ImageAnalysis
@@ -12,6 +13,7 @@ import androidx.lifecycle.viewModelScope
 import com.example.detectionexample.config.ModelConfig
 import com.example.detectionexample.config.OverlayViewConfig
 import com.example.detectionexample.config.Util
+import com.example.detectionexample.custom.BitmapAnalyzer
 import com.example.detectionexample.domain.DetectorUsecase
 import com.example.detectionexample.models.Person
 import com.example.detectionexample.models.Recognition
@@ -19,7 +21,6 @@ import com.example.detectionexample.models.TrackedRecognition
 import com.example.detectionexample.repository.ExtractorRepository
 import com.example.detectionexample.repository.RecognizedPersonRepository
 import com.example.detectionexample.repository.TrackedObjectRepository
-import com.example.detectionexample.customexoplayer.VideoView
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.*
@@ -32,7 +33,7 @@ import kotlin.streams.toList
 
 
 @HiltViewModel
-class DetectionViewModel @Inject constructor(
+class AnalysisViewModel @Inject constructor(
     private val trackedObjectRepository: TrackedObjectRepository,
     private val detector: DetectorUsecase,
     private val recognizedPersonRepository: RecognizedPersonRepository,
@@ -40,6 +41,7 @@ class DetectionViewModel @Inject constructor(
     ) : ViewModel() {
 
     val sampleVideoUri: Uri = Uri.parse("asset:///face-demographics-walking-and-pause.mp4")
+//val sampleVideoUri: Uri = Uri.parse("https://github.com/intel-iot-devkit/sample-videos/raw/master/face-demographics-walking.mp4")
     var isCaptureImage by mutableStateOf(false)
     var captureUri: Uri by mutableStateOf(Uri.EMPTY)
     private val _trackedObjects: MutableStateFlow<List<TrackedRecognition>> =
@@ -52,7 +54,7 @@ class DetectionViewModel @Inject constructor(
 
     val analysisExecutor: ExecutorService = Executors.newSingleThreadExecutor()
 
-    var isStaringCamera by mutableStateOf(false)
+    var isStaringCamera by mutableStateOf(true)
     var isProcessingFrame by mutableStateOf(true)
 
     lateinit var processBitmap: Bitmap
@@ -104,26 +106,12 @@ class DetectionViewModel @Inject constructor(
 
     fun setModelDevice(name: String) = repository.setModelDevice(name)
 
-    fun addPerson(trackedRecognition: TrackedRecognition, face: Bitmap) {
-        val person = Person(
-            id = UUID.randomUUID().toString(),
-            name = trackedRecognition.title,
-            score = (trackedRecognition.detectionConfidence * 100).toInt(),
-            embeddings = extractorRepository.extractImage(face),
-            face = face
-        )
-        recognizedPersonRepository.registerPerson(person)
-        Log.d(TAG, "Register: ${person.name}")
-    }
-
-    var videoAnalyzer = object : VideoView.Analyzer {
+    var bitmapAnalyzer = object : BitmapAnalyzer {
         override fun analyze(image: Bitmap, timestamp: Long) {
             if (!isProcessingFrame) {
                 return
             }
             if (needUpdateTrackerImageSourceInfo) {
-                processBitmap =
-                    Bitmap.createBitmap(image.width, image.height, Bitmap.Config.ARGB_8888)
                 OverlayViewConfig.setFrameConfiguration(
                     image.width,
                     image.height, 0
@@ -164,33 +152,8 @@ class DetectionViewModel @Inject constructor(
         imageProxy.close()
     }
 
-    fun isRegisteredPersonEmpty() = recognizedPersonRepository.isEmpty()
-    fun getRegisteredPerson() = recognizedPersonRepository.getRegisteredPerson()
-    fun clearRegisteredPerson() {
-        viewModelScope.launch(Dispatchers.IO) {
-            recognizedPersonRepository.clearRegisteredPerson()
-        }
-    }
-
     fun detectInImage(srcBitmap: Bitmap): Flow<List<Recognition>> {
         return repository.detectInImage(srcBitmap)
-    }
-
-    fun removeRegisteredPerson(person: Person) =
-        recognizedPersonRepository.removeRegisteredPerson(person)
-
-    fun saveAllToDatastore() {
-        viewModelScope.launch(Dispatchers.IO) {
-            recognizedPersonRepository.saveAllToDatastore()
-            isProcessingFrame = true
-        }
-    }
-
-    fun loadAllToDatastore() {
-        viewModelScope.launch(Dispatchers.IO) {
-            recognizedPersonRepository.loadAllFromDatastore()
-            isProcessingFrame = true
-        }
     }
 
     companion object {

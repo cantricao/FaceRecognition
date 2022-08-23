@@ -8,12 +8,14 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.viewmodel.compose.viewModel
-import com.example.detectionexample.viewmodels.DetectionViewModel
+import com.example.detectionexample.viewmodels.AnalysisViewModel
+import com.example.detectionexample.viewmodels.DatastoreViewModel
 import kotlinx.coroutines.launch
 
 @Composable
 fun ClearNameListDialog(
-    viewModel: DetectionViewModel = viewModel()
+    viewModel: AnalysisViewModel = viewModel(),
+    datastoreViewModel: DatastoreViewModel = viewModel()
 ) {
     val scope = rememberCoroutineScope()
     val context = LocalContext.current
@@ -28,7 +30,7 @@ fun ClearNameListDialog(
             TextButton(onClick = {
                 viewModel.isProcessingFrame = true
                 scope.launch {
-                    viewModel.clearRegisteredPerson()
+                    datastoreViewModel.clearRegisteredPerson()
                     Toast.makeText(context, "Recognitions Cleared", Toast.LENGTH_SHORT).show()
                 }
             }) {

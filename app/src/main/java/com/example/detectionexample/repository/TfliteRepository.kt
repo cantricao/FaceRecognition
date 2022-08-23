@@ -2,6 +2,7 @@ package com.example.detectionexample.repository
 
 import android.content.Context
 import android.graphics.Bitmap
+import android.media.Image
 import com.example.detectionexample.config.ModelConfig
 import com.example.detectionexample.detector.BlazeFaceTfliteDetector
 import com.example.detectionexample.detector.MobilenetSSDTfliteDetector

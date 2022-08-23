@@ -7,5 +7,4 @@ import kotlinx.coroutines.flow.Flow
 
 interface DetectorDataSource {
     fun detectInImage(image: Bitmap): Flow<List<Recognition>>
-    fun detectInImage(image: Image): Flow<List<Recognition>>
 }

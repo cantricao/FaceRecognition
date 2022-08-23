@@ -1,6 +1,7 @@
 package com.example.detectionexample.repository
 
 import android.graphics.Bitmap
+import android.media.Image
 import androidx.annotation.WorkerThread
 import com.example.detectionexample.detector.FaceMlkitDetector
 import com.example.detectionexample.models.Recognition

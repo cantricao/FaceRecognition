@@ -36,13 +36,6 @@ class FaceMlkitDetector: DetectorDataSource{
         return getResult()
     }
 
-    override fun detectInImage(image: Image): Flow<List<Recognition>> {
-        val inputImage = InputImage.fromMediaImage(image, 0)
-        val result = detector.process(inputImage)
-        faceResult = Tasks.await(result)
-        return getResult()
-    }
-
     private fun getResult(): Flow<List<Recognition>> {
         return MutableStateFlow(
             faceResult.map { face ->

@@ -18,12 +18,14 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.DialogProperties
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.detectionexample.config.Util
-import com.example.detectionexample.viewmodels.DetectionViewModel
+import com.example.detectionexample.viewmodels.AnalysisViewModel
+import com.example.detectionexample.viewmodels.DatastoreViewModel
 
 @OptIn(ExperimentalComposeUiApi::class, ExperimentalMaterial3Api::class)
 @Composable
 fun AddPersonDialog(
-    viewModel: DetectionViewModel = viewModel(),
+    viewModel: AnalysisViewModel = viewModel(),
+    datastoreViewModel: DatastoreViewModel = viewModel()
 ) {
     val context = LocalContext.current
     var progress by remember { mutableStateOf(0.0f) }
@@ -90,7 +92,7 @@ fun AddPersonDialog(
                     if (trackedObjectsState.isEmpty())
                         viewModel.isProcessingFrame = true
                     listOfFaceAndTrackedObject.forEachIndexed { index, (face, trackedRecognition) ->
-                        viewModel.addPerson(trackedRecognition, face)
+                        datastoreViewModel.addPerson(trackedRecognition, face)
                         progress = index * 1f / trackedObjectsState.size
                     }
                     Toast.makeText(context,

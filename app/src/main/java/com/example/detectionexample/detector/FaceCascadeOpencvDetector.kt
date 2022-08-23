@@ -99,33 +99,6 @@ class FaceCascadeOpencvDetector(val context: Context) :DetectorDataSource {
         return getResult()
     }
 
-
-    override fun detectInImage(image: Image): Flow<List<Recognition>> {
-        val bb: ByteBuffer = image.planes[0].buffer
-        val buf = ByteArray(bb.remaining())
-        bb.get(buf)
-        inputImage = Imgcodecs.imdecode(MatOfByte(*buf), Imgcodecs.IMREAD_GRAYSCALE)
-        val b = Bitmap.createBitmap(image.width, image.height, Bitmap.Config.ARGB_8888)
-        Utils.matToBitmap(inputImage, b)
-//        Imgproc.cvtColor(inputImage, inputImage, Imgproc.COLOR_YUV2GRAY_I420)
-        Imgproc.equalizeHist(inputImage, inputImage)
-        imageDetector?.detectMultiScale(inputImage, result)
-        listOfPoints.clear()
-        result.toList().forEach { face ->
-            val faceROI: Mat = inputImage.submat(face)
-            val eyes = MatOfRect()
-            eyesCascade?.detectMultiScale(faceROI, eyes)
-            eyes.toList().forEach { eye ->
-                listOfPoints.add(
-                    PointF(face.x + eye.x + eye.width / 2f, face.y + eye.y + eye.height / 2f)
-                )
-
-            }
-        }
-
-        return getResult()
-    }
-
     private fun getResult(): Flow<List<Recognition>> {
         return MutableStateFlow(result.toArray().map {
             Recognition(

@@ -2,12 +2,10 @@ package com.example.detectionexample.compose.dialog
 
 import android.net.Uri
 import android.os.Environment
-import android.provider.MediaStore
 import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.core.animateFloatAsState
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
@@ -15,24 +13,20 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.material.BottomDrawer
-import androidx.compose.material.BottomDrawerValue
-import androidx.compose.material.ExperimentalMaterialApi
-import androidx.compose.material.rememberBottomDrawerState
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.DialogProperties
 import androidx.core.content.FileProvider
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.bumptech.glide.request.RequestOptions
-import com.example.detectionexample.config.CropTransformation
+import com.example.detectionexample.custom.GlideCropBitmapTransformation
 import com.example.detectionexample.config.Util
-import com.example.detectionexample.viewmodels.DetectionViewModel
+import com.example.detectionexample.viewmodels.AnalysisViewModel
+import com.example.detectionexample.viewmodels.DatastoreViewModel
 import com.skydoves.landscapist.glide.GlideImage
 import kotlinx.coroutines.launch
 import java.io.File
@@ -41,12 +35,13 @@ import java.text.DateFormat
 import java.util.*
 
 
-@OptIn(ExperimentalComposeUiApi::class, ExperimentalMaterialApi::class,
+@OptIn(ExperimentalComposeUiApi::class,
     ExperimentalMaterial3Api::class
 )
 @Composable
 fun LoadPhotoDialog(
-    viewModel: DetectionViewModel = viewModel(),
+    viewModel: AnalysisViewModel = viewModel(),
+    datastoreViewModel: DatastoreViewModel = viewModel()
 ) {
     val context = LocalContext.current
     val trackedObjectsState by viewModel.trackedObserver.collectAsState(initial = listOf())
@@ -178,7 +173,7 @@ fun LoadPhotoDialog(
                                         modifier = Modifier.size(24.dp),
                                         requestOptions = {
                                             RequestOptions()
-                                                .transform(CropTransformation(trackedRecognition.location))
+                                                .transform(GlideCropBitmapTransformation(trackedRecognition.location))
                                         },
                                         contentDescription = "Face Icon"
                                     )
@@ -197,7 +192,7 @@ fun LoadPhotoDialog(
                             listOfUriAndTrackedObject.forEach { (uri, listObjectObject) ->
                                 val bitmap = Util.getBitmap(context, uri)
                                 listObjectObject.forEach { trackedRecognition ->
-                                    viewModel.addPerson(trackedRecognition, bitmap)
+                                    datastoreViewModel.addPerson(trackedRecognition, bitmap)
                                     progress += 1f / trackedObjectsState.size
                                 }
                             }

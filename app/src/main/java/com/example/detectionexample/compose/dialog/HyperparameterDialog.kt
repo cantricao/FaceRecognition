@@ -12,13 +12,13 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.detectionexample.config.ModelConfig
-import com.example.detectionexample.viewmodels.DetectionViewModel
+import com.example.detectionexample.viewmodels.AnalysisViewModel
 import org.tensorflow.lite.gpu.CompatibilityList
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun HyperparameterDialog(
-    viewModel: DetectionViewModel = viewModel(),
+    viewModel: AnalysisViewModel = viewModel(),
 ) {
     val context = LocalContext.current
     var expandedModelSlider by remember { mutableStateOf(false) }

@@ -1,4 +1,4 @@
-package com.example.detectionexample.config
+package com.example.detectionexample.custom
 
 import android.graphics.*
 import com.bumptech.glide.load.engine.bitmap_recycle.BitmapPool
@@ -6,7 +6,7 @@ import com.bumptech.glide.load.resource.bitmap.BitmapTransformation
 import java.security.MessageDigest
 
 
-class CropTransformation(val rectF: RectF) : BitmapTransformation() {
+class GlideCropBitmapTransformation(val rectF: RectF) : BitmapTransformation() {
     override fun updateDiskCacheKey(messageDigest: MessageDigest) {
         messageDigest.update((ID + rectF).toByteArray(CHARSET))
     }
@@ -29,8 +29,7 @@ class CropTransformation(val rectF: RectF) : BitmapTransformation() {
             }
 
         val paint = Paint(Paint.FILTER_BITMAP_FLAG)
-            .apply { color = Color.WHITE
-            }
+            .apply { color = Color.WHITE }
         val canvas = Canvas(bitmap)
 
         canvas.drawBitmap(toTransform, resultMatrix, paint)
@@ -42,10 +41,10 @@ class CropTransformation(val rectF: RectF) : BitmapTransformation() {
     }
 
     override fun toString(): String {
-        return "CropTransformation(rectF= ${rectF.toShortString()})"
+        return "GlideCropBitmapTransformation(rectF= ${rectF.toShortString()})"
     }
     override fun equals(other: Any?): Boolean {
-        return other is CropTransformation && other.rectF == rectF
+        return other is GlideCropBitmapTransformation && other.rectF == rectF
     }
 
     override fun hashCode(): Int {
@@ -54,6 +53,6 @@ class CropTransformation(val rectF: RectF) : BitmapTransformation() {
 
     companion object {
         private const val VERSION = 1
-        private const val ID = "com.example.detectionexample.config.${VERSION}"
+        private const val ID = "com.example.detectionexample.config.$VERSION"
     }
 }

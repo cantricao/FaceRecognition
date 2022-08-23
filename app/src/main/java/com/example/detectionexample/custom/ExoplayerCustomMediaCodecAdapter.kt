@@ -1,4 +1,4 @@
-package com.example.detectionexample.customexoplayer
+package com.example.detectionexample.custom
 
 import android.media.Image
 import android.media.MediaCodec
@@ -21,7 +21,7 @@ import java.nio.ByteBuffer
 /**
  * A [MediaCodecAdapter] that operates the underlying [MediaCodec] in synchronous mode.
  */
-class CustomMediaCodecAdapter private constructor(private val codec: MediaCodec) :
+class ExoplayerCustomMediaCodecAdapter private constructor(private val codec: MediaCodec) :
     MediaCodecAdapter {
     /** A factory for {@link SynchronousMediaCodecAdapter} instances.  */
     class Factory : MediaCodecAdapter.Factory {
@@ -43,7 +43,7 @@ class CustomMediaCodecAdapter private constructor(private val codec: MediaCodec)
                 TraceUtil.beginSection("startCodec")
                 codec.start()
                 TraceUtil.endSection()
-                CustomMediaCodecAdapter(codec)
+                ExoplayerCustomMediaCodecAdapter(codec)
             } catch (e: IOException) {
                 codec?.release()
                 throw e
@@ -80,6 +80,7 @@ class CustomMediaCodecAdapter private constructor(private val codec: MediaCodec)
         var index: Int
         do {
             index = codec.dequeueOutputBuffer(bufferInfo, 0)
+
             if (index == MediaCodec.INFO_OUTPUT_BUFFERS_CHANGED && Util.SDK_INT < 21) {
                 outputByteBuffers = codec.outputBuffers
             }
@@ -153,7 +154,7 @@ class CustomMediaCodecAdapter private constructor(private val codec: MediaCodec)
         codec.setOnFrameRenderedListener(
             { _: MediaCodec?, presentationTimeUs: Long, nanoTime: Long ->
                 listener.onFrameRendered(
-                    this@CustomMediaCodecAdapter, presentationTimeUs, nanoTime
+                    this@ExoplayerCustomMediaCodecAdapter, presentationTimeUs, nanoTime
                 )
             },
             handler

@@ -16,14 +16,18 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.detectionexample.compose.dialog.*
-import com.example.detectionexample.viewmodels.DetectionViewModel
+import com.example.detectionexample.viewmodels.AnalysisViewModel
+import com.example.detectionexample.viewmodels.DatastoreViewModel
 import kotlinx.coroutines.launch
 
 
 @OptIn(ExperimentalMaterialApi::class, ExperimentalMaterial3Api::class)
 @Composable
 @Preview
-fun BottomSheet(viewModel: DetectionViewModel = viewModel()) {
+fun BottomSheet(
+    viewModel: AnalysisViewModel = viewModel(),
+    datastoreViewModel: DatastoreViewModel = viewModel()
+) {
     val context = LocalContext.current
 
     var chooseAction by remember { mutableStateOf(-1) }
@@ -79,11 +83,13 @@ fun BottomSheet(viewModel: DetectionViewModel = viewModel()) {
                     0 -> DisplayNameListViewDialog()
                     1 -> AddPersonDialog()
                     2 -> {
-                        viewModel.saveAllToDatastore()
+                        datastoreViewModel.saveAllToDatastore()
+                        viewModel.isProcessingFrame = true
                         Toast.makeText(context, "Recognitions Saved", Toast.LENGTH_SHORT).show()
                     }
                     3 -> {
-                        viewModel.loadAllToDatastore()
+                        datastoreViewModel.loadAllToDatastore()
+                        viewModel.isProcessingFrame = true
                         Toast.makeText(context, "Recognitions Loaded", Toast.LENGTH_SHORT)
                             .show()
                     }

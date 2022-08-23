@@ -2,6 +2,7 @@ package com.example.detectionexample.repository
 
 import android.content.Context
 import android.graphics.Bitmap
+import android.media.Image
 import com.example.detectionexample.detector.FaceCascadeOpencvDetector
 import com.example.detectionexample.models.Recognition
 import dagger.hilt.android.qualifiers.ApplicationContext

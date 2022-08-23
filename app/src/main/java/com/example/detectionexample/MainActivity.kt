@@ -4,9 +4,14 @@ package com.example.detectionexample
 import android.Manifest
 import android.os.Build
 import android.os.Bundle
+import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.compose.foundation.gestures.detectTapGestures
+import androidx.compose.foundation.layout.size
 import androidx.compose.material3.Surface
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.input.pointer.pointerInput
 import com.example.detectionexample.compose.*
 import com.example.detectionexample.ui.theme.DetectionExampleTheme
 import dagger.hilt.android.AndroidEntryPoint
@@ -23,7 +28,6 @@ class MainActivity : ComponentActivity() {
                     Permission(listPermission, explanation, {
                         CameraPreview()
                         VideoPlayer()
-//                        OverlayView()
 //                        BottomSheet()
                     },
                     {

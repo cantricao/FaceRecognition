@@ -17,7 +17,7 @@ object OverlayViewConfig  {
 
     val boxPaint = android.graphics.Paint().apply {
         style = android.graphics.Paint.Style.STROKE
-        strokeWidth = 10.0f
+        strokeWidth = 3.0f
         strokeCap = android.graphics.Paint.Cap.ROUND
         strokeJoin = android.graphics.Paint.Join.ROUND
         strokeMiter = 100f
@@ -67,7 +67,7 @@ object OverlayViewConfig  {
 
     private const val TEXT_SIZE_DIP = 18f
 
-    const val LANDMARK_RADIUS_SIZE = 10f
+    const val LANDMARK_RADIUS_SIZE = 3f
 
     fun setContextToFixTextSize(context: Context){
         val textSize = TypedValue.applyDimension(
