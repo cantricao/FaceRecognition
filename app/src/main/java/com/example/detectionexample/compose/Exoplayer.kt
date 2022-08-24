@@ -26,76 +26,75 @@ import com.example.detectionexample.config.OverlayViewConfig
 import com.example.detectionexample.config.Util
 import com.example.detectionexample.custom.ExoplayerCustomRenderersFactory
 import com.example.detectionexample.viewmodels.AnalysisViewModel
+import com.example.detectionexample.viewmodels.VideoViewModel
 import java.nio.ByteBuffer
 
 
 @Composable
-fun VideoPlayer(viewModel: AnalysisViewModel = viewModel()) {
+fun VideoPlayer(viewModel: AnalysisViewModel = viewModel(),
+                videoViewModel: VideoViewModel = viewModel()
+) {
     if (viewModel.isStaringCamera) return
 
-    val context = LocalContext.current
-
     val lifecycleOwner = LocalLifecycleOwner.current
-
-    OverlayViewConfig.setContextToFixTextSize(context)
 
     val trackedObjectsState by viewModel.trackedObserver.collectAsState(initial = listOf())
 
 
-
     var imageBitmap by remember { mutableStateOf(ImageBitmap(1,1)) }
 
-    val videoFrameDataListener = object : ExoplayerCustomRenderersFactory.VideoFrameDataListener {
-        override fun onFrame(
-            data: ByteBuffer?,
-            androidMediaFormat: MediaFormat,
-            playerFormat: Format
-        ) {
-            // Not in main thread
-            if (data != null) {
-                /*
-                * Color formats of different decoders are different.
-                * We have to apply different raw-data to Bitmap(argb) conversion systems according to color format.
-                * Here we just show YUV to RGB conversion assuming data is YUV formatted.
-                * Following conversion system might not give proper result for all videos.
-                */
-                try {
-                    val width: Int = playerFormat.width
-                    val height: Int = playerFormat.height
-
-                    data.rewind()
-                    val bytes = ByteArray(data.remaining())
-                    data.get(bytes)
-                    val bitmap = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888)
-
-                    Util.yuvToRgb(bytes, bitmap, ImageFormat.YUV_420_888)
-
-//                    val finalBitmap = Bitmap.createScaledBitmap(bitmap, 640, 480, true)
-                    imageBitmap = bitmap.asImageBitmap()
-                    viewModel.bitmapAnalyzer.analyze(bitmap, System.currentTimeMillis())
-
-                } catch (e: Exception) {
-                    Log.e("TAG", "onFrame: error: " + e.message)
-                }
-            }
-        }
-    }
-    val exoPlayer =  remember {
-        val renderersFactory: ExoplayerCustomRenderersFactory =
-            ExoplayerCustomRenderersFactory(context).setVideoFrameDataListener(videoFrameDataListener)
-        ExoPlayer.Builder(context, renderersFactory).build()
-    }
+//    val videoFrameDataListener = object : ExoplayerCustomRenderersFactory.VideoFrameDataListener {
+//        override fun onFrame(
+//            data: ByteBuffer?,
+//            androidMediaFormat: MediaFormat,
+//            playerFormat: Format
+//        ) {
+//            // Not in main thread
+//            if (data != null) {
+//                /*
+//                * Color formats of different decoders are different.
+//                * We have to apply different raw-data to Bitmap(argb) conversion systems according to color format.
+//                * Here we just show YUV to RGB conversion assuming data is YUV formatted.
+//                * Following conversion system might not give proper result for all videos.
+//                */
+//                try {
+//                    val width: Int = playerFormat.width
+//                    val height: Int = playerFormat.height
+//
+//                    data.rewind()
+//                    val bytes = ByteArray(data.remaining())
+//                    data.get(bytes)
+//                    val bitmap = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888)
+//
+//                    Util.yuvToRgb(bytes, bitmap, ImageFormat.YUV_420_888)
+//
+////                    val finalBitmap = Bitmap.createScaledBitmap(bitmap, 640, 480, true)
+//                    imageBitmap = bitmap.asImageBitmap()
+//                    viewModel.bitmapAnalyzer.analyze(bitmap, System.currentTimeMillis())
+//
+//                } catch (e: Exception) {
+//                    Log.e("TAG", "onFrame: error: " + e.message)
+//                }
+//            }
+//        }
+//    }
+//
+//
+//    val exoPlayer =  remember {
+//        val renderersFactory: ExoplayerCustomRenderersFactory =
+//            ExoplayerCustomRenderersFactory(context).setVideoFrameDataListener(videoFrameDataListener)
+//        ExoPlayer.Builder(context, renderersFactory).build()
+//    }
     
     DisposableEffect(lifecycleOwner){
         // Create an observer that triggers our remembered callbacks
         // for sending analytics events
         val observer = LifecycleEventObserver { _, event ->
             when(event){
-                Lifecycle.Event.ON_RESUME -> exoPlayer.play()
-                Lifecycle.Event.ON_PAUSE -> exoPlayer.pause()
-                Lifecycle.Event.ON_STOP -> exoPlayer.stop()
-                Lifecycle.Event.ON_DESTROY -> exoPlayer.release()
-
+                Lifecycle.Event.ON_RESUME -> videoViewModel.exoPlayer.play()
+                Lifecycle.Event.ON_PAUSE -> videoViewModel.exoPlayer.pause()
+                Lifecycle.Event.ON_STOP -> videoViewModel.exoPlayer.stop()
+                Lifecycle.Event.ON_DESTROY -> videoViewModel.exoPlayer.release()
                 else -> {}
             }
         }
@@ -112,14 +111,14 @@ fun VideoPlayer(viewModel: AnalysisViewModel = viewModel()) {
     
     viewModel.needUpdateTrackerImageSourceInfo = true
 
-    LaunchedEffect(viewModel.isProcessingFrame) {
-        val mediaItem = MediaItem.fromUri(viewModel.sampleVideoUri)
-        exoPlayer.apply {
-            setMediaItem(mediaItem)
-            prepare()
-            playWhenReady = viewModel.isProcessingFrame
-        }
-    }
+//    LaunchedEffect(viewModel.isProcessingFrame) {
+//        val mediaItem = MediaItem.fromUri(viewModel.sampleVideoUri)
+//        exoPlayer.apply {
+//            setMediaItem(mediaItem)
+//            prepare()
+//            playWhenReady = viewModel.isProcessingFrame
+//        }
+//    }
 
     val imageOverlay by produceState(
         initialValue = ImageBitmap(1,1), trackedObjectsState
@@ -143,7 +142,7 @@ fun VideoPlayer(viewModel: AnalysisViewModel = viewModel()) {
         )
 
         AndroidView(factory = { mContext -> LegacyPlayerControlView(mContext).apply {
-            player = exoPlayer
+            player = videoViewModel.exoPlayer
             showTimeoutMs = 0
         }
                               },

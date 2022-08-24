@@ -42,8 +42,6 @@ class AnalysisViewModel @Inject constructor(
 
     val sampleVideoUri: Uri = Uri.parse("asset:///face-demographics-walking-and-pause.mp4")
 //val sampleVideoUri: Uri = Uri.parse("https://github.com/intel-iot-devkit/sample-videos/raw/master/face-demographics-walking.mp4")
-    var isCaptureImage by mutableStateOf(false)
-    var captureUri: Uri by mutableStateOf(Uri.EMPTY)
     private val _trackedObjects: MutableStateFlow<List<TrackedRecognition>> =
         MutableStateFlow(emptyList())
     val trackedObserver: StateFlow<List<TrackedRecognition>> = _trackedObjects

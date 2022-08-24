@@ -41,7 +41,7 @@ fun CameraPreview(viewModel: AnalysisViewModel = viewModel(), cameraViewModel: C
 
     var enableCameraShutter by remember { mutableStateOf(true) }
     var enableSwitchLens by remember { mutableStateOf(true) }
-    var enableClosePhotoPreview by remember { mutableStateOf(true) }
+    var enableClosePhotoPreview by remember { mutableStateOf(false) }
     var enablePhotoPreview by remember { mutableStateOf(false) }
     var enableExtensionSelector by remember { mutableStateOf(true) }
     var glideUri by remember { mutableStateOf(Uri.EMPTY) }
