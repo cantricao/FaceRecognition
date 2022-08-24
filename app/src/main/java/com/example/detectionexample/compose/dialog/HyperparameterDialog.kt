@@ -11,6 +11,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.detectionexample.R
 import com.example.detectionexample.config.ModelConfig
 import com.example.detectionexample.viewmodels.AnalysisViewModel
 import org.tensorflow.lite.gpu.CompatibilityList
@@ -92,14 +93,7 @@ fun HyperparameterDialog(
                     },
                     leadingContent = {
                         Icon(
-                            painter = painterResource(
-                                id =
-                                context.resources.getIdentifier(
-                                    "ic_twotone_model_training_24",
-                                    "drawable",
-                                    context.packageName
-                                )
-                            ),
+                            painter = painterResource(id = R.drawable.ic_twotone_model_training_24),
                             contentDescription = "Model"
                         )
                     }
@@ -134,13 +128,7 @@ fun HyperparameterDialog(
                     },
                     leadingContent = {
                         Icon(
-                            painter = painterResource(
-                                id = context.resources.getIdentifier(
-                                    "ic_baseline_device_hub_24",
-                                    "drawable",
-                                    context.packageName
-                                )
-                            ),
+                            painter = painterResource(id = R.drawable.ic_baseline_device_hub_24),
                             contentDescription = "Devices"
                         )
                     }

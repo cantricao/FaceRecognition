@@ -28,6 +28,7 @@ import androidx.camera.extensions.ExtensionMode
  */
 data class CameraUiState(
     val cameraState: CameraState = CameraState.NOT_READY,
+    val analysisState: AnalysisState = AnalysisState.NOT_READY,
     val availableExtensions: List<Int> = emptyList(),
     val availableCameraLens: List<Int> = listOf(LENS_FACING_BACK),
     @LensFacing val cameraLens: Int = LENS_FACING_BACK,
@@ -55,7 +56,11 @@ enum class CameraState {
 }
 
 
-//sealed class Analy
+enum class AnalysisState {
+    NOT_READY,
+    READY,
+    ANALYSIS_STOPPED
+}
 
 /**
  * Defines the various states during post-capture.

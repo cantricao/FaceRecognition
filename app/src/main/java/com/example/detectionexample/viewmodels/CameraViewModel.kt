@@ -17,7 +17,9 @@
 package com.example.detectionexample.viewmodels
 
 import android.app.Application
-import android.os.Environment
+import android.content.ContentValues
+import android.os.Build
+import android.provider.MediaStore
 import androidx.camera.core.*
 import androidx.camera.core.CameraSelector.LensFacing
 import androidx.camera.extensions.ExtensionMode
@@ -28,10 +30,9 @@ import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.viewModelScope
 import com.example.detectionexample.MainApplication
-import com.example.detectionexample.uistate.CameraUiState
-import com.example.detectionexample.uistate.CaptureState
+import com.example.detectionexample.config.CameraConfig
+import com.example.detectionexample.uistate.*
 import com.example.detectionexample.uistate.CameraState
-import com.example.detectionexample.uistate.CameraUiAction
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.asExecutor
@@ -40,7 +41,7 @@ import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.guava.await
 import kotlinx.coroutines.launch
-import java.io.File
+import java.util.concurrent.Executor
 import javax.inject.Inject
 
 /**
@@ -63,6 +64,13 @@ class CameraViewModel @Inject constructor(application: Application) : AndroidVie
         .setTargetAspectRatio(AspectRatio.RATIO_16_9)
         .build()
 
+    private val imageAnalysis = ImageAnalysis.Builder()
+            .setBackpressureStrategy(ImageAnalysis.STRATEGY_KEEP_ONLY_LATEST)
+            .setOutputImageFormat(ImageAnalysis.OUTPUT_IMAGE_FORMAT_RGBA_8888)
+            .setOutputImageRotationEnabled(true)
+//        .setTargetAspectRatio(AspectRatio.RATIO_16_9)
+            .build()
+
     private val preview = Preview.Builder()
         .setTargetAspectRatio(AspectRatio.RATIO_16_9)
         .build()
@@ -70,11 +78,14 @@ class CameraViewModel @Inject constructor(application: Application) : AndroidVie
     private val _cameraUiState: MutableStateFlow<CameraUiState> = MutableStateFlow(CameraUiState())
     private val _captureUiState: MutableStateFlow<CaptureState> =
         MutableStateFlow(CaptureState.CaptureNotReady)
+    private val _analysisState: MutableStateFlow<AnalysisState> =
+        MutableStateFlow(AnalysisState.NOT_READY)
     private var _action: MutableSharedFlow<CameraUiAction> = MutableSharedFlow()
 
 
     val cameraUiState: Flow<CameraUiState> = _cameraUiState
     val captureUiState: Flow<CaptureState> = _captureUiState
+    val analysisState: Flow<AnalysisState> = _analysisState
     val action: Flow<CameraUiAction> = _action
 
     /**
@@ -120,6 +131,7 @@ class CameraViewModel @Inject constructor(application: Application) : AndroidVie
             // of available extensions, available lens faces.
             val newCameraUiState = currentCameraUiState.copy(
                 cameraState = CameraState.READY,
+                analysisState = AnalysisState.NOT_READY,
                 availableExtensions = listOf(ExtensionMode.NONE) + availableExtensions,
                 availableCameraLens = availableCameraLens,
                 extensionMode = if (availableExtensions.isEmpty()) ExtensionMode.NONE else currentCameraUiState.extensionMode,
@@ -153,9 +165,9 @@ class CameraViewModel @Inject constructor(application: Application) : AndroidVie
             )
         }
         val useCaseGroup = UseCaseGroup.Builder()
-//            .setViewPort(previewView.viewPort!!)
             .addUseCase(imageCapture)
             .addUseCase(preview)
+            .addUseCase(imageAnalysis)
             .build()
         cameraProvider.unbindAll()
         cameraProvider.bindToLifecycle(
@@ -172,13 +184,23 @@ class CameraViewModel @Inject constructor(application: Application) : AndroidVie
         }
     }
 
+
+    fun setAnalysis(executor: Executor, analyzer: ImageAnalysis.Analyzer){
+        imageAnalysis.setAnalyzer(executor, analyzer)
+        viewModelScope.launch {
+            val currentCameraUiState = _cameraUiState.value
+            _analysisState.emit(AnalysisState.READY)
+            _cameraUiState.emit(currentCameraUiState.copy(analysisState = AnalysisState.READY))
+        }
+    }
+
     /**
      * Stops the preview stream. This should be invoked when the captured image is displayed.
      */
     fun stopPreview() {
         preview.setSurfaceProvider(null)
         viewModelScope.launch {
-            _cameraUiState.emit(_cameraUiState.value.copy(cameraState = CameraState.PREVIEW_STOPPED))
+            _cameraUiState.emit(_cameraUiState.value.copy(cameraState = CameraState.PREVIEW_STOPPED, analysisState = AnalysisState.ANALYSIS_STOPPED))
         }
     }
 
@@ -202,7 +224,7 @@ class CameraViewModel @Inject constructor(application: Application) : AndroidVie
             viewModelScope.launch {
                 _cameraUiState.emit(
                     newCameraUiState.copy(
-                        cameraState = CameraState.NOT_READY,
+                        cameraState = CameraState.NOT_READY
                     )
                 )
                 _captureUiState.emit(CaptureState.CaptureNotReady)
@@ -222,16 +244,27 @@ class CameraViewModel @Inject constructor(application: Application) : AndroidVie
         viewModelScope.launch {
             _captureUiState.emit(CaptureState.CaptureStarted)
         }
-        val photoFile = File(getCaptureStorageDirectory(), "test.jpg")
+        val contentValues = ContentValues().apply {
+            put(MediaStore.MediaColumns.DISPLAY_NAME, CameraConfig.FILENAME)
+            put(MediaStore.MediaColumns.MIME_TYPE, CameraConfig.MIMETYPE)
+            if (Build.VERSION.SDK_INT > Build.VERSION_CODES.P) {
+                put(MediaStore.Images.Media.RELATIVE_PATH, CameraConfig.FOLDER)
+                put(MediaStore.Images.Media.IS_PENDING, 1)
+                put(MediaStore.Images.Media.DATE_TAKEN, System.currentTimeMillis())
+            }
+        }
+
         val metadata = ImageCapture.Metadata().apply {
             // Mirror image when using the front camera
             isReversedHorizontal =
                 _cameraUiState.value.cameraLens == CameraSelector.LENS_FACING_FRONT
         }
-        val outputFileOptions =
-            ImageCapture.OutputFileOptions.Builder(photoFile)
+        val outputFileOptions = ImageCapture.OutputFileOptions.Builder(
+                getApplication<MainApplication>().contentResolver,
+                MediaStore.Images.Media.EXTERNAL_CONTENT_URI, contentValues)
                 .setMetadata(metadata)
                 .build()
+
 
         imageCapture.takePicture(
             outputFileOptions,
@@ -273,14 +306,4 @@ class CameraViewModel @Inject constructor(application: Application) : AndroidVie
             else -> throw IllegalArgumentException("Invalid lens facing type: $lensFacing")
         }
 
-    private fun getCaptureStorageDirectory(): File {
-        // Get the pictures directory that's inside the app-specific directory on
-        // external storage.
-        val context = getApplication<MainApplication>()
-
-        val file =
-            File(context.getExternalFilesDir(Environment.DIRECTORY_PICTURES), "camera_extensions")
-        file.mkdirs()
-        return file
-    }
 }

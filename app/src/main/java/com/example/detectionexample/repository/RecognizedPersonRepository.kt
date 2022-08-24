@@ -1,24 +1,15 @@
 package com.example.detectionexample.repository
 
-import android.graphics.Bitmap
-import android.os.Build
-import android.util.Base64
-import android.util.Log
 import android.util.Pair
 import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.stringPreferencesKey
 import com.example.detectionexample.models.Person
-import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.map
-import kotlinx.coroutines.flow.toList
-import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.decodeFromString
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
-import java.io.ByteArrayOutputStream
-import java.nio.ByteBuffer
 import javax.inject.Inject
 import javax.inject.Singleton
 import kotlin.math.pow

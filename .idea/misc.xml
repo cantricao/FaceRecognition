@@ -3,8 +3,15 @@
   <component name="DesignSurface">
     <option name="filePathToZoomLevelMap">
       <map>
+        <entry key="..\:/Projects/Public/No05-Reference/Private/ccTri/DetectionExample/app/src/main/res/drawable-v24/ic_launcher_foreground.xml" value="0.1575" />
         <entry key="..\:/Projects/Public/No05-Reference/Private/ccTri/DetectionExample/app/src/main/res/drawable/baseline_gradient.xml" value="0.1" />
+        <entry key="..\:/Projects/Public/No05-Reference/Private/ccTri/DetectionExample/app/src/main/res/drawable/ic_baseline_camera_24.xml" value="0.1575" />
+        <entry key="..\:/Projects/Public/No05-Reference/Private/ccTri/DetectionExample/app/src/main/res/drawable/ic_baseline_device_hub_24.xml" value="0.1575" />
         <entry key="..\:/Projects/Public/No05-Reference/Private/ccTri/DetectionExample/app/src/main/res/drawable/ic_baseline_flip_camera_android_24.xml" value="0.1605" />
+        <entry key="..\:/Projects/Public/No05-Reference/Private/ccTri/DetectionExample/app/src/main/res/drawable/ic_baseline_timelapse_24.xml" value="0.1575" />
+        <entry key="..\:/Projects/Public/No05-Reference/Private/ccTri/DetectionExample/app/src/main/res/drawable/ic_launcher_background.xml" value="0.1575" />
+        <entry key="..\:/Projects/Public/No05-Reference/Private/ccTri/DetectionExample/app/src/main/res/drawable/ic_twotone_model_training_24.xml" value="0.1575" />
+        <entry key="..\:/Projects/Public/No05-Reference/Private/ccTri/DetectionExample/app/src/main/res/drawable/outline_data_thresholding_24.xml" value="0.1575" />
       </map>
     </option>
   </component>

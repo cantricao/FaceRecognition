@@ -22,7 +22,6 @@ import androidx.camera.extensions.ExtensionMode
  * User initiated actions related to camera operations.
  */
 sealed class CameraUiAction {
-    object RequestPermissionClick : CameraUiAction()
     object SwitchCameraClick : CameraUiAction()
     object ShutterButtonClick : CameraUiAction()
     object ClosePhotoPreviewClick : CameraUiAction()
