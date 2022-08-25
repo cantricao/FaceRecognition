@@ -1,12 +1,13 @@
 package com.example.detectionexample.compose
 
 import android.graphics.Bitmap
-import android.graphics.ImageFormat
-import android.media.MediaFormat
-import android.util.Log
+import android.net.Uri
 import androidx.compose.foundation.Image
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.*
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Close
+import androidx.compose.material3.FilledTonalIconButton
+import androidx.compose.material3.Icon
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -14,20 +15,19 @@ import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalLifecycleOwner
+import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.viewmodel.compose.viewModel
-import androidx.media3.common.Format
-import androidx.media3.common.MediaItem
-import androidx.media3.exoplayer.ExoPlayer
 import androidx.media3.ui.LegacyPlayerControlView
-import com.example.detectionexample.config.OverlayViewConfig
+import com.example.detectionexample.R
 import com.example.detectionexample.config.Util
-import com.example.detectionexample.custom.ExoplayerCustomRenderersFactory
+import com.example.detectionexample.uistate.CameraUiAction
+import com.example.detectionexample.uistate.MediaState
 import com.example.detectionexample.viewmodels.AnalysisViewModel
 import com.example.detectionexample.viewmodels.VideoViewModel
-import java.nio.ByteBuffer
 
 
 @Composable
@@ -38,54 +38,22 @@ fun VideoPlayer(viewModel: AnalysisViewModel = viewModel(),
 
     val lifecycleOwner = LocalLifecycleOwner.current
 
-    val trackedObjectsState by viewModel.trackedObserver.collectAsState(initial = listOf())
+    val sampleVideoUri: Uri = Uri.parse("asset:///face-demographics-walking-and-pause.mp4")
+//    val sampleVideoUri: Uri = Uri.parse("https://github.com/intel-iot-devkit/sample-videos/raw/master/face-demographics-walking.mp4")t
 
 
-    var imageBitmap by remember { mutableStateOf(ImageBitmap(1,1)) }
+    produceState(initialValue = MediaState.READY) {
+        videoViewModel.videoState.collect { videoState ->
+            when (videoState) {
+                MediaState.NOT_READY -> videoViewModel.loadVideo(sampleVideoUri)
+                MediaState.READY -> Unit
+                MediaState.PREVIEW_STOPPED -> Unit
+            }
+            value = videoState
 
-//    val videoFrameDataListener = object : ExoplayerCustomRenderersFactory.VideoFrameDataListener {
-//        override fun onFrame(
-//            data: ByteBuffer?,
-//            androidMediaFormat: MediaFormat,
-//            playerFormat: Format
-//        ) {
-//            // Not in main thread
-//            if (data != null) {
-//                /*
-//                * Color formats of different decoders are different.
-//                * We have to apply different raw-data to Bitmap(argb) conversion systems according to color format.
-//                * Here we just show YUV to RGB conversion assuming data is YUV formatted.
-//                * Following conversion system might not give proper result for all videos.
-//                */
-//                try {
-//                    val width: Int = playerFormat.width
-//                    val height: Int = playerFormat.height
-//
-//                    data.rewind()
-//                    val bytes = ByteArray(data.remaining())
-//                    data.get(bytes)
-//                    val bitmap = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888)
-//
-//                    Util.yuvToRgb(bytes, bitmap, ImageFormat.YUV_420_888)
-//
-////                    val finalBitmap = Bitmap.createScaledBitmap(bitmap, 640, 480, true)
-//                    imageBitmap = bitmap.asImageBitmap()
-//                    viewModel.bitmapAnalyzer.analyze(bitmap, System.currentTimeMillis())
-//
-//                } catch (e: Exception) {
-//                    Log.e("TAG", "onFrame: error: " + e.message)
-//                }
-//            }
-//        }
-//    }
-//
-//
-//    val exoPlayer =  remember {
-//        val renderersFactory: ExoplayerCustomRenderersFactory =
-//            ExoplayerCustomRenderersFactory(context).setVideoFrameDataListener(videoFrameDataListener)
-//        ExoPlayer.Builder(context, renderersFactory).build()
-//    }
-    
+        }
+    }
+
     DisposableEffect(lifecycleOwner){
         // Create an observer that triggers our remembered callbacks
         // for sending analytics events
@@ -108,17 +76,22 @@ fun VideoPlayer(viewModel: AnalysisViewModel = viewModel(),
         }
 
     }
-    
+
+
+    val trackedObjectsState by viewModel.trackedObserver.collectAsState(initial = listOf())
+
+
     viewModel.needUpdateTrackerImageSourceInfo = true
 
-//    LaunchedEffect(viewModel.isProcessingFrame) {
-//        val mediaItem = MediaItem.fromUri(viewModel.sampleVideoUri)
-//        exoPlayer.apply {
-//            setMediaItem(mediaItem)
-//            prepare()
-//            playWhenReady = viewModel.isProcessingFrame
-//        }
-//    }
+    val imageBitmap by produceState(
+        initialValue = Bitmap.createBitmap(1 , 1, Bitmap.Config.ARGB_8888), videoViewModel.bitmap
+    ) {
+        videoViewModel.bitmap.collect { bitmap ->
+            viewModel.bitmapAnalyzer.analyze(bitmap, System.currentTimeMillis())
+            value = bitmap
+        }
+    }
+
 
     val imageOverlay by produceState(
         initialValue = ImageBitmap(1,1), trackedObjectsState
@@ -132,21 +105,47 @@ fun VideoPlayer(viewModel: AnalysisViewModel = viewModel(),
 
 
     Box (Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-        Image(bitmap = imageBitmap,
+        Image(
+            bitmap = imageBitmap.asImageBitmap(),
             contentDescription = "Video View",
             modifier = Modifier.fillMaxSize()
         )
-        Image(bitmap = imageOverlay,
+        Image(
+            bitmap = imageOverlay,
             contentDescription = "Overlay View",
             modifier = Modifier.fillMaxSize()
         )
 
-        AndroidView(factory = { mContext -> LegacyPlayerControlView(mContext).apply {
-            player = videoViewModel.exoPlayer
-            showTimeoutMs = 0
+        Column(modifier = Modifier.align(Alignment.BottomCenter),
+            verticalArrangement = Arrangement.Center,
+            horizontalAlignment = Alignment.CenterHorizontally) {
+            FilledTonalIconButton(
+                modifier = Modifier
+                    .size(92.dp + 32.dp)
+                    .padding(PaddingValues(32.dp)),
+                onClick = { },
+//                enabled = enableCameraShutter
+            ) {
+                Icon(
+                    painter = painterResource(id = R.drawable.ic_baseline_camera_24),
+                    contentDescription = "Shutter button",
+                    modifier = Modifier.size(48.dp)
+                )
+            }
+
+            AndroidView(factory = { mContext ->
+                LegacyPlayerControlView(mContext).apply {
+                    player = videoViewModel.exoPlayer
+                    showTimeoutMs = 0
+                }
+            })
         }
-                              },
-            modifier = Modifier.align(alignment = Alignment.BottomCenter))
+
+        FilledTonalIconButton(onClick = { },
+//            enabled = enableClosePhotoPreview,
+            modifier = Modifier.align(Alignment.TopEnd)) {
+            Icon(Icons.Default.Close, contentDescription = "Close Photo Preview")
+        }
     }
 
 }

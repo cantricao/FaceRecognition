@@ -1,21 +1,38 @@
 package com.example.detectionexample.viewmodels
 
 import android.app.Application
+import android.content.ContentValues
 import android.graphics.Bitmap
 import android.graphics.ImageFormat
 import android.media.MediaFormat
 import android.net.Uri
+import android.os.Build
+import android.provider.MediaStore
 import android.util.Log
+import androidx.camera.core.CameraSelector
+import androidx.camera.core.ImageCapture
+import androidx.camera.core.ImageCaptureException
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.media3.common.Format
 import androidx.media3.common.MediaItem
 import androidx.media3.exoplayer.ExoPlayer
+import androidx.media3.exoplayer.video.VideoFrameMetadataListener
+import com.example.detectionexample.MainApplication
+import com.example.detectionexample.config.CameraConfig
 import com.example.detectionexample.config.Util
+import com.example.detectionexample.custom.BitmapAnalyzer
 import com.example.detectionexample.custom.ExoplayerCustomRenderersFactory
+import com.example.detectionexample.uistate.CaptureState
+import com.example.detectionexample.uistate.MediaState
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.asExecutor
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.launch
 import java.nio.ByteBuffer
+import java.util.concurrent.Executor
 import javax.inject.Inject
 
 
@@ -43,11 +60,11 @@ class VideoViewModel @Inject constructor(application: Application) : AndroidView
                     val bytes = ByteArray(data.remaining())
                     data.get(bytes)
                     val bitmap = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888)
-
                     Util.yuvToRgb(bytes, bitmap, ImageFormat.YUV_420_888)
-//                    imageBitmap = bitmap.asImageBitmap()
-//                    viewModel.bitmapAnalyzer.analyze(bitmap, System.currentTimeMillis())
 
+                    viewModelScope.launch {
+                        _bitmap.emit(bitmap)
+                    }
                 } catch (e: Exception) {
                     Log.e("TAG", "onFrame: error: " + e.message)
                 }
@@ -58,6 +75,17 @@ class VideoViewModel @Inject constructor(application: Application) : AndroidView
         ExoplayerCustomRenderersFactory(getApplication()).setVideoFrameDataListener(videoFrameDataListener)
     val exoPlayer = ExoPlayer.Builder(getApplication(), renderersFactory).build()
 
+
+    private val _videoState: MutableStateFlow<MediaState> = MutableStateFlow(MediaState.NOT_READY)
+    private val _bitmap : MutableStateFlow<Bitmap> = MutableStateFlow(Bitmap.createBitmap(1,1,Bitmap.Config.ARGB_8888))
+    private val _captureUiState: MutableStateFlow<CaptureState> =
+        MutableStateFlow(CaptureState.CaptureNotReady)
+
+    val videoState: Flow<MediaState> = _videoState
+    val bitmap: Flow<Bitmap> = _bitmap
+    val captureUiState: Flow<CaptureState> = _captureUiState
+
+
     fun loadVideo(uri: Uri){
         viewModelScope.launch {
             val mediaItem = MediaItem.fromUri(uri)
@@ -66,11 +94,15 @@ class VideoViewModel @Inject constructor(application: Application) : AndroidView
                 prepare()
                 playWhenReady = true
             }
+            _videoState.emit(MediaState.READY)
         }
     }
 
-
-
+    fun capturePhoto() {
+        viewModelScope.launch {
+            _captureUiState.emit(CaptureState.CaptureStarted)
+        }
+    }
 
 
 }

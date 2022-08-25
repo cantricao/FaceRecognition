@@ -29,10 +29,10 @@ import androidx.camera.view.PreviewView
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.viewModelScope
+import androidx.work.WorkManager
 import com.example.detectionexample.MainApplication
 import com.example.detectionexample.config.CameraConfig
 import com.example.detectionexample.uistate.*
-import com.example.detectionexample.uistate.CameraState
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.asExecutor
@@ -56,7 +56,7 @@ import javax.inject.Inject
  */
 
 @HiltViewModel
-class CameraViewModel @Inject constructor(application: Application) : AndroidViewModel(application) {
+class CameraViewModel @Inject constructor(private val workManager: WorkManager, application: Application) : AndroidViewModel(application) {
     private lateinit var cameraProvider: ProcessCameraProvider
     private lateinit var extensionsManager: ExtensionsManager
 
@@ -78,14 +78,11 @@ class CameraViewModel @Inject constructor(application: Application) : AndroidVie
     private val _cameraUiState: MutableStateFlow<CameraUiState> = MutableStateFlow(CameraUiState())
     private val _captureUiState: MutableStateFlow<CaptureState> =
         MutableStateFlow(CaptureState.CaptureNotReady)
-    private val _analysisState: MutableStateFlow<AnalysisState> =
-        MutableStateFlow(AnalysisState.NOT_READY)
     private var _action: MutableSharedFlow<CameraUiAction> = MutableSharedFlow()
 
 
     val cameraUiState: Flow<CameraUiState> = _cameraUiState
     val captureUiState: Flow<CaptureState> = _captureUiState
-    val analysisState: Flow<AnalysisState> = _analysisState
     val action: Flow<CameraUiAction> = _action
 
     /**
@@ -93,7 +90,7 @@ class CameraViewModel @Inject constructor(application: Application) : AndroidVie
      * face. If no extensions are available then the selected extension will be set to None and the
      * available extensions list will also contain None.
      * Because this operation is async, clients should wait for cameraUiState to emit
-     * CameraState.READY. Once the camera is ready the client can start the preview.
+     * MediaState.READY. Once the camera is ready the client can start the preview.
      */
     fun initializeCamera() {
         viewModelScope.launch {
@@ -130,7 +127,7 @@ class CameraViewModel @Inject constructor(application: Application) : AndroidVie
             // prepare the new camera UI state which is now in the READY state and contains the list
             // of available extensions, available lens faces.
             val newCameraUiState = currentCameraUiState.copy(
-                cameraState = CameraState.READY,
+                cameraState = MediaState.READY,
                 analysisState = AnalysisState.NOT_READY,
                 availableExtensions = listOf(ExtensionMode.NONE) + availableExtensions,
                 availableCameraLens = availableCameraLens,
@@ -179,19 +176,22 @@ class CameraViewModel @Inject constructor(application: Application) : AndroidVie
         preview.setSurfaceProvider(previewView.surfaceProvider)
 
         viewModelScope.launch {
-            _cameraUiState.emit(_cameraUiState.value.copy(cameraState = CameraState.READY))
+            _cameraUiState.emit(_cameraUiState.value.copy(cameraState = MediaState.READY))
             _captureUiState.emit(CaptureState.CaptureReady)
         }
     }
 
 
-    fun setAnalysis(executor: Executor, analyzer: ImageAnalysis.Analyzer){
-        imageAnalysis.setAnalyzer(executor, analyzer)
+    fun setAnalysis(analyzer: ImageAnalysis.Analyzer){
+        imageAnalysis.setAnalyzer(Dispatchers.Default.asExecutor(), analyzer)
         viewModelScope.launch {
             val currentCameraUiState = _cameraUiState.value
-            _analysisState.emit(AnalysisState.READY)
             _cameraUiState.emit(currentCameraUiState.copy(analysisState = AnalysisState.READY))
         }
+    }
+
+    fun clearAnalysis(){
+        cameraProvider.unbind(imageAnalysis)
     }
 
     /**
@@ -200,7 +200,7 @@ class CameraViewModel @Inject constructor(application: Application) : AndroidVie
     fun stopPreview() {
         preview.setSurfaceProvider(null)
         viewModelScope.launch {
-            _cameraUiState.emit(_cameraUiState.value.copy(cameraState = CameraState.PREVIEW_STOPPED, analysisState = AnalysisState.ANALYSIS_STOPPED))
+            _cameraUiState.emit(_cameraUiState.value.copy(cameraState = MediaState.PREVIEW_STOPPED, analysisState = AnalysisState.ANALYSIS_STOPPED))
         }
     }
 
@@ -209,7 +209,7 @@ class CameraViewModel @Inject constructor(application: Application) : AndroidVie
      */
     fun switchCamera() {
         val currentCameraUiState = _cameraUiState.value
-        if (currentCameraUiState.cameraState == CameraState.READY) {
+        if (currentCameraUiState.cameraState == MediaState.READY) {
             // To switch the camera lens, there has to be at least 2 camera lenses
             if (currentCameraUiState.availableCameraLens.size == 1) return
 
@@ -224,7 +224,7 @@ class CameraViewModel @Inject constructor(application: Application) : AndroidVie
             viewModelScope.launch {
                 _cameraUiState.emit(
                     newCameraUiState.copy(
-                        cameraState = CameraState.NOT_READY
+                        cameraState = MediaState.NOT_READY
                     )
                 )
                 _captureUiState.emit(CaptureState.CaptureNotReady)
@@ -271,6 +271,7 @@ class CameraViewModel @Inject constructor(application: Application) : AndroidVie
             Dispatchers.Default.asExecutor(),
             object : ImageCapture.OnImageSavedCallback {
                 override fun onImageSaved(outputFileResults: ImageCapture.OutputFileResults) {
+
                     viewModelScope.launch {
                         _captureUiState.emit(CaptureState.CaptureFinished(outputFileResults))
                     }
@@ -291,7 +292,7 @@ class CameraViewModel @Inject constructor(application: Application) : AndroidVie
         viewModelScope.launch {
             _cameraUiState.emit(
                 _cameraUiState.value.copy(
-                    cameraState = CameraState.NOT_READY,
+                    cameraState = MediaState.NOT_READY,
                     extensionMode = extensionMode,
                 )
             )

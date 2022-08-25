@@ -28,7 +28,6 @@ class DatastoreViewModel @Inject constructor (private val recognizedPersonReposi
             face = face
         )
         recognizedPersonRepository.registerPerson(person)
-//        Log.d(AnalysisViewModel.TAG, "Register: ${person.name}")
     }
 
     fun isRegisteredPersonEmpty() = recognizedPersonRepository.isEmpty()

@@ -27,7 +27,7 @@ import androidx.camera.extensions.ExtensionMode
  * the current camera lens, the current extension mode, and the state of the camera.
  */
 data class CameraUiState(
-    val cameraState: CameraState = CameraState.NOT_READY,
+    val cameraState: MediaState = MediaState.NOT_READY,
     val analysisState: AnalysisState = AnalysisState.NOT_READY,
     val availableExtensions: List<Int> = emptyList(),
     val availableCameraLens: List<Int> = listOf(LENS_FACING_BACK),
@@ -38,7 +38,7 @@ data class CameraUiState(
 /**
  * Defines the current state of the camera.
  */
-enum class CameraState {
+enum class MediaState {
     /**
      * Camera hasn't been initialized.
      */
@@ -58,7 +58,9 @@ enum class CameraState {
 
 enum class AnalysisState {
     NOT_READY,
+
     READY,
+
     ANALYSIS_STOPPED
 }
 

@@ -1,8 +1,6 @@
 package com.example.detectionexample.viewmodels
 
 import android.graphics.Bitmap
-import android.media.Image
-import android.net.Uri
 import android.util.Log
 import androidx.camera.core.ImageAnalysis
 import androidx.compose.runtime.getValue
@@ -15,19 +13,14 @@ import com.example.detectionexample.config.OverlayViewConfig
 import com.example.detectionexample.config.Util
 import com.example.detectionexample.custom.BitmapAnalyzer
 import com.example.detectionexample.domain.DetectorUsecase
-import com.example.detectionexample.models.Person
 import com.example.detectionexample.models.Recognition
 import com.example.detectionexample.models.TrackedRecognition
 import com.example.detectionexample.repository.ExtractorRepository
 import com.example.detectionexample.repository.RecognizedPersonRepository
 import com.example.detectionexample.repository.TrackedObjectRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
-import java.util.*
-import java.util.concurrent.ExecutorService
-import java.util.concurrent.Executors
 import javax.inject.Inject
 import kotlin.streams.toList
 
@@ -40,8 +33,6 @@ class AnalysisViewModel @Inject constructor(
     private val extractorRepository: ExtractorRepository
     ) : ViewModel() {
 
-    val sampleVideoUri: Uri = Uri.parse("asset:///face-demographics-walking-and-pause.mp4")
-//val sampleVideoUri: Uri = Uri.parse("https://github.com/intel-iot-devkit/sample-videos/raw/master/face-demographics-walking.mp4")
     private val _trackedObjects: MutableStateFlow<List<TrackedRecognition>> =
         MutableStateFlow(emptyList())
     val trackedObserver: StateFlow<List<TrackedRecognition>> = _trackedObjects
@@ -50,15 +41,14 @@ class AnalysisViewModel @Inject constructor(
     val repository
         get() = detector(modelFilename)
 
-    val analysisExecutor: ExecutorService = Executors.newSingleThreadExecutor()
-
-    var isStaringCamera by mutableStateOf(true)
+    var isStaringCamera by mutableStateOf(false)
     var isProcessingFrame by mutableStateOf(true)
 
     lateinit var processBitmap: Bitmap
         private set
 
     var threshold by mutableStateOf(1F)
+
     private var detectedTime by mutableStateOf(0L)
     private var statedTime = System.currentTimeMillis()
     var needUpdateTrackerImageSourceInfo by mutableStateOf(true)
@@ -124,9 +114,7 @@ class AnalysisViewModel @Inject constructor(
     }
 
     override fun onCleared() {
-        extractorRepository.close()
-        analysisExecutor.shutdown()
-    }
+        extractorRepository.close() }
 
     var analyzer = ImageAnalysis.Analyzer { imageProxy ->
         if (!isProcessingFrame) {
