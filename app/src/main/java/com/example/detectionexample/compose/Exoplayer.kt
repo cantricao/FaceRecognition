@@ -1,7 +1,10 @@
 package com.example.detectionexample.compose
 
+import android.content.Context
 import android.graphics.Bitmap
 import android.net.Uri
+import android.os.Environment
+import android.util.Log
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.icons.Icons
@@ -24,10 +27,13 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.media3.ui.LegacyPlayerControlView
 import com.example.detectionexample.R
 import com.example.detectionexample.config.Util
-import com.example.detectionexample.uistate.CameraUiAction
+import com.example.detectionexample.record.BitmapToVideoEncoder
 import com.example.detectionexample.uistate.MediaState
 import com.example.detectionexample.viewmodels.AnalysisViewModel
 import com.example.detectionexample.viewmodels.VideoViewModel
+import java.io.File
+import java.text.SimpleDateFormat
+import java.util.*
 
 
 @Composable
@@ -38,9 +44,20 @@ fun VideoPlayer(viewModel: AnalysisViewModel = viewModel(),
 
     val lifecycleOwner = LocalLifecycleOwner.current
 
-    val sampleVideoUri: Uri = Uri.parse("asset:///face-demographics-walking-and-pause.mp4")
-//    val sampleVideoUri: Uri = Uri.parse("https://github.com/intel-iot-devkit/sample-videos/raw/master/face-demographics-walking.mp4")t
+    LocalContext.current
 
+    val sampleVideoUri: Uri = Uri.parse("asset:///face-demographics-walking-and-pause.mp4")
+//    val sampleVideoUri: Uri = Uri.parse("https://github.com/intel-iot-devkit/sample-videos/raw/master/face-demographics-walking.mp4")
+
+    val encoderCallback =
+        BitmapToVideoEncoder.IBitmapToVideoEncoderCallback { outputFile ->
+            Log.d(
+                "CameraVideo",
+                "File recording completed\n${outputFile.absolutePath}\n__"
+            )
+        }
+
+    val encoder = BitmapToVideoEncoder(encoderCallback)
 
     produceState(initialValue = MediaState.READY) {
         videoViewModel.videoState.collect { videoState ->
@@ -54,13 +71,18 @@ fun VideoPlayer(viewModel: AnalysisViewModel = viewModel(),
         }
     }
 
+    var mRecordingEnabled by remember { mutableStateOf(false)}
+
     DisposableEffect(lifecycleOwner){
         // Create an observer that triggers our remembered callbacks
         // for sending analytics events
         val observer = LifecycleEventObserver { _, event ->
             when(event){
                 Lifecycle.Event.ON_RESUME -> videoViewModel.exoPlayer.play()
-                Lifecycle.Event.ON_PAUSE -> videoViewModel.exoPlayer.pause()
+                Lifecycle.Event.ON_PAUSE -> {
+                    videoViewModel.exoPlayer.pause()
+                    encoder.stopEncoding()
+                }
                 Lifecycle.Event.ON_STOP -> videoViewModel.exoPlayer.stop()
                 Lifecycle.Event.ON_DESTROY -> videoViewModel.exoPlayer.release()
                 else -> {}
@@ -88,9 +110,13 @@ fun VideoPlayer(viewModel: AnalysisViewModel = viewModel(),
     ) {
         videoViewModel.bitmap.collect { bitmap ->
             viewModel.bitmapAnalyzer.analyze(bitmap, System.currentTimeMillis())
+            encoder.queueFrame(Bitmap.createBitmap(bitmap))
             value = bitmap
         }
     }
+
+
+
 
 
     val imageOverlay by produceState(
@@ -103,13 +129,24 @@ fun VideoPlayer(viewModel: AnalysisViewModel = viewModel(),
             ).asImageBitmap()
     }
 
+    val context = LocalContext.current
+
+    fun createFile(context: Context, extension: String): File {
+        val sdf = SimpleDateFormat("yyyy_MM_dd_HH_mm_ss_SSS", Locale.US)
+        return File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS), "VID_${sdf.format(Date())}.$extension")
+    }
+
+    val outputFile: File by lazy { createFile(context, "mp4") }
+
+
 
     Box (Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
         Image(
             bitmap = imageBitmap.asImageBitmap(),
-            contentDescription = "Video View",
+            contentDescription = "Overlay View",
             modifier = Modifier.fillMaxSize()
         )
+
         Image(
             bitmap = imageOverlay,
             contentDescription = "Overlay View",
@@ -123,7 +160,14 @@ fun VideoPlayer(viewModel: AnalysisViewModel = viewModel(),
                 modifier = Modifier
                     .size(92.dp + 32.dp)
                     .padding(PaddingValues(32.dp)),
-                onClick = { },
+                onClick = {
+                    if (mRecordingEnabled) {
+                        encoder.stopEncoding()
+                    } else {
+                        encoder.startEncoding(imageBitmap.width, imageBitmap.height, outputFile)
+                    }
+                    mRecordingEnabled = !mRecordingEnabled
+                },
 //                enabled = enableCameraShutter
             ) {
                 Icon(

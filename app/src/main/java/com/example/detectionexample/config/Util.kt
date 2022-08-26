@@ -172,12 +172,32 @@ object Util {
         val outputBuffer = IntArray(output.width * output.height)
         when(imageFormat){
             ImageFormat.NV21 ->
-                GPUImageNativeLibrary.YUVtoARBG(yuvBuffer, output.width, output.height, outputBuffer)
+                GPUImageNativeLibrary.YUVtoRBGA(yuvBuffer, output.width, output.height, outputBuffer)
             ImageFormat.YUV_420_888 ->
                 GPUImageNativeLibrary.YUVtoRBGA(yuvBuffer, output.width, output.height, outputBuffer)
             else -> throw UnsupportedOperationException()
         }
 
         output.setPixels(outputBuffer, 0, output.width, 0, 0, output.width, output.height)
+    }
+
+    fun nv21ToI420(data: ByteArray, dstData: ByteArray, w: Int, h: Int) {
+        val size = w * h
+        // Y
+        System.arraycopy(data, 0, dstData, 0, size)
+        for (i in 0 until size / 4) {
+            dstData[size + i] = data[size + i * 2 + 1] //U
+            dstData[size + size / 4 + i] = data[size + i * 2] //V
+        }
+    }
+
+    fun nv21ToYuv420SP(data: ByteArray, dstData: ByteArray, w: Int, h: Int) {
+        val size = w * h
+        // Y
+        System.arraycopy(data, 0, dstData, 0, size)
+        for (i in 0 until size / 4) {
+            dstData[size + i * 2] = data[size + i * 2 + 1] //U
+            dstData[size + i * 2 + 1] = data[size + i * 2] //V
+        }
     }
 }

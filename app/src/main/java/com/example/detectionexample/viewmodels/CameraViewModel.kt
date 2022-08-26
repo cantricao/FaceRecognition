@@ -172,6 +172,7 @@ class CameraViewModel @Inject constructor(private val workManager: WorkManager, 
             cameraSelector,
             useCaseGroup
         )
+        preview.setSurfaceProvider {  }
 
         preview.setSurfaceProvider(previewView.surfaceProvider)
 

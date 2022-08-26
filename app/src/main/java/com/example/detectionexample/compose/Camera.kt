@@ -1,6 +1,8 @@
 package com.example.detectionexample.compose
 
+import android.graphics.RenderEffect
 import android.net.Uri
+import android.os.Build
 import android.widget.Toast
 import androidx.camera.extensions.ExtensionMode
 import androidx.camera.view.PreviewView
@@ -22,7 +24,10 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.bumptech.glide.load.engine.DiskCacheStrategy
+import com.bumptech.glide.request.RequestOptions
 import com.example.detectionexample.R
+import com.example.detectionexample.custom.GlideOverlayBitmapTransformation
 import com.example.detectionexample.uistate.*
 import com.example.detectionexample.viewmodels.AnalysisViewModel
 import com.example.detectionexample.viewmodels.CameraViewModel
@@ -72,6 +77,10 @@ fun CameraPreview(viewModel: AnalysisViewModel = viewModel(), cameraViewModel: C
         glideUri = uri
         enableClosePhotoPreview = true
     }
+
+    val trackedObjectsState by viewModel.trackedObserver.collectAsState(initial = listOf())
+
+
 
     produceState<CameraUiAction>(initialValue = CameraUiAction.SelectCameraExtension(ExtensionMode.NONE), cameraViewModel.action){
         cameraViewModel.action.collectLatest { action ->
@@ -163,10 +172,9 @@ fun CameraPreview(viewModel: AnalysisViewModel = viewModel(), cameraViewModel: C
             },
             modifier = Modifier.fillMaxSize(),
         )
-        OverlayView()
         Column(modifier = Modifier.align(Alignment.BottomEnd)) {
             LazyRow(
-                contentPadding = PaddingValues(24.dp),
+//                contentPadding = PaddingValues(24.dp),
                 horizontalArrangement = Arrangement.spacedBy(24.dp),
 
                 ) {
@@ -184,6 +192,19 @@ fun CameraPreview(viewModel: AnalysisViewModel = viewModel(), cameraViewModel: C
                 }
             }
             Row(modifier = Modifier.align(Alignment.CenterHorizontally)) {
+                FilledTonalIconButton(
+                    modifier = Modifier
+                        .size(92.dp + 32.dp)
+                        .padding(PaddingValues(32.dp)),
+                    onClick = {  },
+                    enabled = enableCameraShutter) {
+                    Icon(
+                        painter = painterResource(id = R.drawable.ic_baseline_camera_24),
+                        contentDescription = "Shutter button",
+                        modifier = Modifier.size(48.dp)
+                    )
+                }
+
                 FilledTonalIconButton(
                     modifier = Modifier
                         .size(92.dp + 32.dp)
@@ -216,14 +237,22 @@ fun CameraPreview(viewModel: AnalysisViewModel = viewModel(), cameraViewModel: C
             GlideImage(
                 imageModel = glideUri,
                 modifier = Modifier.fillMaxSize(),
+                requestOptions = {
+                    RequestOptions()
+                        .transform(GlideOverlayBitmapTransformation(trackedObjectsState))
+                        .diskCacheStrategy(DiskCacheStrategy.RESOURCE)
+                },
                 contentDescription = "Image Preview",
             )
+            FilledTonalIconButton(onClick = { cameraViewModel.setAction(CameraUiAction.ClosePhotoPreviewClick) },
+                enabled = enableClosePhotoPreview,
+                modifier = Modifier.align(Alignment.TopEnd)) {
+                Icon(Icons.Default.Close, contentDescription = "Close Photo Preview")
+            }
+        } else {
+            OverlayView()
         }
-        FilledTonalIconButton(onClick = { cameraViewModel.setAction(CameraUiAction.ClosePhotoPreviewClick) },
-            enabled = enableClosePhotoPreview,
-            modifier = Modifier.align(Alignment.TopEnd)) {
-            Icon(Icons.Default.Close, contentDescription = "Close Photo Preview")
-        }
+
 
     }
 

@@ -79,10 +79,10 @@ class AnalysisViewModel @Inject constructor(
                 trackedObjectRepository.trackedObjects.stateIn(viewModelScope).value
             detectedTime = System.currentTimeMillis() - statedTime
             statedTime = System.currentTimeMillis()
-            Log.d(
-                TAG,
-                "Processing ${_trackedObjects.value.size} results from ${timestamp.toString(3)} in $detectedTime ms"
-            )
+//            Log.d(
+//                TAG,
+//                "Processing ${_trackedObjects.value.size} results from ${timestamp.toString(3)} in $detectedTime ms"
+//            )
         }
     }
 
