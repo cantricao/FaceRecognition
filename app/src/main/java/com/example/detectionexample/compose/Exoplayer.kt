@@ -1,10 +1,8 @@
 package com.example.detectionexample.compose
 
-import android.content.Context
 import android.graphics.Bitmap
 import android.net.Uri
 import android.os.Environment
-import android.util.Log
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.icons.Icons
@@ -27,7 +25,6 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.media3.ui.LegacyPlayerControlView
 import com.example.detectionexample.R
 import com.example.detectionexample.config.Util
-import com.example.detectionexample.record.BitmapToVideoEncoder
 import com.example.detectionexample.uistate.MediaState
 import com.example.detectionexample.viewmodels.AnalysisViewModel
 import com.example.detectionexample.viewmodels.VideoViewModel
@@ -48,16 +45,6 @@ fun VideoPlayer(viewModel: AnalysisViewModel = viewModel(),
 
     val sampleVideoUri: Uri = Uri.parse("asset:///face-demographics-walking-and-pause.mp4")
 //    val sampleVideoUri: Uri = Uri.parse("https://github.com/intel-iot-devkit/sample-videos/raw/master/face-demographics-walking.mp4")
-
-    val encoderCallback =
-        BitmapToVideoEncoder.IBitmapToVideoEncoderCallback { outputFile ->
-            Log.d(
-                "CameraVideo",
-                "File recording completed\n${outputFile.absolutePath}\n__"
-            )
-        }
-
-    val encoder = BitmapToVideoEncoder(encoderCallback)
 
     produceState(initialValue = MediaState.READY) {
         videoViewModel.videoState.collect { videoState ->
@@ -81,7 +68,7 @@ fun VideoPlayer(viewModel: AnalysisViewModel = viewModel(),
                 Lifecycle.Event.ON_RESUME -> videoViewModel.exoPlayer.play()
                 Lifecycle.Event.ON_PAUSE -> {
                     videoViewModel.exoPlayer.pause()
-                    encoder.stopEncoding()
+                    videoViewModel.stopEncoding()
                 }
                 Lifecycle.Event.ON_STOP -> videoViewModel.exoPlayer.stop()
                 Lifecycle.Event.ON_DESTROY -> videoViewModel.exoPlayer.release()
@@ -110,12 +97,9 @@ fun VideoPlayer(viewModel: AnalysisViewModel = viewModel(),
     ) {
         videoViewModel.bitmap.collect { bitmap ->
             viewModel.bitmapAnalyzer.analyze(bitmap, System.currentTimeMillis())
-            encoder.queueFrame(Bitmap.createBitmap(bitmap))
             value = bitmap
         }
     }
-
-
 
 
 
@@ -129,14 +113,7 @@ fun VideoPlayer(viewModel: AnalysisViewModel = viewModel(),
             ).asImageBitmap()
     }
 
-    val context = LocalContext.current
-
-    fun createFile(context: Context, extension: String): File {
-        val sdf = SimpleDateFormat("yyyy_MM_dd_HH_mm_ss_SSS", Locale.US)
-        return File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS), "VID_${sdf.format(Date())}.$extension")
-    }
-
-    val outputFile: File by lazy { createFile(context, "mp4") }
+    val outputFile: File by lazy { Util.createFile("mp4") }
 
 
 
@@ -162,9 +139,9 @@ fun VideoPlayer(viewModel: AnalysisViewModel = viewModel(),
                     .padding(PaddingValues(32.dp)),
                 onClick = {
                     if (mRecordingEnabled) {
-                        encoder.stopEncoding()
+                        videoViewModel.stopEncoding()
                     } else {
-                        encoder.startEncoding(imageBitmap.width, imageBitmap.height, outputFile)
+                        videoViewModel.startEncoding(imageBitmap.width, imageBitmap.height, outputFile)
                     }
                     mRecordingEnabled = !mRecordingEnabled
                 },

@@ -21,6 +21,7 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.launch
+import java.io.File
 import java.nio.ByteBuffer
 import javax.inject.Inject
 
@@ -47,12 +48,13 @@ class VideoViewModel @Inject constructor(application: Application) : AndroidView
 
                     data.rewind()
                     val bytes = ByteArray(data.remaining())
-                    val dstByte = ByteArray(width * height * ImageFormat.getBitsPerPixel(ImageFormat.NV21) / 8)
                     data.get(bytes)
                     val bitmap = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888)
                     val colorFormat = androidMediaFormat.getInteger(MediaFormat.KEY_COLOR_FORMAT)
 //                    Log.d("Image Format", colorFormat.toString())
                     Util.yuvToRgb(bytes, bitmap, ImageFormat.YUV_420_888)
+
+                    encoder.queueFrame(bitmap)
 
                     viewModelScope.launch {
                         _bitmap.emit(bitmap)
@@ -64,7 +66,14 @@ class VideoViewModel @Inject constructor(application: Application) : AndroidView
         }
     }
 
+    private val encoderCallback = object : BitmapToVideoEncoder.IBitmapToVideoEncoderCallback{
+        override fun onEncodingComplete(outputFile: File?) {
+            Log.d("CameraVideo", "File recording completed\n${outputFile?.absolutePath}\n__")
+        }
 
+    }
+
+    private val encoder = BitmapToVideoEncoder(encoderCallback)
 
 
     private val renderersFactory: ExoplayerCustomRenderersFactory =
@@ -102,6 +111,15 @@ class VideoViewModel @Inject constructor(application: Application) : AndroidView
         viewModelScope.launch {
             _captureUiState.emit(CaptureState.CaptureStarted)
         }
+    }
+
+    fun stopEncoding() {
+        encoder.stopEncoding()
+    }
+
+    fun startEncoding(width: Int, height: Int, outputFile: File) {
+        encoder.startEncoding(width, height, outputFile)
+
     }
 
 

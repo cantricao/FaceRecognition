@@ -8,12 +8,15 @@ import android.content.Context
 import android.graphics.*
 import android.net.Uri
 import android.os.Build
+import android.os.Environment
 import android.provider.MediaStore
 import androidx.core.app.NotificationCompat
 import androidx.work.WorkManager
 import com.example.detectionexample.R
 import com.example.detectionexample.models.TrackedRecognition
 import jp.co.cyberagent.android.gpuimage.GPUImageNativeLibrary
+import java.io.File
+import java.text.SimpleDateFormat
 import java.util.*
 
 object Util {
@@ -181,23 +184,9 @@ object Util {
         output.setPixels(outputBuffer, 0, output.width, 0, 0, output.width, output.height)
     }
 
-    fun nv21ToI420(data: ByteArray, dstData: ByteArray, w: Int, h: Int) {
-        val size = w * h
-        // Y
-        System.arraycopy(data, 0, dstData, 0, size)
-        for (i in 0 until size / 4) {
-            dstData[size + i] = data[size + i * 2 + 1] //U
-            dstData[size + size / 4 + i] = data[size + i * 2] //V
-        }
+    fun createFile(extension: String): File {
+        val sdf = SimpleDateFormat("yyyy_MM_dd_HH_mm_ss_SSS", Locale.US)
+        return File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS), "VID_${sdf.format(Date())}.$extension")
     }
 
-    fun nv21ToYuv420SP(data: ByteArray, dstData: ByteArray, w: Int, h: Int) {
-        val size = w * h
-        // Y
-        System.arraycopy(data, 0, dstData, 0, size)
-        for (i in 0 until size / 4) {
-            dstData[size + i * 2] = data[size + i * 2 + 1] //U
-            dstData[size + i * 2 + 1] = data[size + i * 2] //V
-        }
-    }
 }
