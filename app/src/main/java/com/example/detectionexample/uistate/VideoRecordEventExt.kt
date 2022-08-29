@@ -1,5 +1,5 @@
-/*
- * Copyright 2022 The Android Open Source Project
+/**
+ * Copyright 2021 The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,18 +13,20 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package com.example.detectionexample.uistate
 
-import androidx.camera.extensions.ExtensionMode
+import androidx.camera.video.VideoRecordEvent
 
 /**
- * User initiated actions related to camera operations.
+ * A helper extended function to get the name(string) for the VideoRecordEvent.
  */
-sealed class CameraUiAction {
-    object SwitchCameraClick : CameraUiAction()
-    object ShutterButtonClick : CameraUiAction()
-    object ClosePhotoPreviewClick : CameraUiAction()
-    object RecordButtonClick : CameraUiAction()
-    data class SelectCameraExtension(@ExtensionMode.Mode val extension: Int) : CameraUiAction()
+fun VideoRecordEvent.getNameString() : String {
+    return when (this) {
+        is VideoRecordEvent.Status -> "Status"
+        is VideoRecordEvent.Start -> "Started"
+        is VideoRecordEvent.Finalize-> "Finalized"
+        is VideoRecordEvent.Pause -> "Paused"
+        is VideoRecordEvent.Resume -> "Resumed"
+        else -> throw IllegalArgumentException("Unknown VideoRecordEvent: $this")
+    }
 }

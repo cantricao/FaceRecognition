@@ -92,7 +92,6 @@ class FaceCascadeOpencvDetector(val context: Context) :DetectorDataSource {
                 listOfPoints.add(
                     PointF(face.x + eye.x + eye.width / 2f, face.y + eye.y + eye.height / 2f)
                 )
-
             }
         }
 

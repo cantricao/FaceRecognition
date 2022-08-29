@@ -27,16 +27,16 @@ import android.view.SurfaceView
 
 class SoftwarePipeline(width: Int, height: Int, fps: Int, filterOn: Boolean,
                        characteristics: CameraCharacteristics, encoder: EncoderWrapper,
-                       viewFinder: SurfaceView
+                       surface: Surface
 ) : Pipeline(width, height, fps, filterOn,
-                characteristics, encoder, viewFinder) {
+                characteristics, encoder, surface) {
 
     override fun createPreviewRequest(session: CameraCaptureSession,
             previewStabilization: Boolean): CaptureRequest {
         // Capture request holds references to target surfaces
         return session.device.createCaptureRequest(CameraDevice.TEMPLATE_PREVIEW).apply {
             // Add the preview surface target
-            addTarget(viewFinder.holder.surface)
+            addTarget(surface)
 
             if (previewStabilization) {
                 if (Build.VERSION.SDK_INT >= 33) {
@@ -52,7 +52,7 @@ class SoftwarePipeline(width: Int, height: Int, fps: Int, filterOn: Boolean,
         // Capture request holds references to target surfaces
         return session.device.createCaptureRequest(CameraDevice.TEMPLATE_RECORD).apply {
             // Add the preview and recording surface targets
-            addTarget(viewFinder.holder.surface)
+            addTarget(surface)
             addTarget(encoder.getInputSurface())
 
             // Sets user requested FPS for all targets
@@ -68,6 +68,6 @@ class SoftwarePipeline(width: Int, height: Int, fps: Int, filterOn: Boolean,
     }
 
     override fun getTargets(): List<Surface> {
-        return listOf(viewFinder.holder.surface, encoder.getInputSurface())
+        return listOf(surface, encoder.getInputSurface())
     }
 }

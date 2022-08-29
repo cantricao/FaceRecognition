@@ -95,9 +95,9 @@ private val FULLSCREEN_QUAD = floatArrayOf(
 
 class HardwarePipeline(width: Int, height: Int, fps: Int, filterOn: Boolean,
                        characteristics: CameraCharacteristics, encoder: EncoderWrapper,
-                       viewFinder: SurfaceView
+                       surface: Surface
 ) : Pipeline(width, height, fps, filterOn,
-                characteristics, encoder, viewFinder) {
+                characteristics, encoder, surface) {
     private val renderThread: HandlerThread by lazy {
         val renderThread = HandlerThread("Camera2Video.RenderThread")
         renderThread.start()

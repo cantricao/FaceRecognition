@@ -1,17 +1,19 @@
 package com.example.detectionexample.compose
 
-import android.graphics.RenderEffect
 import android.net.Uri
-import android.os.Build
 import android.widget.Toast
 import androidx.camera.extensions.ExtensionMode
+import androidx.camera.video.VideoRecordEvent
 import androidx.camera.view.PreviewView
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Close
-import androidx.compose.material3.*
+import androidx.compose.material3.FilledTonalIconButton
+import androidx.compose.material3.Icon
+import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -93,6 +95,7 @@ fun CameraPreview(viewModel: AnalysisViewModel = viewModel(), cameraViewModel: C
                 }
                 CameraUiAction.ShutterButtonClick -> cameraViewModel.capturePhoto()
                 CameraUiAction.SwitchCameraClick -> cameraViewModel.switchCamera()
+                CameraUiAction.RecordButtonClick -> Unit
             }
             value = action
         }
@@ -155,6 +158,7 @@ fun CameraPreview(viewModel: AnalysisViewModel = viewModel(), cameraViewModel: C
     }
 
 
+
     val extensionName = mapOf(
         ExtensionMode.AUTO to stringResource(R.string.camera_mode_auto),
         ExtensionMode.NIGHT to stringResource(R.string.camera_mode_night),
@@ -163,6 +167,8 @@ fun CameraPreview(viewModel: AnalysisViewModel = viewModel(), cameraViewModel: C
         ExtensionMode.BOKEH to stringResource(R.string.camera_mode_bokeh),
         ExtensionMode.NONE to stringResource(R.string.camera_mode_none),
     )
+    
+    val videoRecordEvent by cameraViewModel.recordingState.collectAsState(initial = null)
 
     Box(Modifier.fillMaxSize(),
         contentAlignment = Alignment.Center) {
@@ -196,10 +202,21 @@ fun CameraPreview(viewModel: AnalysisViewModel = viewModel(), cameraViewModel: C
                     modifier = Modifier
                         .size(92.dp + 32.dp)
                         .padding(PaddingValues(32.dp)),
-                    onClick = {  },
+                    onClick = {
+                        when(videoRecordEvent){
+                            is VideoRecordEvent.Start -> cameraViewModel.stopRecording()
+                            is VideoRecordEvent.Finalize, null -> cameraViewModel.startRecording()
+                            else -> throw IllegalStateException("recordingState in unknown state")
+                        }
+                    },
                     enabled = enableCameraShutter) {
                     Icon(
-                        painter = painterResource(id = R.drawable.ic_baseline_camera_24),
+                        painter = painterResource(id =
+                        when (videoRecordEvent){
+                            is VideoRecordEvent.Start -> R.drawable.ic_baseline_stop_24
+                            else -> R.drawable.ic_baseline_play_arrow_24
+
+                        }),
                         contentDescription = "Shutter button",
                         modifier = Modifier.size(48.dp)
                     )

@@ -16,22 +16,35 @@
 
 package com.example.detectionexample.viewmodels
 
+import android.annotation.SuppressLint
 import android.app.Application
 import android.content.ContentValues
+import android.content.Context
+import android.hardware.camera2.CameraCaptureSession
+import android.hardware.camera2.CameraCharacteristics
+import android.hardware.camera2.CameraDevice
+import android.hardware.camera2.CameraManager
 import android.os.Build
 import android.provider.MediaStore
+import android.util.Log
+import androidx.camera.camera2.interop.Camera2CameraInfo
+import androidx.camera.camera2.interop.Camera2Interop
 import androidx.camera.core.*
 import androidx.camera.core.CameraSelector.LensFacing
 import androidx.camera.extensions.ExtensionMode
 import androidx.camera.extensions.ExtensionsManager
 import androidx.camera.lifecycle.ProcessCameraProvider
+import androidx.camera.video.*
+import androidx.camera.video.VideoCapture
 import androidx.camera.view.PreviewView
+import androidx.core.util.Consumer
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.viewModelScope
 import androidx.work.WorkManager
 import com.example.detectionexample.MainApplication
 import com.example.detectionexample.config.CameraConfig
+import com.example.detectionexample.config.CameraConfig.TAG
 import com.example.detectionexample.uistate.*
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
@@ -41,7 +54,6 @@ import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.guava.await
 import kotlinx.coroutines.launch
-import java.util.concurrent.Executor
 import javax.inject.Inject
 
 /**
@@ -64,6 +76,18 @@ class CameraViewModel @Inject constructor(private val workManager: WorkManager, 
         .setTargetAspectRatio(AspectRatio.RATIO_16_9)
         .build()
 
+    // build a recorder, which can:
+    //   - record video/audio to MediaStore(only shown here), File, ParcelFileDescriptor
+    //   - be used create recording(s) (the recording performs recording)
+
+
+    private val quality = Quality.HD
+    private val qualitySelector = QualitySelector.from(quality)
+    private val recorder = Recorder.Builder()
+        .setQualitySelector(qualitySelector)
+        .build()
+    private val videoCapture: VideoCapture<Recorder> = VideoCapture.withOutput(recorder)
+
     private val imageAnalysis = ImageAnalysis.Builder()
             .setBackpressureStrategy(ImageAnalysis.STRATEGY_KEEP_ONLY_LATEST)
             .setOutputImageFormat(ImageAnalysis.OUTPUT_IMAGE_FORMAT_RGBA_8888)
@@ -71,19 +95,101 @@ class CameraViewModel @Inject constructor(private val workManager: WorkManager, 
 //        .setTargetAspectRatio(AspectRatio.RATIO_16_9)
             .build()
 
-    private val preview = Preview.Builder()
+    private val previewBuilder = Preview.Builder()
         .setTargetAspectRatio(AspectRatio.RATIO_16_9)
-        .build()
+    private lateinit var preview: Preview
 
     private val _cameraUiState: MutableStateFlow<CameraUiState> = MutableStateFlow(CameraUiState())
     private val _captureUiState: MutableStateFlow<CaptureState> =
         MutableStateFlow(CaptureState.CaptureNotReady)
+
+    private val _recordingState: MutableStateFlow<VideoRecordEvent?> =  MutableStateFlow(null)
+
     private var _action: MutableSharedFlow<CameraUiAction> = MutableSharedFlow()
 
 
     val cameraUiState: Flow<CameraUiState> = _cameraUiState
     val captureUiState: Flow<CaptureState> = _captureUiState
     val action: Flow<CameraUiAction> = _action
+    val recordingState: Flow<VideoRecordEvent?> = _recordingState
+
+    private lateinit var cameraDevice: CameraDevice
+    private lateinit var cameraCaptureSession: CameraCaptureSession
+    private val cameraDeviceStateCallback = object : CameraDevice.StateCallback() {
+        // implementation omitted for sake of simplicity
+        override fun onOpened(camera: CameraDevice) {
+            cameraDevice = camera
+            Log.d(TAG, "Open Device ${cameraDevice.id}")
+        }
+
+        override fun onDisconnected(camera: CameraDevice) {
+            Log.d(TAG, "Disconnect Device ${cameraDevice.id}")
+        }
+
+        override fun onError(camera: CameraDevice, error: Int) {
+            val msg = when(error) {
+                ERROR_CAMERA_DEVICE -> "Fatal (device)"
+                ERROR_CAMERA_DISABLED -> "Device policy"
+                ERROR_CAMERA_IN_USE -> "Camera in use"
+                ERROR_CAMERA_SERVICE -> "Fatal (service)"
+                ERROR_MAX_CAMERAS_IN_USE -> "Maximum cameras in use"
+                else -> "Unknown"
+            }
+            val exc = RuntimeException("Camera error: ($error) $msg")
+            Log.e(TAG, exc.message, exc)
+        }
+    }
+
+    private val stateCallback = object: CameraCaptureSession.StateCallback() {
+        override fun onConfigured(session: CameraCaptureSession){
+            cameraCaptureSession = session
+        }
+
+        override fun onConfigureFailed(session: CameraCaptureSession) {
+            val exc = RuntimeException("Camera ${cameraDevice.id} session configuration failed")
+            Log.e(TAG, exc.message, exc)
+        }
+
+        /** Called after all captures have completed - shut down the encoder */
+        override fun onReady(session: CameraCaptureSession) {
+//            if (!isCurrentlyRecording()) {
+//                return
+//            }
+//
+//            recordingComplete = true
+//            pipeline.stopRecording()
+//            cvRecordingComplete.open()
+        }
+    }
+
+    /** Detects, characterizes, and connects to a CameraDevice (used for all camera operations) */
+    private val cameraManager: CameraManager by lazy {
+        val context = getApplication<MainApplication>().applicationContext
+        context.getSystemService(Context.CAMERA_SERVICE) as CameraManager
+    }
+
+    /** [CameraCharacteristics] corresponding to the provided Camera ID */
+
+//    /**
+//     * Setup a [Surface] for the encoder
+//     */
+//    private val encoderSurface: Surface by lazy {
+//        encoder.getInputSurface()
+//    }
+
+//    /** [EncoderWrapper] utility class */
+//    private val encoder: EncoderWrapper by lazy { createEncoder() }
+//
+//    /** [HandlerThread] where all camera operations run */
+//    private val cameraThread = HandlerThread("CameraThread").apply { start() }
+//
+//    /** [Handler] corresponding to [cameraThread] */
+//    private val cameraHandler = Handler(cameraThread.looper)
+
+
+
+
+
 
     /**
      * Initializes the camera and checks which extensions are available for the selected camera lens
@@ -143,6 +249,7 @@ class CameraViewModel @Inject constructor(private val workManager: WorkManager, 
         }
     }
 
+
     /**
      * Starts the preview stream. The camera state should be in the READY or PREVIEW_STOPPED state
      * when calling this operation.
@@ -161,26 +268,99 @@ class CameraViewModel @Inject constructor(private val workManager: WorkManager, 
                 currentCameraUiState.extensionMode
             )
         }
-        val useCaseGroup = UseCaseGroup.Builder()
-            .addUseCase(imageCapture)
+
+        // Create the extender and pass in the config builder we want to extend
+        val previewExtender = Camera2Interop.Extender(previewBuilder)
+        // Listen to camera state changes
+        previewExtender.setDeviceStateCallback(cameraDeviceStateCallback)
+
+        preview = previewBuilder.build()
+
+        // Build your config as usual and create your wanted UseCase with it
+
+
+
+        val useCaseGroupBuilder = UseCaseGroup.Builder()
             .addUseCase(preview)
             .addUseCase(imageAnalysis)
-            .build()
+            .addUseCase(imageCapture)
+//            .addUseCase(videoCapture)
+        val useCaseGroup = useCaseGroupBuilder.build()
         cameraProvider.unbindAll()
-        cameraProvider.bindToLifecycle(
+        val camera = cameraProvider.bindToLifecycle(
             lifecycleOwner,
             cameraSelector,
             useCaseGroup
         )
-        preview.setSurfaceProvider {  }
-
         preview.setSurfaceProvider(previewView.surfaceProvider)
+        val cameraId = Camera2CameraInfo.from(camera.cameraInfo).cameraId
+        val characteristics = cameraManager.getCameraCharacteristics(cameraId)
+
 
         viewModelScope.launch {
             _cameraUiState.emit(_cameraUiState.value.copy(cameraState = MediaState.READY))
             _captureUiState.emit(CaptureState.CaptureReady)
         }
     }
+
+    private var currentRecording: Recording? = null
+
+
+
+
+    /**
+     * Kick start the video recording
+     *   - config Recorder to capture to MediaStoreOutput
+     *   - register RecordEvent Listener
+     *   - apply audio request from user
+     *   - start recording!
+     * After this function, user could start/pause/resume/stop recording and application listens
+     * to VideoRecordEvent for the current recording status.
+     */
+    @SuppressLint("MissingPermission")
+    fun startRecording() {
+        // create MediaStoreOutputOptions for our recorder: resulting our recording!
+        val contentValues = ContentValues().apply {
+            put(MediaStore.MediaColumns.DISPLAY_NAME, "${CameraConfig.FILENAME}.mp4")
+            put(MediaStore.MediaColumns.MIME_TYPE, CameraConfig.VIDEO_MIMETYPE)
+            if (Build.VERSION.SDK_INT > Build.VERSION_CODES.P) {
+                put(MediaStore.Video.Media.RELATIVE_PATH, CameraConfig.VIDEO_FOLDER)
+                put(MediaStore.Video.Media.DATE_TAKEN, System.currentTimeMillis())
+            }
+
+        }
+        val mediaStoreOutput = MediaStoreOutputOptions.Builder(
+            getApplication<MainApplication>().contentResolver,
+            MediaStore.Video.Media.EXTERNAL_CONTENT_URI)
+            .setContentValues(contentValues)
+            .build()
+
+        // configure Recorder and Start recording to the mediaStoreOutput.
+        currentRecording = videoCapture.output
+            .prepareRecording(getApplication(), mediaStoreOutput)
+            .apply { if (false) withAudioEnabled() }
+            .start(Dispatchers.Main.asExecutor(), captureListener)
+
+        Log.i(TAG, "Recording started")
+    }
+
+    /**
+     * CaptureEvent listener.
+     */
+    private val captureListener = Consumer<VideoRecordEvent> { event ->
+        // cache the recording state
+        if (event !is VideoRecordEvent.Status)
+            viewModelScope.launch { _recordingState.emit(event) }
+
+//        updateUI(event)
+
+        if (event is VideoRecordEvent.Finalize) {
+            // display the captured video
+            Log.d(TAG, "File recording completed\n${event.outputResults.outputUri}\n__")
+        }
+    }
+
+
 
 
     fun setAnalysis(analyzer: ImageAnalysis.Analyzer){
@@ -198,6 +378,9 @@ class CameraViewModel @Inject constructor(private val workManager: WorkManager, 
     /**
      * Stops the preview stream. This should be invoked when the captured image is displayed.
      */
+    /**
+     * Stops the preview stream. This should be invoked when the captured image is displayed.
+     */
     fun stopPreview() {
         preview.setSurfaceProvider(null)
         viewModelScope.launch {
@@ -205,6 +388,23 @@ class CameraViewModel @Inject constructor(private val workManager: WorkManager, 
         }
     }
 
+    fun stopRecording() {
+        currentRecording?.stop()
+    }
+
+
+    fun pauseRecording() {
+        currentRecording?.pause()
+    }
+
+    fun resumeRecording() {
+        currentRecording?.resume()
+    }
+
+
+    /**
+     * Toggle the camera lens face. This has no effect if there is only one available camera lens.
+     */
     /**
      * Toggle the camera lens face. This has no effect if there is only one available camera lens.
      */
@@ -241,15 +441,23 @@ class CameraViewModel @Inject constructor(private val workManager: WorkManager, 
      * If the capture operation failed then captureUiState flow will emit CaptureFailed with the
      * exception containing more details on the reason for failure.
      */
+    /**
+     * Captures the photo and saves it to the pictures directory that's inside the app-specific
+     * directory on external storage.
+     * Upon successful capture, the captureUiState flow will emit CaptureFinished with the URI to
+     * the captured photo.
+     * If the capture operation failed then captureUiState flow will emit CaptureFailed with the
+     * exception containing more details on the reason for failure.
+     */
     fun capturePhoto() {
         viewModelScope.launch {
             _captureUiState.emit(CaptureState.CaptureStarted)
         }
         val contentValues = ContentValues().apply {
             put(MediaStore.MediaColumns.DISPLAY_NAME, CameraConfig.FILENAME)
-            put(MediaStore.MediaColumns.MIME_TYPE, CameraConfig.MIMETYPE)
+            put(MediaStore.MediaColumns.MIME_TYPE, CameraConfig.IMAGE_MIMETYPE)
             if (Build.VERSION.SDK_INT > Build.VERSION_CODES.P) {
-                put(MediaStore.Images.Media.RELATIVE_PATH, CameraConfig.FOLDER)
+                put(MediaStore.Images.Media.RELATIVE_PATH, CameraConfig.IMAGE_FOLDER)
                 put(MediaStore.Images.Media.IS_PENDING, 1)
                 put(MediaStore.Images.Media.DATE_TAKEN, System.currentTimeMillis())
             }
@@ -286,6 +494,9 @@ class CameraViewModel @Inject constructor(private val workManager: WorkManager, 
             })
     }
 
+    /**
+     * Sets the current extension mode. This will force the camera to rebind the use cases.
+     */
     /**
      * Sets the current extension mode. This will force the camera to rebind the use cases.
      */

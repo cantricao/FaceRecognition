@@ -29,6 +29,8 @@ import androidx.camera.extensions.ExtensionMode
 data class CameraUiState(
     val cameraState: MediaState = MediaState.NOT_READY,
     val analysisState: AnalysisState = AnalysisState.NOT_READY,
+    val captureState: CaptureState = CaptureState.CaptureNotReady,
+    val recordState: RecordState = RecordState.IDLE,
     val availableExtensions: List<Int> = emptyList(),
     val availableCameraLens: List<Int> = listOf(LENS_FACING_BACK),
     @LensFacing val cameraLens: Int = LENS_FACING_BACK,
@@ -63,6 +65,16 @@ enum class AnalysisState {
 
     ANALYSIS_STOPPED
 }
+
+// Camera UI  states and inputs
+enum class RecordState {
+    IDLE,       // Not recording, all UI controls are active.
+    RECORDING,  // Camera is recording, only display Pause/Resume & Stop button.
+    FINALIZED,  // Recording just completes, disable all RECORDING UI controls.
+    RECOVERY    // For future use.
+}
+
+
 
 /**
  * Defines the various states during post-capture.

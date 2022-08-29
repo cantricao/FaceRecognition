@@ -27,7 +27,7 @@ abstract class Pipeline(
     protected val width: Int, protected val height: Int, protected val fps: Int,
     protected val filterOn: Boolean,
     protected val characteristics: CameraCharacteristics, protected val encoder: EncoderWrapper,
-    protected val viewFinder: SurfaceView
+    protected val surface: Surface
 ) {
 
     open fun createPreviewRequest(session: CameraCaptureSession,

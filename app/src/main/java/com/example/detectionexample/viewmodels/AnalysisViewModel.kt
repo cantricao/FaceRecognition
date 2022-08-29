@@ -1,7 +1,9 @@
 package com.example.detectionexample.viewmodels
 
 import android.graphics.Bitmap
+import android.hardware.camera2.CameraDevice
 import android.util.Log
+import androidx.camera.camera2.Camera2Config
 import androidx.camera.core.ImageAnalysis
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -41,7 +43,7 @@ class AnalysisViewModel @Inject constructor(
     val repository
         get() = detector(modelFilename)
 
-    var isStaringCamera by mutableStateOf(false)
+    var isStaringCamera by mutableStateOf(true)
     var isProcessingFrame by mutableStateOf(true)
 
     lateinit var processBitmap: Bitmap
@@ -79,12 +81,13 @@ class AnalysisViewModel @Inject constructor(
                 trackedObjectRepository.trackedObjects.stateIn(viewModelScope).value
             detectedTime = System.currentTimeMillis() - statedTime
             statedTime = System.currentTimeMillis()
-//            Log.d(
-//                TAG,
-//                "Processing ${_trackedObjects.value.size} results from ${timestamp.toString(3)} in $detectedTime ms"
-//            )
+            Log.d(
+                TAG,
+                "Processing ${_trackedObjects.value.size} results from ${timestamp.toString(3)} in $detectedTime ms"
+            )
         }
     }
+
 
     fun setModelName(filename: String) {
         modelFilename = filename
