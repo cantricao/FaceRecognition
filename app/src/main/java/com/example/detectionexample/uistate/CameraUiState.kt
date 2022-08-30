@@ -30,7 +30,6 @@ data class CameraUiState(
     val cameraState: MediaState = MediaState.NOT_READY,
     val analysisState: AnalysisState = AnalysisState.NOT_READY,
     val captureState: CaptureState = CaptureState.CaptureNotReady,
-    val recordState: RecordState = RecordState.IDLE,
     val availableExtensions: List<Int> = emptyList(),
     val availableCameraLens: List<Int> = listOf(LENS_FACING_BACK),
     @LensFacing val cameraLens: Int = LENS_FACING_BACK,

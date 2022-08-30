@@ -72,7 +72,7 @@ class BitmapToVideoEncoder(private val mCallback: IBitmapToVideoEncoderCallback)
         mediaCodec!!.start()
         try {
             mediaMuxer = MediaMuxer(outputFileString, MediaMuxer.OutputFormat.MUXER_OUTPUT_MPEG_4)
-            mediaMuxer!!.setOrientationHint(270)
+//            mediaMuxer!!.setOrientationHint(270)
         } catch (e: IOException) {
             Log.e(TAG, "MediaMuxer creation failed. " + e.message)
             return
@@ -92,6 +92,7 @@ class BitmapToVideoEncoder(private val mCallback: IBitmapToVideoEncoderCallback)
         }
         Log.d(TAG, "Stopping encoding")
         mNoMoreFrames = true
+        mEncodeQueue = ConcurrentLinkedQueue<Bitmap?>() // Drop all frames
         synchronized(mFrameSync) {
             if (mNewFrameLatch != null && mNewFrameLatch!!.count > 0) {
                 mNewFrameLatch!!.countDown()
@@ -278,9 +279,9 @@ class BitmapToVideoEncoder(private val mCallback: IBitmapToVideoEncoderCallback)
         ): Int {
             val capabilities = codecInfo
                 .getCapabilitiesForType(mimeType)
-            for (i in capabilities.colorFormats.indices) {
-                val colorFormat = capabilities.colorFormats[i]
+            for (colorFormat in capabilities.colorFormats) {
                 if (isRecognizedFormat(colorFormat)) {
+                    Log.d(TAG, colorFormat.toString())
                     return colorFormat
                 }
             }
@@ -289,7 +290,7 @@ class BitmapToVideoEncoder(private val mCallback: IBitmapToVideoEncoderCallback)
 
         private fun isRecognizedFormat(colorFormat: Int): Boolean {
             return when (colorFormat) {
-                CodecCapabilities.COLOR_FormatYUV420Planar, CodecCapabilities.COLOR_FormatYUV420PackedPlanar, CodecCapabilities.COLOR_FormatYUV420SemiPlanar, CodecCapabilities.COLOR_FormatYUV420PackedSemiPlanar, CodecCapabilities.COLOR_TI_FormatYUV420PackedSemiPlanar -> true
+                CodecCapabilities.COLOR_FormatYUV420PackedPlanar, CodecCapabilities.COLOR_FormatYUV420SemiPlanar, CodecCapabilities.COLOR_FormatYUV420PackedSemiPlanar, CodecCapabilities.COLOR_TI_FormatYUV420PackedSemiPlanar -> true
                 else -> false
             }
         }

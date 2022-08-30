@@ -186,7 +186,7 @@ object Util {
 
     fun createFile(extension: String): File {
         val sdf = SimpleDateFormat("yyyy_MM_dd_HH_mm_ss_SSS", Locale.US)
-        return File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS), "VID_${sdf.format(Date())}.$extension")
+        return File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_MOVIES), "VID_${sdf.format(Date())}.$extension")
     }
 
 }

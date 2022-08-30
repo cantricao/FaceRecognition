@@ -2,7 +2,6 @@ package com.example.detectionexample.compose
 
 import android.graphics.Bitmap
 import android.net.Uri
-import android.os.Environment
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.icons.Icons
@@ -28,9 +27,8 @@ import com.example.detectionexample.config.Util
 import com.example.detectionexample.uistate.MediaState
 import com.example.detectionexample.viewmodels.AnalysisViewModel
 import com.example.detectionexample.viewmodels.VideoViewModel
-import java.io.File
-import java.text.SimpleDateFormat
-import java.util.*
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 
 
 @Composable
@@ -49,7 +47,10 @@ fun VideoPlayer(viewModel: AnalysisViewModel = viewModel(),
     produceState(initialValue = MediaState.READY) {
         videoViewModel.videoState.collect { videoState ->
             when (videoState) {
-                MediaState.NOT_READY -> videoViewModel.loadVideo(sampleVideoUri)
+                MediaState.NOT_READY -> {
+                    viewModel.setBitmapEncoding(videoViewModel.bitmapEncoding)
+                    videoViewModel.loadVideo(sampleVideoUri)
+                }
                 MediaState.READY -> Unit
                 MediaState.PREVIEW_STOPPED -> Unit
             }
@@ -58,13 +59,13 @@ fun VideoPlayer(viewModel: AnalysisViewModel = viewModel(),
         }
     }
 
-    var mRecordingEnabled by remember { mutableStateOf(false)}
+    var mRecordingEnabled by remember { mutableStateOf(false) }
 
-    DisposableEffect(lifecycleOwner){
+    DisposableEffect(lifecycleOwner) {
         // Create an observer that triggers our remembered callbacks
         // for sending analytics events
         val observer = LifecycleEventObserver { _, event ->
-            when(event){
+            when (event) {
                 Lifecycle.Event.ON_RESUME -> videoViewModel.exoPlayer.play()
                 Lifecycle.Event.ON_PAUSE -> {
                     videoViewModel.exoPlayer.pause()
@@ -93,7 +94,7 @@ fun VideoPlayer(viewModel: AnalysisViewModel = viewModel(),
     viewModel.needUpdateTrackerImageSourceInfo = true
 
     val imageBitmap by produceState(
-        initialValue = Bitmap.createBitmap(1 , 1, Bitmap.Config.ARGB_8888), videoViewModel.bitmap
+        initialValue = Bitmap.createBitmap(1, 1, Bitmap.Config.ARGB_8888), videoViewModel.bitmap
     ) {
         videoViewModel.bitmap.collect { bitmap ->
             viewModel.bitmapAnalyzer.analyze(bitmap, System.currentTimeMillis())
@@ -101,23 +102,20 @@ fun VideoPlayer(viewModel: AnalysisViewModel = viewModel(),
         }
     }
 
-
-
     val imageOverlay by produceState(
-        initialValue = ImageBitmap(1,1), trackedObjectsState
+        initialValue = ImageBitmap(1, 1), trackedObjectsState
     ) {
         value = Util.drawBitmapOverlay(
-                trackedObjectsState,
-                imageBitmap.width,
-                imageBitmap.height
-            ).asImageBitmap()
+            trackedObjectsState,
+            imageBitmap.width,
+            imageBitmap.height
+        ).asImageBitmap()
     }
 
-    val outputFile: File by lazy { Util.createFile("mp4") }
 
 
 
-    Box (Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+    Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
         Image(
             bitmap = imageBitmap.asImageBitmap(),
             contentDescription = "Overlay View",
@@ -130,9 +128,11 @@ fun VideoPlayer(viewModel: AnalysisViewModel = viewModel(),
             modifier = Modifier.fillMaxSize()
         )
 
-        Column(modifier = Modifier.align(Alignment.BottomCenter),
+        Column(
+            modifier = Modifier.align(Alignment.BottomCenter),
             verticalArrangement = Arrangement.Center,
-            horizontalAlignment = Alignment.CenterHorizontally) {
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
             FilledTonalIconButton(
                 modifier = Modifier
                     .size(92.dp + 32.dp)
@@ -141,7 +141,7 @@ fun VideoPlayer(viewModel: AnalysisViewModel = viewModel(),
                     if (mRecordingEnabled) {
                         videoViewModel.stopEncoding()
                     } else {
-                        videoViewModel.startEncoding(imageBitmap.width, imageBitmap.height, outputFile)
+                        videoViewModel.startEncoding()
                     }
                     mRecordingEnabled = !mRecordingEnabled
                 },
@@ -162,9 +162,11 @@ fun VideoPlayer(viewModel: AnalysisViewModel = viewModel(),
             })
         }
 
-        FilledTonalIconButton(onClick = { },
+        FilledTonalIconButton(
+            onClick = { },
 //            enabled = enableClosePhotoPreview,
-            modifier = Modifier.align(Alignment.TopEnd)) {
+            modifier = Modifier.align(Alignment.TopEnd)
+        ) {
             Icon(Icons.Default.Close, contentDescription = "Close Photo Preview")
         }
     }

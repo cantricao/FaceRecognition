@@ -1,5 +1,6 @@
 package com.example.detectionexample.compose
 
+import android.graphics.Bitmap
 import android.net.Uri
 import android.widget.Toast
 import androidx.camera.extensions.ExtensionMode
@@ -32,13 +33,15 @@ import com.example.detectionexample.R
 import com.example.detectionexample.custom.GlideOverlayBitmapTransformation
 import com.example.detectionexample.uistate.*
 import com.example.detectionexample.viewmodels.AnalysisViewModel
-import com.example.detectionexample.viewmodels.CameraViewModel
+import com.example.detectionexample.viewmodels.CameraXViewModel
 import com.skydoves.landscapist.glide.GlideImage
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.launch
 
 
 @Composable
-fun CameraPreview(viewModel: AnalysisViewModel = viewModel(), cameraViewModel: CameraViewModel = viewModel()) {
+fun CameraPreview(viewModel: AnalysisViewModel = viewModel(), cameraViewModel: CameraXViewModel = viewModel()) {
     if (!viewModel.isStaringCamera) return
     val lifecycleOwner = LocalLifecycleOwner.current
     val context = LocalContext.current
@@ -99,7 +102,6 @@ fun CameraPreview(viewModel: AnalysisViewModel = viewModel(), cameraViewModel: C
             }
             value = action
         }
-
     }
 
     val cameraState by produceState(initialValue = CameraUiState(), cameraViewModel.cameraUiState) {
@@ -110,11 +112,17 @@ fun CameraPreview(viewModel: AnalysisViewModel = viewModel(), cameraViewModel: C
                 AnalysisState.ANALYSIS_STOPPED -> cameraViewModel.clearAnalysis()
             }
             when(cameraState.cameraState) {
-                MediaState.NOT_READY -> cameraViewModel.initializeCamera()
+                MediaState.NOT_READY -> {
+                    viewModel.setBitmapEncoding(cameraViewModel.bitmapEncoding)
+                    cameraViewModel.initializeCamera()
+                }
                 MediaState.READY  -> {
                     when (cameraState.analysisState){
                         AnalysisState.NOT_READY -> Unit
-                        AnalysisState.READY, AnalysisState.ANALYSIS_STOPPED -> cameraViewModel.startPreview(lifecycleOwner, previewView)
+                        AnalysisState.READY, AnalysisState.ANALYSIS_STOPPED -> cameraViewModel.startPreview(
+                            lifecycleOwner,
+                            previewView
+                        )
                     }
                 }
                 MediaState.PREVIEW_STOPPED -> Unit
@@ -157,7 +165,7 @@ fun CameraPreview(viewModel: AnalysisViewModel = viewModel(), cameraViewModel: C
         }
     }
 
-
+    var mRecordingEnabled by remember { mutableStateOf(false) }
 
     val extensionName = mapOf(
         ExtensionMode.AUTO to stringResource(R.string.camera_mode_auto),
@@ -168,14 +176,12 @@ fun CameraPreview(viewModel: AnalysisViewModel = viewModel(), cameraViewModel: C
         ExtensionMode.NONE to stringResource(R.string.camera_mode_none),
     )
     
-    val videoRecordEvent by cameraViewModel.recordingState.collectAsState(initial = null)
+    val videoRecordEvent by cameraViewModel.recordState.collectAsState(initial = RecordState.IDLE)
 
     Box(Modifier.fillMaxSize(),
         contentAlignment = Alignment.Center) {
         AndroidView(
-            factory = {
-                previewView
-            },
+            factory = { previewView },
             modifier = Modifier.fillMaxSize(),
         )
         Column(modifier = Modifier.align(Alignment.BottomEnd)) {
@@ -203,17 +209,25 @@ fun CameraPreview(viewModel: AnalysisViewModel = viewModel(), cameraViewModel: C
                         .size(92.dp + 32.dp)
                         .padding(PaddingValues(32.dp)),
                     onClick = {
-                        when(videoRecordEvent){
-                            is VideoRecordEvent.Start -> cameraViewModel.stopRecording()
-                            is VideoRecordEvent.Finalize, null -> cameraViewModel.startRecording()
-                            else -> throw IllegalStateException("recordingState in unknown state")
+                        if (mRecordingEnabled) {
+                            cameraViewModel.stopRecording()
+                        } else {
+                            cameraViewModel.startRecording()
                         }
+                        mRecordingEnabled = !mRecordingEnabled
+
+
+//                        when(videoRecordEvent){
+//                            RecordState.RECORDING -> cameraViewModel.stopRecording()
+//                            RecordState.IDLE, RecordState.FINALIZED -> cameraViewModel.startRecording()
+//                            else -> throw IllegalStateException("recordingState in unknown state")
+//                        }
                     },
                     enabled = enableCameraShutter) {
                     Icon(
                         painter = painterResource(id =
                         when (videoRecordEvent){
-                            is VideoRecordEvent.Start -> R.drawable.ic_baseline_stop_24
+                            RecordState.RECORDING -> R.drawable.ic_baseline_stop_24
                             else -> R.drawable.ic_baseline_play_arrow_24
 
                         }),

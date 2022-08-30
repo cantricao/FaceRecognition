@@ -13,6 +13,7 @@ import androidx.media3.common.Format
 import androidx.media3.common.MediaItem
 import androidx.media3.exoplayer.ExoPlayer
 import com.example.detectionexample.config.Util
+import com.example.detectionexample.custom.BitmapEncoding
 import com.example.detectionexample.custom.ExoplayerCustomRenderersFactory
 import com.example.detectionexample.record.BitmapToVideoEncoder
 import com.example.detectionexample.uistate.CaptureState
@@ -28,6 +29,12 @@ import javax.inject.Inject
 
 @HiltViewModel
 class VideoViewModel @Inject constructor(application: Application) : AndroidViewModel(application) {
+    val bitmapEncoding: BitmapEncoding = object :BitmapEncoding {
+        override fun queueFrame(bitmap: Bitmap) {
+            encoder.queueFrame(bitmap)
+        }
+
+    }
     private val videoFrameDataListener = object : ExoplayerCustomRenderersFactory.VideoFrameDataListener {
         override fun onFrame(
             data: ByteBuffer?,
@@ -50,12 +57,9 @@ class VideoViewModel @Inject constructor(application: Application) : AndroidView
                     val bytes = ByteArray(data.remaining())
                     data.get(bytes)
                     val bitmap = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888)
-                    val colorFormat = androidMediaFormat.getInteger(MediaFormat.KEY_COLOR_FORMAT)
+//                    val colorFormat = androidMediaFormat.getInteger(MediaFormat.KEY_COLOR_FORMAT)
 //                    Log.d("Image Format", colorFormat.toString())
                     Util.yuvToRgb(bytes, bitmap, ImageFormat.YUV_420_888)
-
-                    encoder.queueFrame(bitmap)
-
                     viewModelScope.launch {
                         _bitmap.emit(bitmap)
                     }
@@ -80,6 +84,8 @@ class VideoViewModel @Inject constructor(application: Application) : AndroidView
         ExoplayerCustomRenderersFactory(getApplication()).setVideoFrameDataListener(videoFrameDataListener)
     val exoPlayer = ExoPlayer.Builder(getApplication(), renderersFactory).build()
 //    val exoPlayer = ExoPlayer.Builder(getApplication()).build()
+
+
 
 
 
@@ -117,9 +123,9 @@ class VideoViewModel @Inject constructor(application: Application) : AndroidView
         encoder.stopEncoding()
     }
 
-    fun startEncoding(width: Int, height: Int, outputFile: File) {
-        encoder.startEncoding(width, height, outputFile)
-
+    fun startEncoding() {
+        val outputFile: File by lazy { Util.createFile("mp4") }
+        encoder.startEncoding(_bitmap.value.width, _bitmap.value.height, outputFile)
     }
 
 

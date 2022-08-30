@@ -1,9 +1,9 @@
 package com.example.detectionexample.viewmodels
 
 import android.graphics.Bitmap
-import android.hardware.camera2.CameraDevice
+import android.graphics.Canvas
+import android.graphics.Matrix
 import android.util.Log
-import androidx.camera.camera2.Camera2Config
 import androidx.camera.core.ImageAnalysis
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -14,6 +14,7 @@ import com.example.detectionexample.config.ModelConfig
 import com.example.detectionexample.config.OverlayViewConfig
 import com.example.detectionexample.config.Util
 import com.example.detectionexample.custom.BitmapAnalyzer
+import com.example.detectionexample.custom.BitmapEncoding
 import com.example.detectionexample.domain.DetectorUsecase
 import com.example.detectionexample.models.Recognition
 import com.example.detectionexample.models.TrackedRecognition
@@ -48,6 +49,18 @@ class AnalysisViewModel @Inject constructor(
 
     lateinit var processBitmap: Bitmap
         private set
+
+    private lateinit var cloneProcessBitmap: Bitmap
+    private lateinit var cloneProcessingCanvas: Canvas
+
+    private var bitmapEncoding: BitmapEncoding? = null
+
+    fun setBitmapEncoding(bitmapEncoding: BitmapEncoding){
+        this.bitmapEncoding = bitmapEncoding
+    }
+
+
+
 
     var threshold by mutableStateOf(1F)
 
@@ -85,6 +98,11 @@ class AnalysisViewModel @Inject constructor(
                 TAG,
                 "Processing ${_trackedObjects.value.size} results from ${timestamp.toString(3)} in $detectedTime ms"
             )
+
+            val overlayBitmap = Util.drawBitmapOverlay(_trackedObjects.value, cloneProcessBitmap.width, cloneProcessBitmap.height)
+            cloneProcessingCanvas.drawBitmap(overlayBitmap, Matrix(), null)
+            bitmapEncoding?.queueFrame(cloneProcessBitmap)
+
         }
     }
 
@@ -110,6 +128,9 @@ class AnalysisViewModel @Inject constructor(
                 needUpdateTrackerImageSourceInfo = false
             }
             processBitmap = Bitmap.createBitmap(image)
+            cloneProcessBitmap = Bitmap.createBitmap(image)
+            cloneProcessingCanvas = Canvas(cloneProcessBitmap)
+
             observeTrackedObject(timestamp,
                 !recognizedPersonRepository.isEmpty(),
                 detectInImage(processBitmap))
@@ -119,6 +140,7 @@ class AnalysisViewModel @Inject constructor(
     override fun onCleared() {
         extractorRepository.close() }
 
+
     var analyzer = ImageAnalysis.Analyzer { imageProxy ->
         if (!isProcessingFrame) {
             imageProxy.close()
@@ -127,6 +149,8 @@ class AnalysisViewModel @Inject constructor(
         if (needUpdateTrackerImageSourceInfo) {
             processBitmap =
                 Bitmap.createBitmap(imageProxy.width, imageProxy.height, Bitmap.Config.ARGB_8888)
+            cloneProcessBitmap = Bitmap.createBitmap(processBitmap)
+            cloneProcessingCanvas = Canvas(cloneProcessBitmap)
             OverlayViewConfig.setFrameConfiguration(
                 imageProxy.width,
                 imageProxy.height, 0
@@ -134,6 +158,9 @@ class AnalysisViewModel @Inject constructor(
             needUpdateTrackerImageSourceInfo = false
         }
         processBitmap.copyPixelsFromBuffer(imageProxy.planes[0].buffer)
+        imageProxy.planes[0].buffer.rewind()
+        cloneProcessBitmap.copyPixelsFromBuffer(imageProxy.planes[0].buffer)
+
         observeTrackedObject(
             imageProxy.imageInfo.timestamp,
             !recognizedPersonRepository.isEmpty(),
