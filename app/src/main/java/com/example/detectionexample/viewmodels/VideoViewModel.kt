@@ -7,17 +7,20 @@ import android.media.MediaCodecInfo
 import android.media.MediaFormat
 import android.net.Uri
 import android.util.Log
+import android.widget.Toast
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.media3.common.Format
 import androidx.media3.common.MediaItem
 import androidx.media3.exoplayer.ExoPlayer
+import com.example.detectionexample.config.CameraConfig
 import com.example.detectionexample.config.Util
 import com.example.detectionexample.custom.BitmapEncoding
 import com.example.detectionexample.custom.ExoplayerCustomRenderersFactory
 import com.example.detectionexample.record.BitmapToVideoEncoder
 import com.example.detectionexample.uistate.CaptureState
 import com.example.detectionexample.uistate.MediaState
+import com.example.detectionexample.uistate.RecordState
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -70,9 +73,17 @@ class VideoViewModel @Inject constructor(application: Application) : AndroidView
         }
     }
 
+
+    private val _recordState: MutableStateFlow<RecordState> = MutableStateFlow(RecordState.IDLE)
+    val recordState: Flow<RecordState> = _recordState
+
     private val encoderCallback = object : BitmapToVideoEncoder.IBitmapToVideoEncoderCallback{
         override fun onEncodingComplete(outputFile: File?) {
-            Log.d("CameraVideo", "File recording completed\n${outputFile?.absolutePath}\n__")
+            viewModelScope.launch {
+                _recordState.emit(RecordState.FINALIZED)
+                Toast.makeText(getApplication(), "File recording completed\n${outputFile?.absolutePath}\n__" , Toast.LENGTH_LONG).show()
+            }
+            Log.d("BitmapToVideoEncoder", "File recording completed\n${outputFile?.absolutePath}\n__")
         }
 
     }
@@ -119,14 +130,17 @@ class VideoViewModel @Inject constructor(application: Application) : AndroidView
         }
     }
 
-    fun stopEncoding() {
+    fun stopRecording() {
         encoder.stopEncoding()
     }
 
-    fun startEncoding() {
+    fun startRecording() {
         val outputFile: File by lazy { Util.createFile("mp4") }
         encoder.startEncoding(_bitmap.value.width, _bitmap.value.height, outputFile)
+        viewModelScope.launch {
+            _recordState.emit(RecordState.RECORDING)
+        }
+        Log.i(CameraConfig.TAG, "Recording started")
+
     }
-
-
 }

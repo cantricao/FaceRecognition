@@ -132,6 +132,8 @@ fun CameraPreview(viewModel: AnalysisViewModel = viewModel(), cameraViewModel: C
 
     }
 
+
+
     produceState<CaptureState>(initialValue = CaptureState.CaptureNotReady, cameraViewModel.captureUiState) {
         cameraViewModel.captureUiState.collectLatest { captureUiState ->
             when (captureUiState) {
@@ -186,7 +188,6 @@ fun CameraPreview(viewModel: AnalysisViewModel = viewModel(), cameraViewModel: C
         )
         Column(modifier = Modifier.align(Alignment.BottomEnd)) {
             LazyRow(
-//                contentPadding = PaddingValues(24.dp),
                 horizontalArrangement = Arrangement.spacedBy(24.dp),
 
                 ) {
@@ -209,19 +210,11 @@ fun CameraPreview(viewModel: AnalysisViewModel = viewModel(), cameraViewModel: C
                         .size(92.dp + 32.dp)
                         .padding(PaddingValues(32.dp)),
                     onClick = {
-                        if (mRecordingEnabled) {
-                            cameraViewModel.stopRecording()
-                        } else {
-                            cameraViewModel.startRecording()
+                        when(videoRecordEvent){
+                            RecordState.RECORDING -> cameraViewModel.stopRecording()
+                            RecordState.IDLE, RecordState.FINALIZED -> cameraViewModel.startRecording()
+                            else -> throw IllegalStateException("recordingState in unknown state")
                         }
-                        mRecordingEnabled = !mRecordingEnabled
-
-
-//                        when(videoRecordEvent){
-//                            RecordState.RECORDING -> cameraViewModel.stopRecording()
-//                            RecordState.IDLE, RecordState.FINALIZED -> cameraViewModel.startRecording()
-//                            else -> throw IllegalStateException("recordingState in unknown state")
-//                        }
                     },
                     enabled = enableCameraShutter) {
                     Icon(

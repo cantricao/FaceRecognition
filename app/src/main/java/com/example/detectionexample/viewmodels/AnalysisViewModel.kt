@@ -44,7 +44,7 @@ class AnalysisViewModel @Inject constructor(
     val repository
         get() = detector(modelFilename)
 
-    var isStaringCamera by mutableStateOf(true)
+    var isStaringCamera by mutableStateOf(false)
     var isProcessingFrame by mutableStateOf(true)
 
     lateinit var processBitmap: Bitmap

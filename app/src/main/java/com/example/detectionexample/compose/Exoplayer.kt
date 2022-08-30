@@ -25,6 +25,7 @@ import androidx.media3.ui.LegacyPlayerControlView
 import com.example.detectionexample.R
 import com.example.detectionexample.config.Util
 import com.example.detectionexample.uistate.MediaState
+import com.example.detectionexample.uistate.RecordState
 import com.example.detectionexample.viewmodels.AnalysisViewModel
 import com.example.detectionexample.viewmodels.VideoViewModel
 import kotlinx.coroutines.Dispatchers
@@ -69,7 +70,7 @@ fun VideoPlayer(viewModel: AnalysisViewModel = viewModel(),
                 Lifecycle.Event.ON_RESUME -> videoViewModel.exoPlayer.play()
                 Lifecycle.Event.ON_PAUSE -> {
                     videoViewModel.exoPlayer.pause()
-                    videoViewModel.stopEncoding()
+                    videoViewModel.stopRecording()
                 }
                 Lifecycle.Event.ON_STOP -> videoViewModel.exoPlayer.stop()
                 Lifecycle.Event.ON_DESTROY -> videoViewModel.exoPlayer.release()
@@ -112,6 +113,8 @@ fun VideoPlayer(viewModel: AnalysisViewModel = viewModel(),
         ).asImageBitmap()
     }
 
+    val videoRecordEvent by videoViewModel.recordState.collectAsState(initial = RecordState.IDLE)
+
 
 
 
@@ -138,17 +141,21 @@ fun VideoPlayer(viewModel: AnalysisViewModel = viewModel(),
                     .size(92.dp + 32.dp)
                     .padding(PaddingValues(32.dp)),
                 onClick = {
-                    if (mRecordingEnabled) {
-                        videoViewModel.stopEncoding()
-                    } else {
-                        videoViewModel.startEncoding()
+                    when(videoRecordEvent){
+                        RecordState.RECORDING -> videoViewModel.stopRecording()
+                        RecordState.IDLE, RecordState.FINALIZED -> videoViewModel.startRecording()
+                        else -> throw IllegalStateException("recordingState in unknown state")
                     }
-                    mRecordingEnabled = !mRecordingEnabled
                 },
 //                enabled = enableCameraShutter
             ) {
                 Icon(
-                    painter = painterResource(id = R.drawable.ic_baseline_camera_24),
+                    painter = painterResource(id =
+                    when (videoRecordEvent){
+                        RecordState.RECORDING -> R.drawable.ic_baseline_stop_24
+                        else -> R.drawable.ic_baseline_play_arrow_24
+
+                    }),
                     contentDescription = "Shutter button",
                     modifier = Modifier.size(48.dp)
                 )
