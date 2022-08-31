@@ -1,10 +1,9 @@
 package com.example.detectionexample.compose
 
-import android.graphics.Bitmap
 import android.net.Uri
+import android.opengl.GLSurfaceView
 import android.widget.Toast
 import androidx.camera.extensions.ExtensionMode
-import androidx.camera.video.VideoRecordEvent
 import androidx.camera.view.PreviewView
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyRow
@@ -30,14 +29,13 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.bumptech.glide.load.engine.DiskCacheStrategy
 import com.bumptech.glide.request.RequestOptions
 import com.example.detectionexample.R
+import com.example.detectionexample.custom.GLCameraRender
 import com.example.detectionexample.custom.GlideOverlayBitmapTransformation
 import com.example.detectionexample.uistate.*
 import com.example.detectionexample.viewmodels.AnalysisViewModel
 import com.example.detectionexample.viewmodels.CameraXViewModel
 import com.skydoves.landscapist.glide.GlideImage
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.collectLatest
-import kotlinx.coroutines.launch
 
 
 @Composable
@@ -46,6 +44,8 @@ fun CameraPreview(viewModel: AnalysisViewModel = viewModel(), cameraViewModel: C
     val lifecycleOwner = LocalLifecycleOwner.current
     val context = LocalContext.current
     val previewView = remember { PreviewView(context) }
+
+    val surfaceView = remember { GLSurfaceView(context) }
 
 
     var enableCameraShutter by remember { mutableStateOf(true) }
@@ -94,7 +94,7 @@ fun CameraPreview(viewModel: AnalysisViewModel = viewModel(), cameraViewModel: C
                 CameraUiAction.ClosePhotoPreviewClick -> {
                     hidePhoto()
                     showCameraControls()
-                    cameraViewModel.startPreview(lifecycleOwner, previewView)
+                    cameraViewModel.startPreview(lifecycleOwner, surfaceView)
                 }
                 CameraUiAction.ShutterButtonClick -> cameraViewModel.capturePhoto()
                 CameraUiAction.SwitchCameraClick -> cameraViewModel.switchCamera()
@@ -121,7 +121,7 @@ fun CameraPreview(viewModel: AnalysisViewModel = viewModel(), cameraViewModel: C
                         AnalysisState.NOT_READY -> Unit
                         AnalysisState.READY, AnalysisState.ANALYSIS_STOPPED -> cameraViewModel.startPreview(
                             lifecycleOwner,
-                            previewView
+                            surfaceView
                         )
                     }
                 }
@@ -145,7 +145,7 @@ fun CameraPreview(viewModel: AnalysisViewModel = viewModel(), cameraViewModel: C
                 is CaptureState.CaptureFailed -> {
                     val error = captureUiState.exception.message!!
                     showCaptureError(error)
-                    cameraViewModel.startPreview(lifecycleOwner, previewView)
+                    cameraViewModel.startPreview(lifecycleOwner, surfaceView)
                     enableCameraShutter = true
                     enableSwitchLens = true
                 }
@@ -167,8 +167,6 @@ fun CameraPreview(viewModel: AnalysisViewModel = viewModel(), cameraViewModel: C
         }
     }
 
-    var mRecordingEnabled by remember { mutableStateOf(false) }
-
     val extensionName = mapOf(
         ExtensionMode.AUTO to stringResource(R.string.camera_mode_auto),
         ExtensionMode.NIGHT to stringResource(R.string.camera_mode_night),
@@ -183,7 +181,8 @@ fun CameraPreview(viewModel: AnalysisViewModel = viewModel(), cameraViewModel: C
     Box(Modifier.fillMaxSize(),
         contentAlignment = Alignment.Center) {
         AndroidView(
-            factory = { previewView },
+//            factory = { previewView },
+            factory = { surfaceView },
             modifier = Modifier.fillMaxSize(),
         )
         Column(modifier = Modifier.align(Alignment.BottomEnd)) {

@@ -43,7 +43,7 @@ class EncoderWrapper(width: Int,
                      outputFile: File) {
     companion object {
         const val TAG = "EncoderWrapper"
-        const val VERBOSE = false
+        const val VERBOSE = true
         const val IFRAME_INTERVAL = 1 // sync one frame every second
     }
 

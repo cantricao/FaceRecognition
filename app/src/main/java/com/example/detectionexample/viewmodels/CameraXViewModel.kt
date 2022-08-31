@@ -19,11 +19,23 @@ package com.example.detectionexample.viewmodels
 import android.annotation.SuppressLint
 import android.app.Application
 import android.content.ContentValues
+import android.content.Context
 import android.graphics.Bitmap
+import android.hardware.camera2.*
+import android.media.MediaFormat
+import android.opengl.GLSurfaceView
 import android.os.Build
+import android.os.ConditionVariable
+import android.os.Handler
+import android.os.HandlerThread
 import android.provider.MediaStore
 import android.util.Log
+import android.view.Surface
+import android.view.SurfaceHolder
+import android.view.SurfaceView
 import android.widget.Toast
+import androidx.camera.camera2.interop.Camera2CameraInfo
+import androidx.camera.camera2.interop.Camera2Interop
 import androidx.camera.core.*
 import androidx.camera.core.CameraSelector.LensFacing
 import androidx.camera.extensions.ExtensionMode
@@ -42,11 +54,16 @@ import com.example.detectionexample.config.CameraConfig
 import com.example.detectionexample.config.CameraConfig.TAG
 import com.example.detectionexample.config.Util
 import com.example.detectionexample.custom.BitmapEncoding
+import com.example.detectionexample.custom.GLCameraRender
 import com.example.detectionexample.record.BitmapToVideoEncoder
+import com.example.detectionexample.record.EncoderWrapper
+import com.example.detectionexample.record.HardwarePipeline
+import com.example.detectionexample.record.Pipeline
 import com.example.detectionexample.uistate.*
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.asExecutor
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -74,9 +91,9 @@ class CameraXViewModel @Inject constructor(private val workManager: WorkManager,
     private lateinit var cameraProvider: ProcessCameraProvider
     private lateinit var extensionsManager: ExtensionsManager
 
-    private val imageCapture = ImageCapture.Builder()
+    private val imageCaptureBuilder = ImageCapture.Builder()
         .setTargetAspectRatio(AspectRatio.RATIO_16_9)
-        .build()
+    private lateinit var imageCapture: ImageCapture
 
     // build a recorder, which can:
     //   - record video/audio to MediaStore(only shown here), File, ParcelFileDescriptor
@@ -139,6 +156,41 @@ class CameraXViewModel @Inject constructor(private val workManager: WorkManager,
     val recordingState: Flow<VideoRecordEvent?> = _recordingState
     val recordState: Flow<RecordState> = _recordState
 
+
+    private lateinit var pipeline: Pipeline
+
+    /** File where the recording will be saved */
+    private val outputFile: File by lazy { Util.createFile( "mp4") }
+
+    /**
+     * Setup a [Surface] for the encoder
+     */
+    private val encoderSurface: Surface by lazy {
+        encoderWrapper.getInputSurface()
+    }
+
+    /** [EncoderWrapper] utility class */
+    private lateinit var encoderWrapper: EncoderWrapper
+
+    private var recordingStartMillis: Long = 0L
+
+    /** [HandlerThread] where all camera operations run */
+    private val cameraThread = HandlerThread("CameraThread").apply { start() }
+
+    /** [Handler] corresponding to [cameraThread] */
+    private val cameraHandler = Handler(cameraThread.looper)
+
+    @Volatile
+    private var recordingStarted = false
+
+    @Volatile
+    private var recordingComplete = false
+
+    /** Condition variable for blocking until the recording completes */
+    private val cvRecordingStarted = ConditionVariable(false)
+    private val cvRecordingComplete = ConditionVariable(false)
+    /** Orientation of the camera as 0, 90, 180, or 270 degrees */
+    private var orientation: Int = 0
 
 
 
@@ -208,8 +260,9 @@ class CameraXViewModel @Inject constructor(private val workManager: WorkManager,
      */
     fun startPreview(
         lifecycleOwner: LifecycleOwner,
-        previewView: PreviewView
+        surfaceProvider: GLSurfaceView
     ) {
+
 
         val currentCameraUiState = _cameraUiState.value
         val cameraSelector = if (currentCameraUiState.extensionMode == ExtensionMode.NONE) {
@@ -221,6 +274,27 @@ class CameraXViewModel @Inject constructor(private val workManager: WorkManager,
             )
         }
 
+
+//         Create an Extender to attach Camera2 options
+        val imageCaptureExtender = Camera2Interop.Extender(imageCaptureBuilder)
+
+        imageCaptureExtender.setSessionCaptureCallback(object : CameraCaptureSession.CaptureCallback(){
+            override fun onCaptureCompleted(session: CameraCaptureSession,
+                                            request: CaptureRequest,
+                                            result: TotalCaptureResult
+            ) {
+                if (isCurrentlyRecording()) {
+                    encoderWrapper.frameAvailable()
+                }
+            }
+        }
+    )
+        imageCapture = imageCaptureBuilder.build()
+
+
+
+
+
         preview = previewBuilder.build()
 
         val useCaseGroupBuilder = UseCaseGroup.Builder()
@@ -230,17 +304,78 @@ class CameraXViewModel @Inject constructor(private val workManager: WorkManager,
 //            .addUseCase(videoCapture)
         val useCaseGroup = useCaseGroupBuilder.build()
         cameraProvider.unbindAll()
-        cameraProvider.bindToLifecycle(
+        val camera = cameraProvider.bindToLifecycle(
             lifecycleOwner,
             cameraSelector,
             useCaseGroup
         )
-        preview.setSurfaceProvider(previewView.surfaceProvider)
+//        preview.setSurfaceProvider(previewView.surfaceProvider)
+
+        surfaceProvider.apply {
+            setEGLContextClientVersion(2)
+            val callback = object : GLCameraRender.Callback {
+                override fun onSurfaceChanged() {
+                }
+
+                override fun onFrameAvailable() {
+                    requestRender()
+                }
+            }
+            val cameraRender = GLCameraRender(context, callback)
+            cameraRender.type = "Normal"
+            setRenderer(cameraRender)
+            renderMode = GLSurfaceView.RENDERMODE_WHEN_DIRTY
+            preview.setSurfaceProvider(cameraRender)
+        }
+
+
+
+        val cameraId = Camera2CameraInfo.from(camera.cameraInfo).cameraId
+        val cameraManager = getApplication<MainApplication>().applicationContext.getSystemService(Context.CAMERA_SERVICE) as CameraManager
+        val characteristics = cameraManager.getCameraCharacteristics(cameraId)
+
+        orientation = characteristics.get(CameraCharacteristics.SENSOR_ORIENTATION)!!
+
+        encoderWrapper = createEncoder()
+
+//        pipeline = HardwarePipeline(width, height, fps, false,
+//            characteristics, encoderWrapper, surfaceView.holder.surface)
 
         viewModelScope.launch {
             _cameraUiState.emit(_cameraUiState.value.copy(cameraState = MediaState.READY))
             _captureUiState.emit(CaptureState.CaptureReady)
         }
+    }
+
+    val width = 480
+    val height = 640
+    val fps = 30
+
+    companion object {
+        private const val RECORDER_VIDEO_BITRATE: Int = 10_000_000
+        private const val MIN_REQUIRED_RECORDING_TIME_MILLIS: Long = 1000L
+    }
+
+    private fun createEncoder(): EncoderWrapper {
+        val videoEncoder = MediaFormat.MIMETYPE_VIDEO_AVC
+        val codecProfile = -1
+
+        var width = this.width
+        var height = this.height
+
+        if (orientation == 90 || orientation == 270) {
+            width = this.height
+            height = this.width
+        }
+        val orientationHint = 0
+
+        return EncoderWrapper(width, height, RECORDER_VIDEO_BITRATE, this.fps,
+            orientationHint, videoEncoder, codecProfile, outputFile)
+
+    }
+
+    private fun isCurrentlyRecording(): Boolean {
+        return recordingStarted && !recordingComplete
     }
 
     private var currentRecording: Recording? = null
@@ -282,11 +417,22 @@ class CameraXViewModel @Inject constructor(private val workManager: WorkManager,
         // Prevents screen rotation during the video recording
 
 
-        val outputFile: File by lazy { Util.createFile("mp4") }
-        encoder.startEncoding(480, 640, outputFile)
+//        encoder.startEncoding(width, height, outputFile)
+
+        pipeline.actionDown(encoderSurface)
+        // Finalizes encoder setup and starts recording
+        recordingStarted = true
+        encoderWrapper.start()
+        cvRecordingStarted.open()
+        pipeline.startRecording()
+        recordingStartMillis = System.currentTimeMillis()
+
         viewModelScope.launch {
             _recordState.emit(RecordState.RECORDING)
         }
+
+
+
         Log.i(TAG, "Recording started")
     }
 
@@ -322,9 +468,6 @@ class CameraXViewModel @Inject constructor(private val workManager: WorkManager,
     /**
      * Stops the preview stream. This should be invoked when the captured image is displayed.
      */
-    /**
-     * Stops the preview stream. This should be invoked when the captured image is displayed.
-     */
     fun stopPreview() {
         preview.setSurfaceProvider(null)
         viewModelScope.launch {
@@ -334,7 +477,31 @@ class CameraXViewModel @Inject constructor(private val workManager: WorkManager,
 
     fun stopRecording() {
 //        currentRecording?.stop()
-        encoder.stopEncoding()
+//        encoder.stopEncoding()
+
+        viewModelScope.launch(Dispatchers.IO) {
+            cvRecordingStarted.block()
+
+            /* Wait for at least one frame to process so we don't have an empty video */
+            encoderWrapper.waitForFirstFrame()
+
+            pipeline.clearFrameListener()
+
+            /* Wait until the session signals onReady */
+            cvRecordingComplete.block()
+
+            // Requires recording of at least MIN_REQUIRED_RECORDING_TIME_MILLIS
+            val elapsedTimeMillis = System.currentTimeMillis() - recordingStartMillis
+            if (elapsedTimeMillis < MIN_REQUIRED_RECORDING_TIME_MILLIS) {
+                delay(MIN_REQUIRED_RECORDING_TIME_MILLIS - elapsedTimeMillis)
+            }
+
+
+            Log.d(TAG, "Recording stopped. Output file: $outputFile")
+            encoderWrapper.shutdown()
+
+            pipeline.cleanup()
+        }
     }
 
 

@@ -21,7 +21,7 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContent {
-            val listPermission = listOf(Manifest.permission.CAMERA)
+            val listPermission = listOf(Manifest.permission.CAMERA, Manifest.permission.RECORD_AUDIO, Manifest.permission.WRITE_EXTERNAL_STORAGE)
             val explanation = "Use camera for detection and store image"
 
             DetectionExampleTheme {
