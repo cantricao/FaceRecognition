@@ -8,9 +8,19 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
-import androidx.compose.ui.ExperimentalComposeUiApi
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.ProgressIndicatorDefaults
+import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.produceState
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.platform.LocalContext
@@ -21,7 +31,6 @@ import com.example.detectionexample.config.Util
 import com.example.detectionexample.viewmodels.AnalysisViewModel
 import com.example.detectionexample.viewmodels.DatastoreViewModel
 
-@OptIn(ExperimentalComposeUiApi::class, ExperimentalMaterial3Api::class)
 @Composable
 fun AddPersonDialog(
     viewModel: AnalysisViewModel = viewModel(),
@@ -41,7 +50,7 @@ fun AddPersonDialog(
         initialValue = mutableListOf(), trackedObjectsState
     ) {
         value = trackedObjectsState.map {
-            val face = Util.getCropBitmapByCPU(it.location, viewModel.processBitmap)
+            val face = Util.getCropBitmapByCPU(it.location, viewModel.processingBitmap)
             Pair(face, it)
         }
     }

@@ -1,11 +1,17 @@
 package com.example.detectionexample.compose
 
 import android.net.Uri
-import android.opengl.GLSurfaceView
 import android.widget.Toast
 import androidx.camera.extensions.ExtensionMode
 import androidx.camera.view.PreviewView
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
@@ -14,7 +20,13 @@ import androidx.compose.material3.FilledTonalIconButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
-import androidx.compose.runtime.*
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -29,9 +41,14 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.bumptech.glide.load.engine.DiskCacheStrategy
 import com.bumptech.glide.request.RequestOptions
 import com.example.detectionexample.R
-import com.example.detectionexample.custom.GLCameraRender
+import com.example.detectionexample.config.OverlayViewConfig
+import com.example.detectionexample.custom.DetectionDrawable
 import com.example.detectionexample.custom.GlideOverlayBitmapTransformation
-import com.example.detectionexample.uistate.*
+import com.example.detectionexample.uistate.AnalysisState
+import com.example.detectionexample.uistate.CameraUiAction
+import com.example.detectionexample.uistate.CameraUiState
+import com.example.detectionexample.uistate.MediaState
+import com.example.detectionexample.uistate.RecordState
 import com.example.detectionexample.viewmodels.AnalysisViewModel
 import com.example.detectionexample.viewmodels.CameraXViewModel
 import com.skydoves.landscapist.glide.GlideImage
@@ -43,10 +60,12 @@ fun CameraPreview(viewModel: AnalysisViewModel = viewModel(), cameraViewModel: C
     if (!viewModel.isStaringCamera) return
     val lifecycleOwner = LocalLifecycleOwner.current
     val context = LocalContext.current
-    val previewView = remember { PreviewView(context) }
-
-    val surfaceView = remember { GLSurfaceView(context) }
-
+    val previewView = remember {
+        PreviewView(context).apply {
+            implementationMode = PreviewView.ImplementationMode.COMPATIBLE
+            controller = cameraViewModel.cameraController
+        }
+    }
 
     var enableCameraShutter by remember { mutableStateOf(true) }
     var enableSwitchLens by remember { mutableStateOf(true) }
@@ -78,7 +97,7 @@ fun CameraPreview(viewModel: AnalysisViewModel = viewModel(), cameraViewModel: C
 
     fun showPhoto(uri: Uri?) {
         if (uri == null) return
-        enablePhotoPreview= true
+        enablePhotoPreview = true
         glideUri = uri
         enableClosePhotoPreview = true
     }
@@ -86,86 +105,47 @@ fun CameraPreview(viewModel: AnalysisViewModel = viewModel(), cameraViewModel: C
     val trackedObjectsState by viewModel.trackedObserver.collectAsState(initial = listOf())
 
 
+    var cameraState by remember { mutableStateOf(CameraUiState()) }
 
-    produceState<CameraUiAction>(initialValue = CameraUiAction.SelectCameraExtension(ExtensionMode.NONE), cameraViewModel.action){
-        cameraViewModel.action.collectLatest { action ->
-            when(action){
-                is CameraUiAction.SelectCameraExtension -> cameraViewModel.setExtensionMode(action.extension)
-                CameraUiAction.ClosePhotoPreviewClick -> {
-                    hidePhoto()
-                    showCameraControls()
-                    cameraViewModel.startPreview(lifecycleOwner, surfaceView)
-                }
-                CameraUiAction.ShutterButtonClick -> cameraViewModel.capturePhoto()
-                CameraUiAction.SwitchCameraClick -> cameraViewModel.switchCamera()
-                CameraUiAction.RecordButtonClick -> Unit
-            }
-            value = action
-        }
-    }
-
-    val cameraState by produceState(initialValue = CameraUiState(), cameraViewModel.cameraUiState) {
-        cameraViewModel.cameraUiState.collectLatest { cameraState ->
-            when(cameraState.analysisState){
-                AnalysisState.NOT_READY -> cameraViewModel.setAnalysis(viewModel.analyzer)
-                AnalysisState.READY -> Unit
-                AnalysisState.ANALYSIS_STOPPED -> cameraViewModel.clearAnalysis()
-            }
-            when(cameraState.cameraState) {
-                MediaState.NOT_READY -> {
-                    viewModel.setBitmapEncoding(cameraViewModel.bitmapEncoding)
-                    cameraViewModel.initializeCamera()
-                }
-                MediaState.READY  -> {
-                    when (cameraState.analysisState){
+    LaunchedEffect(cameraViewModel.cameraUiState, cameraViewModel.action) {
+        cameraViewModel.cameraUiState.collectLatest { state ->
+            when (state.cameraState) {
+                MediaState.NOT_READY -> cameraViewModel.initializeCamera()
+                MediaState.READY -> {
+                    when (state.analysisState) {
                         AnalysisState.NOT_READY -> Unit
                         AnalysisState.READY, AnalysisState.ANALYSIS_STOPPED -> cameraViewModel.startPreview(
-                            lifecycleOwner,
-                            surfaceView
+                            lifecycleOwner
                         )
                     }
                 }
                 MediaState.PREVIEW_STOPPED -> Unit
             }
-            value = cameraState
-        }
 
-    }
-
-
-
-    produceState<CaptureState>(initialValue = CaptureState.CaptureNotReady, cameraViewModel.captureUiState) {
-        cameraViewModel.captureUiState.collectLatest { captureUiState ->
-            when (captureUiState) {
-                CaptureState.CaptureNotReady -> {
-                    hidePhoto()
-                    enableCameraShutter = true
-                    enableSwitchLens = true
-                }
-                is CaptureState.CaptureFailed -> {
-                    val error = captureUiState.exception.message!!
-                    showCaptureError(error)
-                    cameraViewModel.startPreview(lifecycleOwner, surfaceView)
-                    enableCameraShutter = true
-                    enableSwitchLens = true
-                }
-                is CaptureState.CaptureFinished -> {
-                    cameraViewModel.stopPreview()
-                    showPhoto(captureUiState.outputResults.savedUri)
-                    hideCameraControls()
-                }
-                CaptureState.CaptureReady -> {
-                    enableCameraShutter = true
-                    enableSwitchLens = true
-                }
-                CaptureState.CaptureStarted -> {
-                    enableCameraShutter = false
-                    enableSwitchLens = false
-                }
+            when (state.analysisState) {
+                AnalysisState.NOT_READY -> cameraViewModel.setAnalysis(viewModel.analyzer)
+                AnalysisState.READY -> Unit
+                AnalysisState.ANALYSIS_STOPPED -> cameraViewModel.clearAnalysis()
             }
-            value = captureUiState
+            cameraState = state
+        }
+
+        cameraViewModel.action.collectLatest { action ->
+            when (action) {
+                is CameraUiAction.SelectCameraExtension -> cameraViewModel.setExtensionMode(action.extension)
+                CameraUiAction.ClosePhotoPreviewClick -> {
+                    hidePhoto()
+                    showCameraControls()
+                    cameraViewModel.startPreview(lifecycleOwner)
+                }
+
+                CameraUiAction.ShutterButtonClick -> cameraViewModel.capturePhoto()
+                CameraUiAction.SwitchCameraClick -> cameraViewModel.switchCamera()
+                CameraUiAction.RecordButtonClick -> Unit
+            }
         }
     }
+
 
     val extensionName = mapOf(
         ExtensionMode.AUTO to stringResource(R.string.camera_mode_auto),
@@ -175,14 +155,16 @@ fun CameraPreview(viewModel: AnalysisViewModel = viewModel(), cameraViewModel: C
         ExtensionMode.BOKEH to stringResource(R.string.camera_mode_bokeh),
         ExtensionMode.NONE to stringResource(R.string.camera_mode_none),
     )
-    
+
     val videoRecordEvent by cameraViewModel.recordState.collectAsState(initial = RecordState.IDLE)
 
-    Box(Modifier.fillMaxSize(),
-        contentAlignment = Alignment.Center) {
+    Box(
+        Modifier.fillMaxSize(),
+        contentAlignment = Alignment.Center
+    ) {
         AndroidView(
-//            factory = { previewView },
-            factory = { surfaceView },
+            factory = { previewView },
+//            factory = { surfaceView },
             modifier = Modifier.fillMaxSize(),
         )
         Column(modifier = Modifier.align(Alignment.BottomEnd)) {
@@ -191,8 +173,10 @@ fun CameraPreview(viewModel: AnalysisViewModel = viewModel(), cameraViewModel: C
 
                 ) {
                 items(cameraState.availableExtensions) { extension ->
-                    TextButton(onClick = {
-                        cameraViewModel.setAction(CameraUiAction.SelectCameraExtension(extension)) },
+                    TextButton(
+                        onClick = {
+                            cameraViewModel.setAction(CameraUiAction.SelectCameraExtension(extension))
+                        },
                         enabled = enableExtensionSelector
                     ) {
                         Text(
@@ -209,20 +193,23 @@ fun CameraPreview(viewModel: AnalysisViewModel = viewModel(), cameraViewModel: C
                         .size(92.dp + 32.dp)
                         .padding(PaddingValues(32.dp)),
                     onClick = {
-                        when(videoRecordEvent){
+                        when (videoRecordEvent) {
                             RecordState.RECORDING -> cameraViewModel.stopRecording()
                             RecordState.IDLE, RecordState.FINALIZED -> cameraViewModel.startRecording()
                             else -> throw IllegalStateException("recordingState in unknown state")
                         }
                     },
-                    enabled = enableCameraShutter) {
+                    enabled = enableCameraShutter
+                ) {
                     Icon(
-                        painter = painterResource(id =
-                        when (videoRecordEvent){
-                            RecordState.RECORDING -> R.drawable.ic_baseline_stop_24
-                            else -> R.drawable.ic_baseline_play_arrow_24
+                        painter = painterResource(
+                            id =
+                            when (videoRecordEvent) {
+                                RecordState.RECORDING -> R.drawable.ic_baseline_stop_24
+                                else -> R.drawable.ic_baseline_play_arrow_24
 
-                        }),
+                            }
+                        ),
                         contentDescription = "Shutter button",
                         modifier = Modifier.size(48.dp)
                     )
@@ -233,7 +220,8 @@ fun CameraPreview(viewModel: AnalysisViewModel = viewModel(), cameraViewModel: C
                         .size(92.dp + 32.dp)
                         .padding(PaddingValues(32.dp)),
                     onClick = { cameraViewModel.setAction(CameraUiAction.ShutterButtonClick) },
-                    enabled = enableCameraShutter) {
+                    enabled = enableCameraShutter
+                ) {
                     Icon(
                         painter = painterResource(id = R.drawable.ic_baseline_camera_24),
                         contentDescription = "Shutter button",
@@ -246,7 +234,8 @@ fun CameraPreview(viewModel: AnalysisViewModel = viewModel(), cameraViewModel: C
                         .size(92.dp + 32.dp)
                         .padding(PaddingValues(32.dp)),
                     onClick = { cameraViewModel.setAction(CameraUiAction.SwitchCameraClick) },
-                    enabled = enableSwitchLens) {
+                    enabled = enableSwitchLens
+                ) {
                     Icon(
                         painter = painterResource(id = R.drawable.ic_baseline_flip_camera_android_24),
                         contentDescription = "switch lens",
@@ -256,7 +245,7 @@ fun CameraPreview(viewModel: AnalysisViewModel = viewModel(), cameraViewModel: C
 
             }
         }
-        if(enablePhotoPreview){
+        if (enablePhotoPreview) {
             GlideImage(
                 imageModel = glideUri,
                 modifier = Modifier.fillMaxSize(),
@@ -267,51 +256,25 @@ fun CameraPreview(viewModel: AnalysisViewModel = viewModel(), cameraViewModel: C
                 },
                 contentDescription = "Image Preview",
             )
-            FilledTonalIconButton(onClick = { cameraViewModel.setAction(CameraUiAction.ClosePhotoPreviewClick) },
+            FilledTonalIconButton(
+                onClick = { cameraViewModel.setAction(CameraUiAction.ClosePhotoPreviewClick) },
                 enabled = enableClosePhotoPreview,
-                modifier = Modifier.align(Alignment.TopEnd)) {
+                modifier = Modifier.align(Alignment.TopEnd)
+            ) {
                 Icon(Icons.Default.Close, contentDescription = "Close Photo Preview")
             }
         } else {
-            OverlayView()
+            previewView.overlay.clear()
+            OverlayViewConfig.setContextToFixTextSize(context)
+            val drawable = DetectionDrawable(
+                trackedObjectsState,
+                previewView.width,
+                previewView.height
+            )
+            previewView.overlay.add(drawable)
         }
 
-
     }
-
-//                // Setup image capture listener which is triggered after photo has been taken
-//                imageCapture.takePicture(outputOptions, cameraExecutor, object :
-//                    ImageCapture.OnImageSavedCallback {
-//                    override fun onError(exception: ImageCaptureException) {
-//                        Log.e(CameraConfig.TAG, "Photo capture failed: ${exception.message}", exception)
-//                        value = Uri.EMPTY
-//                        viewModel.isCaptureImage = false
-//                    }
-//
-//                    override fun onImageSaved(outputFileResults: ImageCapture.OutputFileResults) {
-//                        val jsonString = Json.encodeToString(trackedObjectsState)
-//                        Log.d("trackedObjectsState1:", jsonString)
-//                        val request = OneTimeWorkRequestBuilder<SaveImageWorker>()
-//                            .setInputData(workDataOf(
-//                                CameraConfig.KEY_CAPTURE_IMAGE to outputFileResults.savedUri.toString(),
-//                                CameraConfig.KEY_CAPTURE_TRACKER_OBJECT to jsonString
-//                            ))
-//                            .build()
-//                        worker.enqueueUniqueWork(CameraConfig.KEY_CAPTURE_IMAGE,ExistingWorkPolicy.KEEP,  request)
-//                        viewModel.isCaptureImage = false
-//                        Log.d(CameraConfig.TAG, "Photo capture succeeded: $value")
-//                    }
-//                })
-//            }
-//        }
-
-//    DisposableEffect(lifecycleOwner) {
-//        onDispose {
-//            cameraProvider.unbindAll()
-//            cameraExecutor.shutdown()
-//            displayManager.unregisterDisplayListener(displayListener)
-//        }
-//    }
 }
 
 

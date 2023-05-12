@@ -29,13 +29,14 @@ android {
         }
     }
     compileOptions {
-        sourceCompatibility JavaVersion.VERSION_11
-        targetCompatibility JavaVersion.VERSION_11
+        sourceCompatibility JavaVersion.VERSION_17
+        targetCompatibility JavaVersion.VERSION_17
         coreLibraryDesugaringEnabled = true
     }
     kotlinOptions {
-        jvmTarget = '11'
+        jvmTarget = '17'
     }
+
     buildFeatures {
         viewBinding true
         compose true
@@ -48,25 +49,26 @@ android {
             excludes += '/META-INF/{AL2.0,LGPL2.1}'
         }
     }
+    namespace 'com.example.detectionexample'
 }
 
 dependencies {
 
-    implementation 'androidx.core:core-ktx:1.8.0'
-    implementation 'androidx.appcompat:appcompat:1.5.0'
-    implementation 'com.google.android.material:material:1.6.1'
-    implementation "androidx.compose.ui:ui:1.3.0-alpha03"
-    implementation "androidx.compose.ui:ui-text-google-fonts:1.3.0-alpha03"
+    implementation 'androidx.core:core-ktx:1.10.1'
+    implementation 'androidx.appcompat:appcompat:1.6.1'
+    implementation 'com.google.android.material:material:1.9.0'
+    implementation "androidx.compose.ui:ui:$compose_version_ui"
+    implementation "androidx.compose.ui:ui-text-google-fonts:$compose_version_ui"
     implementation "androidx.compose.material:material:$compose_version_ui"
 
     implementation "androidx.compose.ui:ui-tooling-preview:$compose_version_ui"
     implementation "androidx.lifecycle:lifecycle-runtime-ktx:$lifecycle_version"
-    implementation 'androidx.activity:activity-compose:1.5.1'
+    implementation 'androidx.activity:activity-compose:1.7.1'
     implementation 'androidx.startup:startup-runtime:1.1.1'
-    implementation 'androidx.compose.material3:material3:1.0.0-alpha16'
+    implementation 'androidx.compose.material3:material3:1.1.0'
     testImplementation 'junit:junit:4.13.2'
-    androidTestImplementation 'androidx.test.ext:junit:1.1.3'
-    androidTestImplementation 'androidx.test.espresso:espresso-core:3.4.0'
+    androidTestImplementation 'androidx.test.ext:junit:1.1.5'
+    androidTestImplementation 'androidx.test.espresso:espresso-core:3.5.1'
     androidTestImplementation "androidx.compose.ui:ui-test-junit4:$compose_version_ui"
     debugImplementation "androidx.compose.ui:ui-tooling:$compose_version_ui"
 
@@ -78,7 +80,7 @@ dependencies {
     implementation "com.github.skydoves:landscapist-glide:1.5.2"
 
     // Tensorflow lite dependencies
-    implementation "org.tensorflow:tensorflow-lite:$tfliteVersion"
+//    implementation "org.tensorflow:tensorflow-lite:$tfliteVersion"
     implementation "org.tensorflow:tensorflow-lite-gpu:$tfliteVersion"
     implementation 'org.tensorflow:tensorflow-lite-support:0.4.1'
     implementation "org.tensorflow:tensorflow-lite-select-tf-ops:$tfliteVersion"
@@ -123,7 +125,6 @@ dependencies {
 
     implementation "androidx.work:work-runtime-ktx:$work_version"
 
-
     // For media playback using ExoPlayer
     implementation("androidx.media3:media3-exoplayer:$media3_version")
     // For building media playback UIs
@@ -133,14 +134,12 @@ dependencies {
 
     implementation 'jp.co.cyberagent.android:gpuimage:2.1.0'
 
-    implementation 'org.jetbrains.kotlinx:kotlinx-coroutines-guava:1.6.1'
-
+    implementation 'org.jetbrains.kotlinx:kotlinx-coroutines-guava:1.6.4'
 
     implementation("androidx.datastore:datastore-preferences:1.0.0")
     implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.3.3")
 
-    //noinspection GradleDependency
-    coreLibraryDesugaring("com.android.tools:desugar_jdk_libs:1.1.6")
+    coreLibraryDesugaring("com.android.tools:desugar_jdk_libs:2.0.3")
 
 
 }

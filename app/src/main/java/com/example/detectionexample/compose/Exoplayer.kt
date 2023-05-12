@@ -2,13 +2,24 @@ package com.example.detectionexample.compose
 
 import android.graphics.Bitmap
 import android.net.Uri
+import android.widget.FrameLayout
 import androidx.compose.foundation.Image
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material3.FilledTonalIconButton
 import androidx.compose.material3.Icon
-import androidx.compose.runtime.*
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.produceState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.ImageBitmap
@@ -21,19 +32,22 @@ import androidx.compose.ui.viewinterop.AndroidView
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.media3.common.util.UnstableApi
 import androidx.media3.ui.LegacyPlayerControlView
+import androidx.media3.ui.PlayerView
 import com.example.detectionexample.R
 import com.example.detectionexample.config.Util
+import com.example.detectionexample.custom.BitmapOverlayVideoProcessor
+import com.example.detectionexample.custom.VideoProcessingGLSurfaceView
 import com.example.detectionexample.uistate.MediaState
 import com.example.detectionexample.uistate.RecordState
 import com.example.detectionexample.viewmodels.AnalysisViewModel
 import com.example.detectionexample.viewmodels.VideoViewModel
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.launch
 
 
 @Composable
-fun VideoPlayer(viewModel: AnalysisViewModel = viewModel(),
+@UnstableApi
+fun  VideoPlayer(viewModel: AnalysisViewModel = viewModel(),
                 videoViewModel: VideoViewModel = viewModel()
 ) {
     if (viewModel.isStaringCamera) return
@@ -60,7 +74,7 @@ fun VideoPlayer(viewModel: AnalysisViewModel = viewModel(),
         }
     }
 
-    var mRecordingEnabled by remember { mutableStateOf(false) }
+    // var mRecordingEnabled by remember { mutableStateOf(false) }
 
     DisposableEffect(lifecycleOwner) {
         // Create an observer that triggers our remembered callbacks
@@ -119,11 +133,22 @@ fun VideoPlayer(viewModel: AnalysisViewModel = viewModel(),
 
 
     Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-        Image(
-            bitmap = imageBitmap.asImageBitmap(),
-            contentDescription = "Overlay View",
-            modifier = Modifier.fillMaxSize()
-        )
+        AndroidView(factory = { cxt ->
+            PlayerView(cxt).apply {
+                player = videoViewModel.exoPlayer
+                val contentFrame = findViewById<FrameLayout>(androidx.media3.ui.R.id.exo_content_frame)
+                contentFrame.addView(VideoProcessingGLSurfaceView(cxt, false, BitmapOverlayVideoProcessor(cxt)).apply {
+                    setPlayer(videoViewModel.exoPlayer)
+                })
+            }
+
+        })
+
+//        Image(
+//            bitmap = imageBitmap.asImageBitmap(),
+//            contentDescription = "Overlay View",
+//            modifier = Modifier.fillMaxSize()
+//        )
 
         Image(
             bitmap = imageOverlay,
@@ -141,7 +166,7 @@ fun VideoPlayer(viewModel: AnalysisViewModel = viewModel(),
                     .size(92.dp + 32.dp)
                     .padding(PaddingValues(32.dp)),
                 onClick = {
-                    when(videoRecordEvent){
+                    when (videoRecordEvent) {
                         RecordState.RECORDING -> videoViewModel.stopRecording()
                         RecordState.IDLE, RecordState.FINALIZED -> videoViewModel.startRecording()
                         else -> throw IllegalStateException("recordingState in unknown state")
@@ -150,12 +175,14 @@ fun VideoPlayer(viewModel: AnalysisViewModel = viewModel(),
 //                enabled = enableCameraShutter
             ) {
                 Icon(
-                    painter = painterResource(id =
-                    when (videoRecordEvent){
-                        RecordState.RECORDING -> R.drawable.ic_baseline_stop_24
-                        else -> R.drawable.ic_baseline_play_arrow_24
+                    painter = painterResource(
+                        id =
+                        when (videoRecordEvent) {
+                            RecordState.RECORDING -> R.drawable.ic_baseline_stop_24
+                            else -> R.drawable.ic_baseline_play_arrow_24
 
-                    }),
+                        }
+                    ),
                     contentDescription = "Shutter button",
                     modifier = Modifier.size(48.dp)
                 )

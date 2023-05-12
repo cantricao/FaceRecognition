@@ -2,7 +2,6 @@ package com.example.detectionexample.compose
 
 import android.widget.Toast
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Column
 import androidx.compose.material.BottomDrawer
 import androidx.compose.material.BottomDrawerValue
@@ -11,7 +10,6 @@ import androidx.compose.material.rememberBottomDrawerState
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -21,7 +19,7 @@ import com.example.detectionexample.viewmodels.DatastoreViewModel
 import kotlinx.coroutines.launch
 
 
-@OptIn(ExperimentalMaterialApi::class, ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterialApi::class)
 @Composable
 @Preview
 fun BottomSheet(
@@ -40,7 +38,7 @@ fun BottomSheet(
         "Load Recognitions From Datastore",
         "Clear All Recognitions",
         "Import Photo",
-        "Hyperparameters",
+        "Hyper parameters",
     )
 
     val drawerState = rememberBottomDrawerState(BottomDrawerValue.Closed)
@@ -56,7 +54,7 @@ fun BottomSheet(
                             drawerState.close()
                             chooseAction = index
                         }
-                    }, headlineText =  {
+                    }, headlineContent =  {
                         Text(text = action)
                     })
                 }
@@ -80,7 +78,7 @@ fun BottomSheet(
                     }
                     4 -> ClearNameListDialog()
                     5 -> LoadPhotoDialog()
-                    6 -> HyperparameterDialog()
+                    6 -> HyperParameterDialog()
 
                 }
             } else {

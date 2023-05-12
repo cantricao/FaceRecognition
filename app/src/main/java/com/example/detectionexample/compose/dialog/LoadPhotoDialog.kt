@@ -23,8 +23,8 @@ import androidx.compose.ui.window.DialogProperties
 import androidx.core.content.FileProvider
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.bumptech.glide.request.RequestOptions
-import com.example.detectionexample.custom.GlideCropBitmapTransformation
 import com.example.detectionexample.config.Util
+import com.example.detectionexample.custom.GlideCropBitmapTransformation
 import com.example.detectionexample.viewmodels.AnalysisViewModel
 import com.example.detectionexample.viewmodels.DatastoreViewModel
 import com.skydoves.landscapist.glide.GlideImage
@@ -127,7 +127,7 @@ fun LoadPhotoDialog(
                             Toast.makeText(context, "Select ${listOfUri.size} images", Toast.LENGTH_SHORT).show()
                         }
 
-                    }, headlineText = { Text("Take Photo From Default Camera") }
+                    }, headlineContent = { Text("Take Photo From Default Camera") }
                     )
                     ListItem(modifier = Modifier.clickable {
                         scope.launch {
@@ -135,7 +135,7 @@ fun LoadPhotoDialog(
                             launcher.launch("image/*")
                             Toast.makeText(context, "Select ${listOfUri.size} images", Toast.LENGTH_SHORT).show()
                         }
-                    }, headlineText = {
+                    }, headlineContent = {
                         Text("Load Photos From Gallery")
                     })
                 }

@@ -2,7 +2,6 @@ package com.example.detectionexample.detector
 
 import android.content.Context
 import android.graphics.Bitmap
-import android.media.Image
 import android.util.Log
 import com.example.detectionexample.models.Recognition
 import kotlinx.coroutines.flow.Flow

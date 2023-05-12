@@ -1,10 +1,11 @@
 package com.example.detectionexample.viewmodels
 
 import android.app.Application
+import android.content.Intent
 import android.graphics.Bitmap
 import android.graphics.ImageFormat
-import android.media.MediaCodecInfo
 import android.media.MediaFormat
+import android.media.projection.MediaProjectionManager
 import android.net.Uri
 import android.util.Log
 import android.widget.Toast
@@ -12,7 +13,11 @@ import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.media3.common.Format
 import androidx.media3.common.MediaItem
+import androidx.media3.common.util.UnstableApi
+import androidx.media3.exoplayer.DefaultRenderersFactory
 import androidx.media3.exoplayer.ExoPlayer
+import androidx.media3.exoplayer.util.EventLogger
+import com.example.detectionexample.MainApplication
 import com.example.detectionexample.config.CameraConfig
 import com.example.detectionexample.config.Util
 import com.example.detectionexample.custom.BitmapEncoding
@@ -30,7 +35,7 @@ import java.nio.ByteBuffer
 import javax.inject.Inject
 
 
-@HiltViewModel
+@UnstableApi @HiltViewModel
 class VideoViewModel @Inject constructor(application: Application) : AndroidViewModel(application) {
     val bitmapEncoding: BitmapEncoding = object :BitmapEncoding {
         override fun queueFrame(bitmap: Bitmap) {
@@ -93,11 +98,12 @@ class VideoViewModel @Inject constructor(application: Application) : AndroidView
 
     private val renderersFactory: ExoplayerCustomRenderersFactory =
         ExoplayerCustomRenderersFactory(getApplication()).setVideoFrameDataListener(videoFrameDataListener)
-    val exoPlayer = ExoPlayer.Builder(getApplication(), renderersFactory).build()
-//    val exoPlayer = ExoPlayer.Builder(getApplication()).build()
-
-
-
+//    val exoPlayer = ExoPlayer.Builder(getApplication(), renderersFactory).build()
+    val exoPlayer = ExoPlayer.Builder(
+                getApplication(),
+                DefaultRenderersFactory(getApplication())
+                    .setExtensionRendererMode(DefaultRenderersFactory.EXTENSION_RENDERER_MODE_ON)
+            ).build()
 
 
 
@@ -119,8 +125,13 @@ class VideoViewModel @Inject constructor(application: Application) : AndroidView
                 setMediaItem(mediaItem)
                 prepare()
                 playWhenReady = true
+                addAnalyticsListener(EventLogger())
             }
+            mediaProjectionManager =
+                getApplication<MainApplication>().applicationContext.getSystemService(android.content.Context.MEDIA_PROJECTION_SERVICE) as MediaProjectionManager
+
             _videoState.emit(MediaState.READY)
+
         }
     }
 
@@ -134,8 +145,12 @@ class VideoViewModel @Inject constructor(application: Application) : AndroidView
         encoder.stopEncoding()
     }
 
+    private var mediaProjectionManager: MediaProjectionManager? = null
+
     fun startRecording() {
         val outputFile: File by lazy { Util.createFile("mp4") }
+        val permissionIntent: Intent = mediaProjectionManager!!.createScreenCaptureIntent()
+
         encoder.startEncoding(_bitmap.value.width, _bitmap.value.height, outputFile)
         viewModelScope.launch {
             _recordState.emit(RecordState.RECORDING)

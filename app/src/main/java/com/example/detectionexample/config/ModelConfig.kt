@@ -13,10 +13,10 @@ object ModelConfig {
     const val COCO_LABEL_PATH = "coco.txt"
     const val MOBILE_FACENET_MODEL_NAME = "mobile_face_net.tflite"
 
-    val EXTRACTOR_DEFAULT_DEVICE = Model.Device.GPU
+    val EXTRACTOR_DEFAULT_DEVICE = Model.Device.NNAPI
     const val EXTRACTOR_DEFAULT_MODEL = MOBILE_FACENET_MODEL_NAME
 
-    val DETECTOR_DEFAULT_DEVICE = Model.Device.GPU
+    val DETECTOR_DEFAULT_DEVICE = Model.Device.NNAPI
     const val DETECTOR_DEFAULT_MODEL = BLAZEFACE_MODEL_NAME
 
 

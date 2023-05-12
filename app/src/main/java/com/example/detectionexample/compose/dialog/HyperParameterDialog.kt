@@ -5,8 +5,20 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowDropDown
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.material3.Icon
+import androidx.compose.material3.ListItem
+import androidx.compose.material3.OutlinedButton
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.input.KeyboardType
@@ -16,9 +28,8 @@ import com.example.detectionexample.config.ModelConfig
 import com.example.detectionexample.viewmodels.AnalysisViewModel
 import org.tensorflow.lite.gpu.CompatibilityList
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun HyperparameterDialog(
+fun HyperParameterDialog(
     viewModel: AnalysisViewModel = viewModel(),
 ) {
     val context = LocalContext.current
@@ -67,7 +78,7 @@ fun HyperparameterDialog(
                     )
                 )
                 ListItem(
-                    headlineText = {
+                    headlineContent = {
                         OutlinedButton(
                             onClick = { expandedModelSlider = true },
                         ) {
@@ -100,7 +111,7 @@ fun HyperparameterDialog(
                 )
 
                 ListItem(
-                    headlineText = {
+                    headlineContent = {
                         OutlinedButton(
                             onClick = { expandedDeviceSlider = true },
                         ) {

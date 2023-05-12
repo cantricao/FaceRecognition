@@ -5,9 +5,17 @@ import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
-import androidx.compose.ui.ExperimentalComposeUiApi
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.Checkbox
+import androidx.compose.material3.ListItem
+import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import androidx.compose.runtime.toMutableStateList
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.asImageBitmap
@@ -17,7 +25,6 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.detectionexample.viewmodels.AnalysisViewModel
 import com.example.detectionexample.viewmodels.DatastoreViewModel
 
-@OptIn(ExperimentalComposeUiApi::class, ExperimentalMaterial3Api::class)
 @Composable
 fun DisplayNameListViewDialog(
     viewModel: AnalysisViewModel = viewModel(),
@@ -45,13 +52,13 @@ fun DisplayNameListViewDialog(
                             bitmap = person.face.asImageBitmap(),
                             contentDescription = "Face Icon"
                         ) },
-                        headlineText = { Text(text = person.name) },
+                        headlineContent = { Text(text = person.name) },
                         trailingContent = {
                             if(canEdit)
                                 Checkbox(
                                     checked = checkedItems[index],
                                     onCheckedChange = { checkedItems[index] = it },
-                                    enabled = canEdit
+                                    enabled = true
                                 )}
                     )
                 }

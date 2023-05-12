@@ -1,10 +1,11 @@
 package com.example.detectionexample.viewmodels
 
 import android.graphics.Bitmap
-import android.graphics.Canvas
+import android.graphics.ImageFormat
 import android.graphics.Matrix
 import android.util.Log
 import androidx.camera.core.ImageAnalysis
+import androidx.camera.core.ImageProxy
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
@@ -22,7 +23,11 @@ import com.example.detectionexample.repository.ExtractorRepository
 import com.example.detectionexample.repository.RecognizedPersonRepository
 import com.example.detectionexample.repository.TrackedObjectRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
-import kotlinx.coroutines.flow.*
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 import kotlin.streams.toList
@@ -47,11 +52,11 @@ class AnalysisViewModel @Inject constructor(
     var isStaringCamera by mutableStateOf(true)
     var isProcessingFrame by mutableStateOf(true)
 
-    lateinit var processBitmap: Bitmap
+    lateinit var processingBitmap: Bitmap
         private set
 
-    private lateinit var cloneProcessBitmap: Bitmap
-    private lateinit var cloneProcessingCanvas: Canvas
+    private var processingMatrix = Matrix()
+    private lateinit var analyzingBitmap: Bitmap
 
     private var bitmapEncoding: BitmapEncoding? = null
 
@@ -77,7 +82,7 @@ class AnalysisViewModel @Inject constructor(
             if (isRecognizedFace) {
                 val resultWithRegister = result.map { recognitions ->
                     recognitions.parallelStream().map { recognize ->
-                        val faces = Util.getCropBitmapByCPU(recognize.location, processBitmap)
+                        val faces = Util.getCropBitmapByCPU(recognize.location, processingBitmap)
                         val emb = extractorRepository.extractImage(faces)
                         val neighbor = recognizedPersonRepository.findNearest(emb, threshold)
                         recognize.apply {
@@ -98,10 +103,6 @@ class AnalysisViewModel @Inject constructor(
                 TAG,
                 "Processing ${_trackedObjects.value.size} results from ${timestamp.toString(3)} in $detectedTime ms"
             )
-
-            val overlayBitmap = Util.drawBitmapOverlay(_trackedObjects.value, cloneProcessBitmap.width, cloneProcessBitmap.height)
-            cloneProcessingCanvas.drawBitmap(overlayBitmap, Matrix(), null)
-            bitmapEncoding?.queueFrame(cloneProcessBitmap)
 
         }
     }
@@ -127,13 +128,10 @@ class AnalysisViewModel @Inject constructor(
                 )
                 needUpdateTrackerImageSourceInfo = false
             }
-            processBitmap = Bitmap.createBitmap(image)
-            cloneProcessBitmap = Bitmap.createBitmap(image)
-            cloneProcessingCanvas = Canvas(cloneProcessBitmap)
-
+            processingBitmap = Bitmap.createBitmap(image)
             observeTrackedObject(timestamp,
                 !recognizedPersonRepository.isEmpty(),
-                detectInImage(processBitmap))
+                detectInImage(processingBitmap))
         }
     }
 
@@ -141,30 +139,39 @@ class AnalysisViewModel @Inject constructor(
         extractorRepository.close() }
 
 
+    private fun ImageProxy.toByteArray() : ByteArray{
+        val yBuffer = planes[0].buffer // Y
+        val vuBuffer = planes[2].buffer // VU
+
+        val ySize = yBuffer.remaining()
+        val vuSize = vuBuffer.remaining()
+
+        val nv21 = ByteArray(ySize + vuSize)
+
+        yBuffer.get(nv21, 0, ySize)
+        vuBuffer.get(nv21, ySize, vuSize)
+        return nv21
+    }
     var analyzer = ImageAnalysis.Analyzer { imageProxy ->
         if (!isProcessingFrame) {
             imageProxy.close()
             return@Analyzer
         }
         if (needUpdateTrackerImageSourceInfo) {
-            processBitmap =
-                Bitmap.createBitmap(imageProxy.width, imageProxy.height, Bitmap.Config.ARGB_8888)
-            cloneProcessBitmap = Bitmap.createBitmap(processBitmap)
-            cloneProcessingCanvas = Canvas(cloneProcessBitmap)
+            analyzingBitmap = Bitmap.createBitmap(imageProxy.width, imageProxy.height, Bitmap.Config.ARGB_8888)
+            processingMatrix.setRotate(imageProxy.imageInfo.rotationDegrees.toFloat(), imageProxy.width / 2f, imageProxy.height / 2f)
             OverlayViewConfig.setFrameConfiguration(
                 imageProxy.width,
                 imageProxy.height, 0
             )
             needUpdateTrackerImageSourceInfo = false
         }
-        processBitmap.copyPixelsFromBuffer(imageProxy.planes[0].buffer)
-        imageProxy.planes[0].buffer.rewind()
-        cloneProcessBitmap.copyPixelsFromBuffer(imageProxy.planes[0].buffer)
-
+        Util.yuvToRgb(imageProxy.toByteArray(), analyzingBitmap, ImageFormat.NV21)
+        processingBitmap = Bitmap.createBitmap(analyzingBitmap, 0, 0, imageProxy.width, imageProxy.height, processingMatrix, true)
         observeTrackedObject(
             imageProxy.imageInfo.timestamp,
             !recognizedPersonRepository.isEmpty(),
-            detectInImage(processBitmap))
+            detectInImage(processingBitmap))
         imageProxy.close()
     }
 

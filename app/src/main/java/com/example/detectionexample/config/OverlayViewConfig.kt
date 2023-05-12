@@ -2,16 +2,14 @@ package com.example.detectionexample.config
 
 import android.content.Context
 import android.graphics.Matrix
-import android.util.Log
 import android.util.TypedValue
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.*
-import androidx.compose.ui.graphics.drawscope.Stroke
-import javax.inject.Inject
+import androidx.compose.ui.graphics.NativePaint
+import androidx.compose.ui.graphics.Paint
 
 object OverlayViewConfig  {
 
