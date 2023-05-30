@@ -3,11 +3,6 @@ package com.example.detectionexample.config
 import android.content.Context
 import android.graphics.Matrix
 import android.util.TypedValue
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.setValue
-import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.NativePaint
 import androidx.compose.ui.graphics.Paint
 
@@ -27,11 +22,9 @@ object OverlayViewConfig  {
     }
 
 
-    var frameWidth = 0
-    var frameHeight = 0
-    var sensorOrientation = 0f
-
-    var modifier: Modifier by mutableStateOf( Modifier.fillMaxSize() )
+    private var frameWidth = 0
+    private var frameHeight = 0
+    private var sensorOrientation = 0f
 
     //BorderedText
     val interiorPaint: NativePaint = Paint().asFrameworkPaint().apply {
@@ -53,7 +46,7 @@ object OverlayViewConfig  {
         width: Int, height: Int, sensorOrientation: Int
     ) {
         this.sensorOrientation = sensorOrientation.toFloat()
-        if(sensorOrientation%2==0){
+        if(sensorOrientation != 90){
             frameWidth = width
             frameHeight = height
         }
@@ -86,9 +79,9 @@ object OverlayViewConfig  {
         screenWidth: Float, screenHeight:Float
     ): Matrix {
         val matrix = Matrix()
-        val scaleFactorX = screenWidth / frameWidth.toFloat()
-        val scaleFactorY = screenHeight / frameHeight.toFloat()
-        matrix.postScale(scaleFactorX, scaleFactorY )
+        val scaleFactorX = screenWidth * 1f / frameWidth.toFloat()
+        val scaleFactorY = screenHeight * 1f / frameHeight.toFloat()
+        matrix.setScale(scaleFactorX, scaleFactorY )
         return matrix
     }
 }

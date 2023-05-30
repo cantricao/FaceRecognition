@@ -1,0 +1,55 @@
+task downloadModelFile(type: Download) {
+    src 'https://raw.githubusercontent.com/opencv/opencv/4.x/data/haarcascades/haarcascade_eye_tree_eyeglasses.xml'
+    dest project.ext.RAW_DIR + '/haarcascade_eye_tree_eyeglasses.xml'
+    overwrite false
+}
+
+task downloadModelFile0(type: Download) {
+    src 'https://raw.githubusercontent.com/opencv/opencv/4.x/data/lbpcascades/lbpcascade_frontalface_improved.xml'
+    dest project.ext.RAW_DIR + '/lbpcascade_frontalface_improved.xml'
+    overwrite false
+}
+
+task downloadModelFile1(type: Download) {
+    src 'https://raw.githubusercontent.com/androidx/media/release/demos/gl/src/main/assets/bitmap_overlay_video_processor_fragment.glsl'
+    dest project.ext.ASSET_DIR + '/bitmap_overlay_video_processor_fragment.glsl'
+    overwrite false
+}
+
+task downloadModelFile2(type: Download) {
+    src 'https://raw.githubusercontent.com/androidx/media/release/demos/gl/src/main/assets/bitmap_overlay_video_processor_vertex.glsl'
+    dest project.ext.ASSET_DIR + '/bitmap_overlay_video_processor_vertex.glsl'
+    overwrite false
+}
+
+task downloadModelFile3(type: Download) {
+    src 'https://github.com/pillarpond/face-recognizer-android/raw/master/app/src/main/assets/face_detection_front.tflite'
+    dest project.ext.ASSET_DIR + '/face_detection_front.tflite'
+    overwrite false
+}
+
+task downloadModelFile4(type: Download) {
+    src 'https://github.com/intel-iot-devkit/sample-videos/raw/master/face-demographics-walking-and-pause.mp4'
+    dest project.ext.ASSET_DIR + '/face-demographics-walking-and-pause.mp4'
+    overwrite false
+}
+
+task downloadModelFile5(type: Download) {
+    src 'https://github.com/amikelive/coco-labels/raw/master/coco-labels-paper.txt'
+    dest project.ext.ASSET_DIR + '/coco.txt'
+    overwrite false
+}
+
+task downloadModelFile6(type: Download) {
+    src 'https://github.com/opencv/opencv_zoo/raw/master/models/face_detection_yunet/face_detection_yunet_2022mar.onnx'
+    dest project.ext.ASSET_DIR + '/face_detection_yunet_2022mar.onnx'
+    overwrite false
+}
+
+//task copyTestModel(type: Copy, dependsOn: downloadModelFile) {
+//    from project.ext.ASSET_DIR + '/mobilenetv1.tflite'
+//    into project.ext.TEST_ASSETS_DIR
+//}
+
+preBuild.dependsOn downloadModelFile, downloadModelFile0, downloadModelFile1, downloadModelFile2,
+        downloadModelFile3, downloadModelFile4, downloadModelFile5, downloadModelFile6

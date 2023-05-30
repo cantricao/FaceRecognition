@@ -30,6 +30,7 @@ object Util {
         val resultCanvas = Canvas(resultBitmap)
         val resultMatrix = Matrix()
             .apply {
+                setRotate(90f)
                 postTranslate(-cropRectF.left, -cropRectF.top)
             }
         val processBitmapShader =
@@ -175,7 +176,7 @@ object Util {
         val outputBuffer = IntArray(output.width * output.height)
         when(imageFormat){
             ImageFormat.NV21 ->
-                GPUImageNativeLibrary.YUVtoRBGA(yuvBuffer, output.width, output.height, outputBuffer)
+                GPUImageNativeLibrary.YUVtoARBG(yuvBuffer, output.width, output.height, outputBuffer)
             ImageFormat.YUV_420_888 ->
                 GPUImageNativeLibrary.YUVtoRBGA(yuvBuffer, output.width, output.height, outputBuffer)
             else -> throw UnsupportedOperationException()

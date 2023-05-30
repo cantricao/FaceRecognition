@@ -24,7 +24,7 @@ import androidx.core.content.FileProvider
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.bumptech.glide.request.RequestOptions
 import com.example.detectionexample.config.Util
-import com.example.detectionexample.custom.GlideCropBitmapTransformation
+import com.example.detectionexample.glide.GlideCropBitmapTransformation
 import com.example.detectionexample.viewmodels.AnalysisViewModel
 import com.example.detectionexample.viewmodels.DatastoreViewModel
 import com.skydoves.landscapist.glide.GlideImage
@@ -84,11 +84,11 @@ fun LoadPhotoDialog(
 
         value = listOfUri.map { uri ->
             val bitmap = Util.getBitmap(context, uri)
-            viewModel.observeTrackedObject(
-                System.currentTimeMillis(),
-                false,
-                viewModel.detectInImage(bitmap)
-            )
+//            viewModel.observeTrackedObject(
+//                System.currentTimeMillis(),
+//                false,
+////                viewModel.detectInImage(bitmap, 0)
+//            )
 
             progressLoader += 1f / listOfUri.size
             Pair(uri, viewModel.trackedObserver.value)
@@ -169,13 +169,13 @@ fun LoadPhotoDialog(
                                 },
                                 leadingIcon = {
                                     GlideImage(
-                                        imageModel = uri,
+                                        imageModel = { uri },
                                         modifier = Modifier.size(24.dp),
                                         requestOptions = {
                                             RequestOptions()
                                                 .transform(GlideCropBitmapTransformation(trackedRecognition.location))
                                         },
-                                        contentDescription = "Face Icon"
+//                                        contentDescription = "Face Icon"
                                     )
                                 },
                             )

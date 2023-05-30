@@ -8,3 +8,5 @@ dependencyResolutionManagement {
 }
 rootProject.name = "DetectionExample"
 include ':app'
+include ':opencv470'
+project(":opencv470").projectDir = file("opencv470")

@@ -11,4 +11,6 @@
     <string name="camera_mode_hdr">HDR</string>
     <string name="camera_mode_night">Night</string>
     <string name="camera_mode_face_retouch">Face Retouch</string>
+    <string name="camera">camera</string>
+    <string name="video">video</string>
 </resources>

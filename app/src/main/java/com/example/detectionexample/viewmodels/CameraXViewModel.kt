@@ -19,11 +19,11 @@ package com.example.detectionexample.viewmodels
 import android.annotation.SuppressLint
 import android.app.Application
 import android.content.ContentValues
-import android.graphics.Bitmap
 import android.os.Build
 import android.provider.MediaStore
 import android.util.Log
-import android.widget.Toast
+import androidx.camera.core.AspectRatio
+import androidx.camera.core.CameraEffect
 import androidx.camera.core.CameraSelector
 import androidx.camera.core.CameraSelector.LensFacing
 import androidx.camera.core.ImageAnalysis
@@ -31,20 +31,24 @@ import androidx.camera.core.ImageCapture
 import androidx.camera.core.ImageCaptureException
 import androidx.camera.extensions.ExtensionMode
 import androidx.camera.extensions.ExtensionsManager
+import androidx.camera.video.MediaStoreOutputOptions
+import androidx.camera.video.Recording
+import androidx.camera.video.VideoRecordEvent
+import androidx.camera.video.VideoRecordEvent.Finalize
+import androidx.camera.video.VideoRecordEvent.Finalize.ERROR_NONE
 import androidx.camera.view.CameraController
 import androidx.camera.view.LifecycleCameraController
-import androidx.camera.view.video.OnVideoSavedCallback
-import androidx.camera.view.video.OutputFileOptions
-import androidx.camera.view.video.OutputFileResults
+import androidx.camera.view.video.AudioConfig
+import androidx.compose.runtime.State
+import androidx.core.util.Consumer
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.viewModelScope
-import androidx.work.WorkManager
 import com.example.detectionexample.MainApplication
+import com.example.detectionexample.cameraeffect.ToneMappingSurfaceEffect
 import com.example.detectionexample.config.CameraConfig
 import com.example.detectionexample.config.CameraConfig.TAG
-import com.example.detectionexample.custom.BitmapEncoding
-import com.example.detectionexample.record.BitmapToVideoEncoder
+import com.example.detectionexample.models.TrackedRecognition
 import com.example.detectionexample.uistate.*
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
@@ -54,8 +58,8 @@ import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.guava.await
 import kotlinx.coroutines.launch
-import java.io.File
 import javax.inject.Inject
+
 
 /**
  * View model for camera extensions. This manages all the operations on the camera.
@@ -69,32 +73,13 @@ import javax.inject.Inject
  */
 
 @HiltViewModel
-class CameraXViewModel @Inject constructor(private val workManager: WorkManager, application: Application) : AndroidViewModel(application) {
+class CameraXViewModel @Inject constructor(application: Application) : AndroidViewModel(application) {
 
      val cameraController = LifecycleCameraController(getApplication()).apply {
          isTapToFocusEnabled = true
      }
     private lateinit var extensionsManager: ExtensionsManager
-
-
-    val bitmapEncoding: BitmapEncoding = object : BitmapEncoding {
-        override fun queueFrame(bitmap: Bitmap) {
-            encoder.queueFrame(Bitmap.createBitmap(bitmap))
-        }
-
-    }
-
-    private val encoderCallback = object : BitmapToVideoEncoder.IBitmapToVideoEncoderCallback{
-        override fun onEncodingComplete(outputFile: File?) {
-            viewModelScope.launch {
-                _recordState.emit(RecordState.FINALIZED)
-                Toast.makeText(getApplication(), "File recording completed\n${outputFile?.absolutePath}\n__" , Toast.LENGTH_LONG).show()
-            }
-            Log.d("BitmapToVideoEncoder", "File recording completed\n${outputFile?.absolutePath}\n__")
-        }
-    }
-
-    private val encoder = BitmapToVideoEncoder(encoderCallback)
+    /** Blocking camera operations are performed using this executor */
 
     private val _cameraUiState: MutableStateFlow<CameraUiState> = MutableStateFlow(CameraUiState())
     private val _captureUiState: MutableStateFlow<CaptureState> =
@@ -134,18 +119,6 @@ class CameraXViewModel @Inject constructor(private val workManager: WorkManager,
                     cameraController.hasCamera(cameraLensToSelector(lensFacing))
                 }
 
-            // get the supported extensions for the selected camera lens by filtering the full list
-            // of extensions and checking each one if it's available
-            val availableExtensions = listOf(
-                ExtensionMode.AUTO,
-                ExtensionMode.BOKEH,
-                ExtensionMode.HDR,
-                ExtensionMode.NIGHT,
-                ExtensionMode.FACE_RETOUCH,
-            )
-//                .filter { extensionMode ->
-//                extensionsManager.isExtensionAvailable(cameraSelector, extensionMode)
-//            }
 
             // prepare the new camera UI state which is now in the READY state and contains the list
             // of available extensions, available lens faces.
@@ -154,7 +127,7 @@ class CameraXViewModel @Inject constructor(private val workManager: WorkManager,
                 analysisState = AnalysisState.NOT_READY,
                 availableExtensions = listOf(ExtensionMode.NONE), // + availableExtensions,
                 availableCameraLens = availableCameraLens,
-                extensionMode = if (true) ExtensionMode.NONE else currentCameraUiState.extensionMode,
+                extensionMode = ExtensionMode.NONE,
             )
             _cameraUiState.emit(newCameraUiState)
         }
@@ -173,7 +146,8 @@ class CameraXViewModel @Inject constructor(private val workManager: WorkManager,
      * This process will bind the preview and image capture uses cases to the camera provider.
      */
     fun startPreview(
-        lifecycleOwner: LifecycleOwner
+        lifecycleOwner: LifecycleOwner,
+        trackedObjectsState: State<List<TrackedRecognition>>
     ) {
         val currentCameraUiState = _cameraUiState.value
         val cameraSelector = if (currentCameraUiState.extensionMode == ExtensionMode.NONE) {
@@ -184,20 +158,19 @@ class CameraXViewModel @Inject constructor(private val workManager: WorkManager,
                 currentCameraUiState.extensionMode
             )
         }
-
         cameraController.cameraSelector = cameraSelector
         cameraController.bindToLifecycle(lifecycleOwner)
 
-
-
+        val effects = mutableSetOf<CameraEffect>()
+        effects.add(ToneMappingSurfaceEffect(trackedObjectsState))
+//        effects.add(ToneMappingImageEffect(trackedObjectsState))
+        cameraController.setEffects(effects)
         viewModelScope.launch {
             _cameraUiState.emit(_cameraUiState.value.copy(cameraState = MediaState.READY))
             _captureUiState.emit(CaptureState.CaptureReady)
         }
     }
 
-    val width = 480
-    val height = 640
 
 
     /**
@@ -225,32 +198,34 @@ class CameraXViewModel @Inject constructor(private val workManager: WorkManager,
 
         }
 
-        val outputFileOptions = OutputFileOptions
-            .builder(
+
+        val outputFileOptions = MediaStoreOutputOptions
+            .Builder(
                 getApplication<MainApplication>().contentResolver,
-                MediaStore.Video.Media.EXTERNAL_CONTENT_URI,
-                contentValues
-            )
+                MediaStore.Video.Media.EXTERNAL_CONTENT_URI)
+            .setContentValues(contentValues)
             .build()
 
-        cameraController.startRecording(outputFileOptions, Dispatchers.Main.asExecutor(),
-            object : OnVideoSavedCallback {
-            override fun onVideoSaved(outputFileResults: OutputFileResults) {
-                val msg = "Video record succeeded: " + outputFileResults.savedUri
-                Toast.makeText(getApplication(), msg, Toast.LENGTH_LONG).show()
-                viewModelScope.launch {
-                    _recordState.emit(RecordState.FINALIZED)
+        val audioConfig = AudioConfig.create(true)
+
+        val mVideoRecordEventListener: Consumer<VideoRecordEvent> =
+            Consumer<VideoRecordEvent> { videoRecordEvent ->
+                if (videoRecordEvent is Finalize) {
+                    val uri = videoRecordEvent.outputResults.outputUri
+                    if (videoRecordEvent.error == ERROR_NONE) {
+                        val msg = "Video record succeeded: $uri"
+//                        Toast.makeText(getApplication(), msg, Toast.LENGTH_LONG).show()
+                        viewModelScope.launch {
+                            _recordState.emit(RecordState.FINALIZED)
+                        }
+                    } else {
+                        Log.e(TAG, "Video saving failed: ${videoRecordEvent.error}")
+                    }
                 }
             }
 
-            override fun onError(
-                videoCaptureError: Int,
-                message: String,
-                cause: Throwable?
-            ) {
-                Log.e(TAG, "Video saving failed: $message")
-            }
-        })
+        mActiveRecording  = cameraController.startRecording(outputFileOptions,audioConfig , Dispatchers.Default.asExecutor(), mVideoRecordEventListener)
+
 
         // Prevents screen rotation during the video recording
 
@@ -264,12 +239,14 @@ class CameraXViewModel @Inject constructor(private val workManager: WorkManager,
         Log.i(TAG, "Recording started")
     }
 
+    private var mActiveRecording: Recording? = null
 
     fun setAnalysis(analyzer: ImageAnalysis.Analyzer){
+        cameraController.imageAnalysisTargetSize = CameraController.OutputSize(AspectRatio.RATIO_4_3)
+        cameraController.setImageAnalysisAnalyzer(Dispatchers.Default.asExecutor(), analyzer)
         if(!cameraController.isImageAnalysisEnabled) {
             cameraController.setEnabledUseCases(CameraController.IMAGE_ANALYSIS)
         }
-        cameraController.setImageAnalysisAnalyzer(Dispatchers.Default.asExecutor(), analyzer)
         viewModelScope.launch {
             val currentCameraUiState = _cameraUiState.value
             _cameraUiState.emit(currentCameraUiState.copy(analysisState = AnalysisState.READY))
@@ -292,7 +269,7 @@ class CameraXViewModel @Inject constructor(private val workManager: WorkManager,
 
     @androidx.annotation.OptIn(androidx.camera.view.video.ExperimentalVideo::class)
     fun stopRecording() {
-        cameraController.stopRecording()
+        mActiveRecording?.stop()
     }
 
 
@@ -344,7 +321,6 @@ class CameraXViewModel @Inject constructor(private val workManager: WorkManager,
      * exception containing more details on the reason for failure.
      */
     fun capturePhoto() {
-
         if(!cameraController.isImageCaptureEnabled){
             cameraController.setEnabledUseCases(CameraController.IMAGE_CAPTURE)
         }

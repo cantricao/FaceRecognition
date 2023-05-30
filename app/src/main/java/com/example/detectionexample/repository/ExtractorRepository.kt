@@ -5,7 +5,6 @@ import android.graphics.Bitmap
 import com.example.detectionexample.config.ModelConfig
 import com.example.detectionexample.extractor.TfliteExtractor
 import dagger.hilt.android.qualifiers.ApplicationContext
-import org.tensorflow.lite.support.model.Model
 import java.io.Closeable
 import javax.inject.Inject
 import javax.inject.Singleton

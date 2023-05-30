@@ -1,17 +1,12 @@
 package com.example.detectionexample.repository
 
 import android.graphics.Bitmap
-import android.media.Image
-import com.example.detectionexample.models.Recognition
-import kotlinx.coroutines.flow.Flow
 import javax.inject.Singleton
 
 @Singleton
 interface DetectorRepository {
-    fun setThreshold(threshold: Float) {
-    }
 
-    fun detectInImage(bitmap: Bitmap): Flow<List<Recognition>>
+    fun detectInImage(bitmap: Bitmap)
 
 
     fun setFileModelName(filename: String) {

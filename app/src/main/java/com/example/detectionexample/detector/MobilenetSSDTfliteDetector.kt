@@ -13,47 +13,53 @@ import kotlin.math.min
 /**
  * Wrapper class for tflite food classification model
  */
-class MobilenetSSDTfliteDetector(context: Context, modelPath: String, device: Model.Device):
-    TfliteDetector(context, modelPath, ModelConfig.COCO_LABEL_PATH, device) {
+class MobilenetSSDTfliteDetector(context: Context, modelPath: String, device: Model.Device, objectDetectorListener: DetectorListener?):
+    TfliteDetectorHelper(
+        context,
+        modelPath,
+        ModelConfig.COCO_LABEL_PATH,
+        device,
+        objectDetectorListener
+    ) {
 
-    // location: array of shape [Batchsize, NUM_DETECTIONS,4]
+    // location: array of shape [Batch-size, NUM_DETECTIONS,4]
     // contains the location of detected boxes
     private val location by lazy {
-        imageDetector.getOutputTensor(0).let {
+        imageDetector?.getOutputTensor(0).let {
             TensorBuffer.createFixedSize(
-                it.shape(),
-                it.dataType()
+                it?.shape(),
+                it?.dataType()
             )
         }
     }
 
-    // category: array of shape [Batchsize, NUM_DETECTIONS]
+    // category: array of shape [Batch-size, NUM_DETECTIONS]
     // contains the classes of detected boxes
     private val category by lazy {
-        imageDetector.getOutputTensor(1).let {
+        imageDetector?.getOutputTensor(1).let {
             TensorBuffer.createFixedSize(
-                it.shape(),
-                it.dataType()
+                it?.shape(),
+                it?.dataType()
             )
         }
     }
 
-    // outputScores: array of shape [Batchsize, NUM_DETECTIONS]
+    // outputScores: array of shape [Batch-size, NUM_DETECTIONS]
     // contains the scores of detected boxes
-    private var score = imageDetector.getOutputTensor(2).let {
+    private var score = imageDetector?.getOutputTensor(2).let {
         TensorBuffer.createFixedSize(
-            it.shape(),
-            it.dataType()
+            it?.shape(),
+            it?.dataType()
         )
     }
 
-    // numDetections: array of shape [Batchsize]
+    // numDetections: array of shape [Batch-size]
     // contains the number of detected boxes
     private val numberOfDetections by lazy {
-        imageDetector.getOutputTensor(3).let {
+        imageDetector?.getOutputTensor(3).let {
             TensorBuffer.createFixedSize(
-                it.shape(),
-                it.dataType()
+                it?.shape(),
+                it?.dataType()
             )
         }
     }

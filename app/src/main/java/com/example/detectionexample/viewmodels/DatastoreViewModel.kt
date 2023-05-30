@@ -1,7 +1,6 @@
 package com.example.detectionexample.viewmodels
 
 import android.graphics.Bitmap
-import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.detectionexample.models.Person
@@ -11,7 +10,7 @@ import com.example.detectionexample.repository.RecognizedPersonRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
-import java.util.*
+import java.util.UUID
 import javax.inject.Inject
 
 @HiltViewModel

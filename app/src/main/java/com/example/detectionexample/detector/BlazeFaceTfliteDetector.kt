@@ -15,8 +15,14 @@ import kotlin.math.exp
 import kotlin.math.sqrt
 
 
-class BlazeFaceTfliteDetector(context: Context, modelPath: String, device: Model.Device):
-    TfliteDetector(context, modelPath, ModelConfig.BLAZEFACE_LABEL_NAME, device) {
+class BlazeFaceTfliteDetector(context: Context, modelPath: String, device: Model.Device, objectDetectorListener: DetectorListener?):
+    TfliteDetectorHelper(
+        context,
+        modelPath,
+        ModelConfig.BLAZEFACE_LABEL_NAME,
+        device,
+        objectDetectorListener
+    ) {
 
     override fun getResult(): Flow<List<Recognition>> {
         val detections: MutableList<Recognition> = ArrayList()
@@ -84,19 +90,19 @@ class BlazeFaceTfliteDetector(context: Context, modelPath: String, device: Model
     }
 
     private val outputBoxes by lazy {
-        imageDetector.getOutputTensor(0).let {
+        imageDetector?.getOutputTensor(0).let {
             TensorBuffer.createFixedSize(
-                it.shape(),
-                it.dataType()
+                it?.shape(),
+                it?.dataType()
             )
         }
     }
 
     private val outputScores by lazy {
-        imageDetector.getOutputTensor(1).let {
+        imageDetector?.getOutputTensor(1).let {
             TensorBuffer.createFixedSize(
-                it.shape(),
-                it.dataType()
+                it?.shape(),
+                it?.dataType()
             )
         }
     }
@@ -185,9 +191,9 @@ class BlazeFaceTfliteDetector(context: Context, modelPath: String, device: Model
                 lastSameStrideLayer++
             }
             for (i in aspectRatios.indices) {
-                val ratioSqrts = sqrt(aspectRatios[i])
-                anchorHeight.add(scales[i] / ratioSqrts)
-                anchorWidth.add(scales[i] * ratioSqrts)
+                val ratioSqrt = sqrt(aspectRatios[i])
+                anchorHeight.add(scales[i] / ratioSqrt)
+                anchorWidth.add(scales[i] * ratioSqrt)
             }
             val stride: Int = strides[layerId]
             val featureMapHeight = ceil(1.0f * imageSizeY / stride).toInt()
@@ -242,11 +248,11 @@ class BlazeFaceTfliteDetector(context: Context, modelPath: String, device: Model
                 var totalScore = 0.0f
                 for ( c in candidates) {
                     totalScore += c.score
-                    val bbox = detections[c.index].location
-                    wXmin += bbox.left * c.score
-                    wYmin += bbox.top * c.score
-                    wXmax += bbox.right * c.score
-                    wYmax += bbox.bottom * c.score
+                    val box = detections[c.index].location
+                    wXmin += box.left * c.score
+                    wYmin += box.top * c.score
+                    wXmax += box.right * c.score
+                    wYmax += box.bottom * c.score
                 }
                 weightedLocation.left = wXmin / totalScore
                 weightedLocation.top = wYmin / totalScore

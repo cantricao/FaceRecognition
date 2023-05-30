@@ -14,7 +14,6 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
-import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.window.DialogProperties
@@ -52,7 +51,6 @@ fun Permission(permission: List<String>,
 
 
 
-@OptIn(ExperimentalComposeUiApi::class)
 @Composable
 private fun Rationale(
     onDoNotShowRationale: () -> Unit,
