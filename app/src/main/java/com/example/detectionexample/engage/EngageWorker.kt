@@ -133,7 +133,9 @@ class EngageWorker(
                 id = "demo_analysis_walking",
                 title = "Pedestrian Demographics Walking Analysis",
                 description = "Automated face demographics and landmark tracking session.",
-                playBackUri = Uri.parse("facerecognition://video/playback?asset=face-demographics-walking-and-pause.mp4"),
+                playBackUri = Uri.parse(
+                    "facerecognition://video/playback?asset=face-demographics-walking-and-pause.mp4"
+                ),
                 posterUri = placeholderUri,
                 durationMillis = 180_000L
             ),
@@ -167,7 +169,9 @@ class EngageWorker(
                 id = "continue_demo_walking",
                 title = "Resume: Walking Face Analysis Session",
                 description = "Continue playback at 00:45",
-                playBackUri = Uri.parse("facerecognition://video/playback?asset=face-demographics-walking-and-pause.mp4"),
+                playBackUri = Uri.parse(
+                    "facerecognition://video/playback?asset=face-demographics-walking-and-pause.mp4"
+                ),
                 posterUri = placeholderUri,
                 durationMillis = 180_000L,
                 lastPlaybackPositionMillis = 45_000L,

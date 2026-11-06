@@ -1,10 +1,7 @@
 package com.example.detectionexample.tv
 
 import com.example.detectionexample.tv.model.TvMediaCatalog
-import com.example.detectionexample.tv.model.TvVideo
 import org.junit.Assert.assertEquals
-import org.junit.Assert.assertFalse
-import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
 
@@ -23,7 +20,11 @@ class TvScreenTest {
         assertTrue("Expected Perimeter Alerts category", categorized.containsKey("Perimeter Alerts"))
 
         val totalCategorized = categorized.values.sumOf { it.size }
-        assertEquals("Total videos across categories should match catalog size", TvMediaCatalog.sampleVideos.size, totalCategorized)
+        assertEquals(
+            "Total videos across categories should match catalog size",
+            TvMediaCatalog.sampleVideos.size,
+            totalCategorized
+        )
     }
 
     @Test

@@ -47,7 +47,9 @@ class VerifiedEmailManagerTest {
 
     private fun buildSampleSdJwt(): String {
         val header = base64Url("""{"alg":"ES256","typ":"vc+sd-jwt"}""")
-        val payload = base64Url("""{"iss":"https://verifiablecredentials-pa.googleapis.com","vct":"UserInfoCredential"}""")
+        val payload = base64Url(
+            """{"iss":"https://verifiablecredentials-pa.googleapis.com","vct":"UserInfoCredential"}"""
+        )
         val issuerJwt = "$header.$payload.sig"
         val disclosureEmail = base64Url("""["salt1","email","alex@gmail.com"]""")
         val disclosureName = base64Url("""["salt2","name","Alex Smith"]""")

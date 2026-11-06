@@ -82,4 +82,3 @@ class PlayBillingManagerTest {
         billingManager.onPurchasesUpdated(alreadyOwnedResult, null)
     }
 }
-

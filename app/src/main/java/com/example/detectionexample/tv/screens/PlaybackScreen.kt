@@ -154,7 +154,9 @@ fun PlaybackScreen(
                         }
                         else -> false
                     }
-                } else false
+                } else {
+                    false
+                }
             },
         contentAlignment = Alignment.Center
     ) {

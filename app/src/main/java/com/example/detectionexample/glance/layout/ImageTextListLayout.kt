@@ -258,7 +258,9 @@ private fun FilledHorizontalListItem(
         },
         trailingContent = if (displayTrailingIcon) {
             { IconButton() }
-        } else null,
+        } else {
+            null
+        },
     )
 }
 

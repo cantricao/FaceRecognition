@@ -41,17 +41,21 @@ object ImageUtils {
             val reqWidth = max(1, requestedSize.width)
             var inSampleSize = 1
             while (
-                (height / (inSampleSize * 2) >= reqHeight &&
-                    width / (inSampleSize * 2) >= reqWidth) ||
+                (
+                    height / (inSampleSize * 2) >= reqHeight &&
+                    width / (inSampleSize * 2) >= reqWidth
+                ) ||
                 (height / inSampleSize > reqHeight * 2) ||
                 (width / inSampleSize > reqWidth * 2)
             ) {
                 inSampleSize *= 2
             }
             while (
-                (max(1, width / inSampleSize).toLong() *
+                (
+                    max(1, width / inSampleSize).toLong() *
                     max(1, height / inSampleSize).toLong() *
-                    effectiveBytesPerPixel) > maxBytesPerImage
+                    effectiveBytesPerPixel
+                ) > maxBytesPerImage
             ) {
                 inSampleSize *= 2
             }

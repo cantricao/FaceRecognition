@@ -17,7 +17,6 @@ import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.preferencesOf
 import com.example.detectionexample.util.MainDispatcherRule
 import io.mockk.coEvery
-import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.slot
@@ -93,7 +92,11 @@ class RestoreCredentialManagerTest {
         assertEquals(fallbackResponse, result.getOrNull())
         assertEquals(2, capturedRequests.size)
         assertTrue("First attempt must have isCloudBackupEnabled = true", capturedRequests[0].isCloudBackupEnabled)
-        assertEquals("Fallback attempt must have isCloudBackupEnabled = false", false, capturedRequests[1].isCloudBackupEnabled)
+        assertEquals(
+            "Fallback attempt must have isCloudBackupEnabled = false",
+            false,
+            capturedRequests[1].isCloudBackupEnabled
+        )
     }
 
     @Test

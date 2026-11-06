@@ -94,7 +94,11 @@ fun TvSettingsScreen(
                     selected = false,
                     onClick = { autoPlayNext = !autoPlayNext },
                     headlineContent = { Text("Autoplay Next Feed") },
-                    supportingContent = { Text("Automatically transition to the next surveillance clip when playback completes") },
+                    supportingContent = {
+                        Text(
+                        "Automatically transition to the next surveillance clip when playback completes"
+                    )
+                    },
                     trailingContent = {
                         Switch(
                             checked = autoPlayNext,
@@ -114,7 +118,11 @@ fun TvSettingsScreen(
                     selected = false,
                     onClick = { highSensitivity = !highSensitivity },
                     headlineContent = { Text("High Sensitivity Recognition") },
-                    supportingContent = { Text("Lower cosine similarity threshold for identifying persons at long distance") },
+                    supportingContent = {
+                        Text(
+                        "Lower cosine similarity threshold for identifying persons at long distance"
+                    )
+                    },
                     trailingContent = {
                         Switch(
                             checked = highSensitivity,
@@ -133,7 +141,11 @@ fun TvSettingsScreen(
                     selected = false,
                     onClick = { drawOverlays = !drawOverlays },
                     headlineContent = { Text("Real-Time Bounding Box Overlays") },
-                    supportingContent = { Text("Render color-coded detection boxes and landmarks on active video feed") },
+                    supportingContent = {
+                        Text(
+                        "Render color-coded detection boxes and landmarks on active video feed"
+                    )
+                    },
                     trailingContent = {
                         Switch(
                             checked = drawOverlays,

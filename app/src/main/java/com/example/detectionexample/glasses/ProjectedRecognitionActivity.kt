@@ -4,11 +4,8 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.background
-import androidx.compose.foundation.focusable
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -31,7 +28,6 @@ import androidx.compose.ui.unit.dp
 import androidx.xr.glimmer.ActionCard
 import androidx.xr.glimmer.Button
 import androidx.xr.glimmer.ButtonGroup
-import androidx.xr.glimmer.Card
 import androidx.xr.glimmer.GlimmerTheme
 import androidx.xr.glimmer.Text
 import androidx.xr.glimmer.TitleChip
@@ -180,7 +176,7 @@ fun GlassesRecognitionScreen(
                             lastGesture = "Acknowledge"
                         }
                     ) {
-                        Text(if (acknowledgedCount > 0) "Acknowledged (${acknowledgedCount})" else "Acknowledge Match")
+                        Text(if (acknowledgedCount > 0) "Acknowledged ($acknowledgedCount)" else "Acknowledge Match")
                     }
                 }
             ) {

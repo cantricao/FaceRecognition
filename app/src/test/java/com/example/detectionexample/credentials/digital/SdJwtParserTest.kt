@@ -17,7 +17,9 @@ class SdJwtParserTest {
     @Test
     fun parse_decodesIssuerPayloadAndDisclosures() {
         val header = base64Url("""{"alg":"ES256","typ":"vc+sd-jwt"}""")
-        val payload = base64Url("""{"iss":"https://verifiablecredentials-pa.googleapis.com","vct":"UserInfoCredential","directClaim":"value"}""")
+        val payload = base64Url(
+            """{"iss":"https://verifiablecredentials-pa.googleapis.com","vct":"UserInfoCredential","directClaim":"value"}"""
+        )
         val issuerJwt = "$header.$payload.dummySignature"
 
         val disclosureEmail = base64Url("""["salt1","email","jane.doe@gmail.com"]""")

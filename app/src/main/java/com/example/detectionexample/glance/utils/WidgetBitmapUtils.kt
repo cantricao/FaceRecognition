@@ -65,8 +65,10 @@ fun decodeDownsampledWidgetBitmap(
     }
     var sampleSize = 1
     while (
-        (bounds.outWidth / (sampleSize * 2) >= targetWidthPx &&
-            bounds.outHeight / (sampleSize * 2) >= targetHeightPx) ||
+        (
+            bounds.outWidth / (sampleSize * 2) >= targetWidthPx &&
+            bounds.outHeight / (sampleSize * 2) >= targetHeightPx
+        ) ||
             (bounds.outWidth / sampleSize > targetWidthPx * 2) ||
             (bounds.outHeight / sampleSize > targetHeightPx * 2)
     ) {

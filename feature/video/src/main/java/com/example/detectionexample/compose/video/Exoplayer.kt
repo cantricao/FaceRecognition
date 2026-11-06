@@ -4,23 +4,19 @@ import android.content.ComponentName
 import android.content.res.Configuration
 import android.net.Uri
 import androidx.activity.ComponentActivity
-import androidx.compose.foundation.background
 import androidx.compose.foundation.focusable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.displayCutoutPadding
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
@@ -71,7 +67,6 @@ import androidx.media3.common.util.UnstableApi
 import androidx.media3.session.MediaController
 import androidx.media3.session.MediaSessionService
 import androidx.media3.session.SessionToken
-import androidx.media3.ui.compose.material3.Player as Material3Player
 import com.example.detectionexample.compose.adaptive.FormFactorPreviews
 import com.example.detectionexample.core.ui.R
 import com.example.detectionexample.feature.video.playback.CarUtils
@@ -82,6 +77,7 @@ import com.example.detectionexample.uistate.RecordState
 import com.example.detectionexample.viewmodels.AnalysisViewModel
 import com.example.detectionexample.viewmodels.VideoViewModel
 import kotlinx.coroutines.delay
+import androidx.media3.ui.compose.material3.Player as Material3Player
 
 val sampleVideoUri: Uri = Uri.parse("asset:///face-demographics-walking-and-pause.mp4")
 
@@ -366,7 +362,9 @@ private fun CastAndPlaybackControls(
             positionProvider = TooltipDefaults.rememberPlainTooltipPositionProvider(),
             tooltip = {
                 PlainTooltip {
-                    Text(if (videoRecordEvent.value == RecordState.RECORDING) "Stop recording (R)" else "Record video (R)")
+                    Text(
+                        if (videoRecordEvent.value == RecordState.RECORDING) "Stop recording (R)" else "Record video (R)"
+                    )
                 }
             },
             state = rememberTooltipState()

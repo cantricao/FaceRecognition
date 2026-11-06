@@ -48,12 +48,11 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
-import kotlinx.coroutines.launch
 import com.example.detectionexample.agent.AgentChatDialog
 import com.example.detectionexample.credentials.digital.VerifiedEmailDialog
-import com.example.detectionexample.credentials.digital.VerifiedUserInfo
 import com.example.detectionexample.genai.GeminiNanoFaceDialog
 import com.google.ai.edge.litertlm.Backend
+import kotlinx.coroutines.launch
 
 @Composable
 fun ChatScreen(

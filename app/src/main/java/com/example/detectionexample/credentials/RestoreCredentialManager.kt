@@ -3,9 +3,9 @@ package com.example.detectionexample.credentials
 import android.content.Context
 import android.util.Log
 import androidx.credentials.ClearCredentialStateRequest
-import androidx.credentials.CredentialManager
 import androidx.credentials.CreateRestoreCredentialRequest
 import androidx.credentials.CreateRestoreCredentialResponse
+import androidx.credentials.CredentialManager
 import androidx.credentials.GetCredentialRequest
 import androidx.credentials.GetRestoreCredentialOption
 import androidx.credentials.RestoreCredential
@@ -143,7 +143,11 @@ class RestoreCredentialManager @Inject constructor(
                 )
                 credentialManager.createCredential(activityContext, primaryRequest)
             } catch (e: E2eeUnavailableException) {
-                Log.w(TAG, "E2eeUnavailableException caught: device lacks screen lock/cloud backup. Retrying with isCloudBackupEnabled = false", e)
+                Log.w(
+                    TAG,
+                    "E2eeUnavailableException caught: device lacks screen lock/cloud backup. Retrying with isCloudBackupEnabled = false",
+                    e
+                )
                 val fallbackRequest = CreateRestoreCredentialRequest(
                     requestJson = creationOptionsJson,
                     isCloudBackupEnabled = false

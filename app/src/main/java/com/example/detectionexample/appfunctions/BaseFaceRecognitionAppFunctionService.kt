@@ -4,7 +4,6 @@ import android.app.PendingIntent
 import android.content.Intent
 import androidx.annotation.RequiresApi
 import androidx.appfunctions.AppFunctionDeclaration
-import androidx.appfunctions.AppFunctionElementNotFoundException
 import androidx.appfunctions.AppFunctionInvalidArgumentException
 import androidx.appfunctions.AppFunctionService
 import androidx.appfunctions.AppFunctionServiceEntryPoint
@@ -101,7 +100,9 @@ abstract class BaseFaceRecognitionAppFunctionService : AppFunctionService() {
             recognizedPersonRepository.deletePerson(person)
             true
         } catch (e: Exception) {
-            throw AppFunctionExceptionFactory.createInvalidArgument("Failed to delete person with ID '$personId': ${e.message}")
+            throw AppFunctionExceptionFactory.createInvalidArgument(
+                "Failed to delete person with ID '$personId': ${e.message}"
+            )
         }
     }
 

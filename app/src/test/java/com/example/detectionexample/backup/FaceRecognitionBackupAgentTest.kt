@@ -24,4 +24,3 @@ class FaceRecognitionBackupAgentTest {
         agent.onRestoreFinished()
     }
 }
-

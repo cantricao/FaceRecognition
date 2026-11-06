@@ -1,7 +1,6 @@
 package com.example.detectionexample.credentials.digital
 
 import android.widget.Toast
-import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -209,17 +208,31 @@ fun VerifiedEmailDialog(
                                 Text(
                                     text = if (uiState.isPasskeyCreated) "Passkey created successfully!" else "Fast, passwordless biometric sign-in",
                                     style = MaterialTheme.typography.bodySmall,
-                                    color = if (uiState.isPasskeyCreated) Color(0xFF2E7D32) else MaterialTheme.colorScheme.onSurfaceVariant
+                                    color = if (uiState.isPasskeyCreated) {
+                                        Color(
+                                            0xFF2E7D32
+                                        )
+                                    } else {
+                                        MaterialTheme.colorScheme.onSurfaceVariant
+                                    }
                                 )
                             }
                             OutlinedButton(
                                 onClick = {
                                     viewModel.markPasskeyCreated()
-                                    Toast.makeText(context, "Passkey configured for ${verifiedUser.email}", Toast.LENGTH_SHORT).show()
+                                    Toast.makeText(
+                                        context,
+                                        "Passkey configured for ${verifiedUser.email}",
+                                        Toast.LENGTH_SHORT
+                                    ).show()
                                 },
                                 enabled = !uiState.isPasskeyCreated
                             ) {
-                                Icon(imageVector = Icons.Default.Lock, contentDescription = null, modifier = Modifier.size(16.dp))
+                                Icon(
+                                    imageVector = Icons.Default.Lock,
+                                    contentDescription = null,
+                                    modifier = Modifier.size(16.dp)
+                                )
                                 Spacer(modifier = Modifier.width(4.dp))
                                 Text(if (uiState.isPasskeyCreated) "Added" else "Add")
                             }
