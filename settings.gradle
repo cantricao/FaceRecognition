@@ -3,10 +3,17 @@ dependencyResolutionManagement {
     repositories {
         google()
         mavenCentral()
-         // Warning: this repository is going to shut down soon
     }
 }
 rootProject.name = "DetectionExample"
 include ':app'
-include ':opencv470'
-project(":opencv470").projectDir = file("opencv470")
+include ':core:common'
+include ':core:model'
+include ':core:data'
+include ':core:ui'
+include ':core:ml'
+include ':core:camera'
+include ':feature:detection'
+include ':feature:video'
+include ':feature:settings'
+include ':wear'

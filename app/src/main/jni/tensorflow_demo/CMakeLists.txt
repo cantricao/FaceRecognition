@@ -28,6 +28,7 @@ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DSTANDALONE_DEMO_LIB \
                     -fPIE")
 set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} \
                               -Wl,--allow-multiple-definition \
+                              -Wl,-z,max-page-size=16384 \
                               -Wl,--whole-archive -fPIE -v")
 
 file(GLOB_RECURSE tensorflow_demo_sources ${SRC_DIR}/jni/tensorflow_demo/*.*)

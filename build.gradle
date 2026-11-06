@@ -1,37 +1,192 @@
 // Top-level build file where you can add configuration options common to all sub-projects/modules.
 buildscript {
     ext {
-        kotlin_version = '1.8.21'
+        kotlin_version = '2.2.10'
         compose_version = '1.4.7'
         compose_version_ui = '1.4.3'
         lifecycle_version = "2.6.1"
         arch_version = "2.1.0"
-        camerax_version = '1.3.0-alpha07'
-        hilt_version = '2.46.1'
-        nav_version = "2.5.0"
-        tfliteVersion = '2.12.0'
-        opencv_version = '4.5.3.0'
-        work_version= '2.8.1'
-        appsearch_version = "1.1.0-alpha02"
-        media3_version = "1.0.2"
+        camerax_version = '1.6.2'
+        hilt_version = '2.60.1'
         nav_version = "2.5.3"
+        nav3_version = "1.2.0"
+        lifecycle_viewmodel_nav3_version = "2.11.0"
+        navigationevent_version = "1.2.0"
+        opencv_version = '4.5.3.0'
+        work_version = '2.8.1'
+        appsearch_version = "1.1.0-alpha02"
+        media3_version = "1.11.1"
+        detekt_version = "1.23.8"
     }
     repositories {
         google()
         mavenCentral()
     }
     dependencies {
-        classpath 'com.android.tools.build:gradle:8.0.2'
-        classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
+        classpath 'com.android.tools.build:gradle:9.1.0'
         classpath "com.google.dagger:hilt-android-gradle-plugin:$hilt_version"
         classpath "androidx.navigation:navigation-safe-args-gradle-plugin:$nav_version"
+        classpath "org.jetbrains.kotlin:compose-compiler-gradle-plugin:$kotlin_version"
         classpath "org.jetbrains.kotlin:kotlin-serialization:$kotlin_version"
-        classpath 'de.undercouch:gradle-download-task:4.1.2'
-        // NOTE: Do not place your application dependencies here; they belong
-        // in the individual module build.gradle files
+        classpath "com.google.devtools.ksp:symbol-processing-gradle-plugin:2.3.6"
+        classpath 'de.undercouch:gradle-download-task:5.7.0'
+        classpath 'com.android.compose.screenshot:screenshot-test-gradle-plugin:0.0.1-alpha16'
+        classpath "io.gitlab.arturbosch.detekt:detekt-gradle-plugin:$detekt_version"
     }
 }
 
-task clean(type: Delete) {
-    delete rootProject.buildDir
+apply plugin: 'io.gitlab.arturbosch.detekt'
+apply plugin: 'jacoco'
+
+jacoco {
+    toolVersion = "0.8.11"
+}
+
+detekt {
+    toolVersion = "$detekt_version"
+    config.setFrom(files("${rootDir}/config/detekt/detekt.yml"))
+    buildUponDefaultConfig = true
+    parallel = true
+    autoCorrect = true
+}
+
+tasks.withType(io.gitlab.arturbosch.detekt.Detekt).configureEach {
+    autoCorrect = true
+}
+
+dependencies {
+    detektPlugins "io.gitlab.arturbosch.detekt:detekt-formatting:$detekt_version"
+    detektPlugins "io.nlopez.compose.rules:detekt:0.4.22"
+}
+
+subprojects {
+    apply plugin: 'io.gitlab.arturbosch.detekt'
+    apply plugin: 'jacoco'
+
+    jacoco {
+        toolVersion = "0.8.11"
+    }
+
+    plugins.withId('com.android.library') {
+        android {
+            compileSdk = 37
+            defaultConfig {
+                minSdk = 24
+                consumerProguardFiles 'consumer-rules.pro'
+            }
+            compileOptions {
+                sourceCompatibility = JavaVersion.VERSION_17
+                targetCompatibility = JavaVersion.VERSION_17
+            }
+            buildTypes {
+                debug {
+                    enableUnitTestCoverage = true
+                }
+            }
+        }
+    }
+
+    plugins.withId('com.android.application') {
+        android {
+            compileSdk = 37
+            defaultConfig {
+                minSdk = 24
+                targetSdk = 37
+            }
+            compileOptions {
+                sourceCompatibility = JavaVersion.VERSION_17
+                targetCompatibility = JavaVersion.VERSION_17
+            }
+            buildTypes {
+                debug {
+                    enableUnitTestCoverage = true
+                }
+            }
+        }
+    }
+
+    detekt {
+        toolVersion = "$detekt_version"
+        config.setFrom(files("${rootDir}/config/detekt/detekt.yml"))
+        buildUponDefaultConfig = true
+        parallel = true
+        autoCorrect = true
+    }
+
+    tasks.withType(io.gitlab.arturbosch.detekt.Detekt).configureEach {
+        autoCorrect = true
+    }
+
+    dependencies {
+        detektPlugins "io.gitlab.arturbosch.detekt:detekt-formatting:$detekt_version"
+        detektPlugins "io.nlopez.compose.rules:detekt:0.4.22"
+    }
+}
+
+def coverageExclusions = [
+    '**/R.class',
+    '**/R$*.class',
+    '**/BuildConfig.*',
+    '**/Manifest*.*',
+    '**/*Test*.*',
+    'android/**/*.*',
+    '**/Hilt_*.class',
+    '**/*_Hilt*.class',
+    '**/*_Factory.class',
+    '**/*_MembersInjector.class',
+    '**/Dagger*.class',
+    '**/*Module.class',
+    '**/*Module_*Factory.class',
+    '**/*Component.class',
+    '**/*ComponentImpl.class',
+    '**/*_Impl.class',
+    '**/*_Impl$*.class',
+    '**/ComposableSingletons*.class',
+    '**/*$$ExternalSyntheticLambda*.class',
+    '**/*_Provide*Factory.class'
+]
+
+tasks.register('jacocoRootReport', JacocoReport) {
+    group = "Reporting"
+    description = "Generates an aggregated JaCoCo code coverage report across all subprojects."
+
+    dependsOn subprojects.collect { prj ->
+        prj.tasks.matching { t ->
+            t.name in ['testDebugUnitTest', 'compileDebugKotlin', 'compileDebugJavaWithJavac']
+        }
+    }
+    mustRunAfter subprojects.collect { prj ->
+        prj.tasks.matching { t ->
+            t.name in ['testDebugUnitTest', 'compileDebugKotlin', 'compileDebugJavaWithJavac']
+        }
+    }
+
+    reports {
+        xml.required = true
+        html.required = true
+    }
+
+    def sourceDirs = files()
+    def classDirs = files()
+    def executionDataFiles = files()
+
+    subprojects.each { prj ->
+        sourceDirs += prj.files("${prj.projectDir}/src/main/java", "${prj.projectDir}/src/main/kotlin")
+
+        def kotlinClasses = prj.fileTree(dir: "${prj.layout.buildDirectory.get()}/tmp/kotlin-classes/debug", excludes: coverageExclusions)
+        def javaClasses = prj.fileTree(dir: "${prj.layout.buildDirectory.get()}/intermediates/javac/debug/compileDebugJavaWithJavac/classes", excludes: coverageExclusions)
+        classDirs += kotlinClasses + javaClasses
+
+        def execFile1 = prj.layout.buildDirectory.file("outputs/unit_test_code_coverage/debugUnitTest/testDebugUnitTest.exec")
+        def execFile2 = prj.layout.buildDirectory.file("jacoco/testDebugUnitTest.exec")
+        executionDataFiles += files(execFile1, execFile2)
+    }
+
+    sourceDirectories.setFrom(sourceDirs)
+    classDirectories.setFrom(classDirs)
+    executionData.setFrom(executionDataFiles)
+}
+
+tasks.register("clean", Delete) {
+    delete rootProject.layout.buildDirectory
 }
