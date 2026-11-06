@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- On Android Automotive OS, allow rendering into irregular display cutouts safely (AR-2) -->
+    <integer name="windowLayoutInDisplayCutoutMode">3</integer>
+</resources>

@@ -1,0 +1,11 @@
+package com.example.detectionexample.engage
+
+object Constants {
+    const val REPEAT_INTERVAL = 24L
+    const val MAX_PUBLISHING_ATTEMPTS = 3
+    const val PUBLISH_TYPE_KEY = "PUBLISH_TYPE"
+    const val PUBLISH_TYPE_RECOMMENDATIONS = "RECOMMENDATIONS"
+    const val PUBLISH_TYPE_FEATURED = "FEATURED"
+    const val PUBLISH_TYPE_CONTINUATION = "CONTINUATION"
+    const val PUBLISH_TYPE_USER_ACCOUNT_MANAGEMENT = "USER_ACCOUNT_MANAGEMENT"
+}

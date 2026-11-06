@@ -1,0 +1,38 @@
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="256dp"
+    android:height="115dp"
+    android:viewportWidth="256"
+    android:viewportHeight="115">
+    <!-- Card background -->
+    <path
+        android:fillColor="#F2F3FA"
+        android:pathData="M0,16 C0,7.16 7.16,0 16,0 L240,0 C248.84,0 256,7.16 256,16 L256,99 C256,107.84 248.84,115 240,115 L16,115 C7.16,115 0,107.84 0,99 Z" />
+    <!-- Header title -->
+    <path
+        android:fillColor="#1B1B1F"
+        android:pathData="M16,16 L120,16 L120,24 L16,24 Z" />
+    <!-- Row 1 Thumbnail -->
+    <path
+        android:fillColor="#D8DAE2"
+        android:pathData="M16,36 C16,31.58 19.58,28 24,28 L56,28 C60.42,28 64,31.58 64,36 L64,68 C64,72.42 60.42,76 56,76 L24,76 C19.58,76 16,72.42 16,68 Z" />
+    <!-- Row 1 Title line -->
+    <path
+        android:fillColor="#1B1B1F"
+        android:pathData="M76,38 L180,38 L180,46 L76,46 Z" />
+    <!-- Row 1 Subtitle line -->
+    <path
+        android:fillColor="#74777F"
+        android:pathData="M76,52 L140,52 L140,58 L76,58 Z" />
+    <!-- Row 2 Thumbnail -->
+    <path
+        android:fillColor="#D8DAE2"
+        android:pathData="M16,86 C16,83.58 19.58,82 24,82 L56,82 C60.42,82 64,83.58 64,86 L64,106 C64,108.42 60.42,110 56,110 L24,110 C19.58,110 16,108.42 16,106 Z" />
+    <!-- Row 2 Title line -->
+    <path
+        android:fillColor="#1B1B1F"
+        android:pathData="M76,88 L170,88 L170,96 L76,96 Z" />
+    <!-- Row 2 Subtitle line -->
+    <path
+        android:fillColor="#74777F"
+        android:pathData="M76,100 L130,100 L130,106 L76,106 Z" />
+</vector>

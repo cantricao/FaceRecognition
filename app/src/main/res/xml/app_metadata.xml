@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<AppFunctionAppMetadata xmlns:appfn="http://schemas.android.com/apk/androidx.appfunctions"
+    appfn:instructions="This app manages on-device facial detection and identity recognition.
+    Operational Patterns:
+    - Use 'getRegisteredPersonCount' to verify if the face recognition database has enrolled persons before querying.
+    - Use 'searchPersons' to resolve a person's name to their unique 'id' before calling 'deletePersonById'.
+    - Use 'openLiveDetection' to launch the camera preview when the user wants to start live recognition or enroll faces.
+    Constraints:
+    - Queries are case-insensitive.
+    - Person IDs must be non-empty valid strings."
+    appfn:displayDescription="@string/app_functions_display_description" />
