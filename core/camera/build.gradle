@@ -1,0 +1,62 @@
+plugins {
+    id 'com.android.library'
+    id 'com.google.devtools.ksp'
+    id 'dagger.hilt.android.plugin'
+    id 'org.jetbrains.kotlin.plugin.compose'
+}
+
+android {
+    namespace 'com.example.detectionexample.core.camera'
+
+    buildFeatures {
+        compose true
+    }
+}
+
+dependencies {
+    implementation project(':core:model')
+    implementation project(':core:common')
+    implementation project(':core:ml')
+    implementation project(':core:data')
+
+    implementation libs.androidx.core.ktx
+    implementation libs.androidx.appcompat
+    implementation libs.androidx.compose.ui
+    implementation libs.androidx.work.runtime.ktx
+
+    // CameraX
+    implementation libs.androidx.camera.core
+    implementation libs.androidx.camera.camera2
+    implementation libs.androidx.camera.video
+    implementation libs.androidx.camera.lifecycle
+    implementation libs.androidx.camera.view
+    implementation libs.androidx.camera.extensions
+    implementation libs.androidx.camera.mlkit.vision
+
+    // Media3
+    implementation libs.androidx.media3.exoplayer
+    implementation libs.androidx.media3.ui
+    implementation libs.androidx.media3.transformer
+    implementation libs.androidx.media3.effect
+
+    // Hilt
+    implementation libs.hilt.android
+    ksp libs.hilt.compiler
+
+    // Lifecycle
+    implementation libs.androidx.lifecycle.runtime.ktx
+    implementation libs.androidx.lifecycle.viewmodel.ktx
+    implementation libs.androidx.lifecycle.viewmodel.compose
+
+    implementation libs.landscapist.glide
+    implementation libs.gpuimage
+
+    annotationProcessor libs.auto.value
+    compileOnly libs.auto.value
+}
+
+tasks.withType(org.jetbrains.kotlin.gradle.tasks.KotlinCompile).configureEach {
+    compilerOptions {
+        freeCompilerArgs.add("-Xskip-metadata-version-check")
+    }
+}

@@ -1,0 +1,39 @@
+plugins {
+    id 'com.android.library'
+    id 'com.google.devtools.ksp'
+    id 'dagger.hilt.android.plugin'
+}
+
+android {
+    namespace 'com.example.detectionexample.core.ml'
+
+    androidResources {
+        noCompress 'tflite', 'onnx'
+    }
+}
+
+dependencies {
+    implementation project(':core:model')
+    implementation project(':core:common')
+
+    implementation libs.androidx.core.ktx
+    implementation libs.litert
+    implementation libs.litert.gpu
+    implementation libs.litert.support
+    implementation libs.mlkit.face.detection
+    implementation libs.opencv
+
+    implementation libs.hilt.android
+    ksp libs.hilt.compiler
+    implementation libs.gpuimage
+
+    testImplementation libs.junit
+    testImplementation libs.mockk
+    testImplementation libs.robolectric
+}
+
+tasks.withType(org.jetbrains.kotlin.gradle.tasks.KotlinCompile).configureEach {
+    compilerOptions {
+        freeCompilerArgs.add("-Xskip-metadata-version-check")
+    }
+}

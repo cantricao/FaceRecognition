@@ -1,0 +1,40 @@
+plugins {
+    id 'com.android.library'
+    id 'com.google.devtools.ksp'
+    id 'dagger.hilt.android.plugin'
+    id 'org.jetbrains.kotlin.plugin.serialization'
+}
+
+android {
+    namespace 'com.example.detectionexample.core.data'
+
+    testOptions {
+        unitTests {
+            includeAndroidResources = true
+        }
+    }
+}
+
+dependencies {
+    implementation project(':core:model')
+    implementation project(':core:common')
+
+    implementation libs.androidx.core.ktx
+    implementation libs.androidx.datastore.preferences
+    implementation libs.androidx.room.runtime
+    implementation libs.androidx.room.ktx
+    ksp libs.androidx.room.compiler
+    implementation libs.kotlinx.serialization.json
+    implementation libs.hilt.android
+    ksp libs.hilt.compiler
+    implementation libs.androidx.work.runtime.ktx
+    implementation libs.hilt.work
+    ksp libs.hilt.work.compiler
+
+    testImplementation libs.junit
+    testImplementation libs.androidx.test.core
+    testImplementation libs.turbine
+    testImplementation libs.mockk
+    testImplementation libs.robolectric
+    testImplementation libs.kotlinx.coroutines.test
+}
