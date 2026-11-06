@@ -107,9 +107,11 @@ graph TD
 2. **Feature Extraction**:
    - **MobileFaceNet**: Generates compact 128-dimensional normalized floating-point embedding vectors.
    - **Vector Nearest Neighbor**: High-speed cosine and Euclidean distance matching with configurable cosine similarity threshold.
-3. **LiteRT Runtime Acceleration**:
-   - Bundled with `com.google.ai.edge.litert:2.3.0`.
-   - Supports OpenCL/Vulkan GPU delegates with automatic graceful CPU fallback.
+3. **LiteRT Runtime & Hardware Acceleration**:
+   - Bundled with `com.google.ai.edge.litert:2.3.0` (`litert-api`, `litert-gpu`, and `litert-support`).
+   - **Multi-Tier Accelerator Hierarchy**: Prioritizes `Accelerator.NPU` -> `Accelerator.GPU` -> `Accelerator.CPU`.
+   - **Qualcomm Snapdragon NPU (HTP)**: Configured with `CompiledModel.QualcommOptions` for Hexagon Tensor Processor burst performance modes, ConvHMX, and VTCM optimization.
+   - **Graceful Hardware Fallback**: Automatic single-thread confined fallback to OpenCL/Vulkan GPU and multi-threaded CPU (`xnnPack` optimized) when hardware NPU/GPU compilation is unsupported.
 4. **On-Device Generative AI (Gemini Nano)**:
    - Deep integration with `mlkit.genai.prompt` and `mlkit.genai.agent` for local conversational querying of detected identities without network roundtrips.
    - **AppFunctions**: Standardized Android 16/17 schema declarations allowing Google Assistant and system AI agents to search or inspect registered profiles securely.

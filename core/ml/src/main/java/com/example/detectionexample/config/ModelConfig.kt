@@ -3,7 +3,8 @@ package com.example.detectionexample.config
 enum class DeviceType {
     CPU,
     GPU,
-    NNAPI
+    NNAPI,
+    NPU
 }
 
 object ModelConfig {

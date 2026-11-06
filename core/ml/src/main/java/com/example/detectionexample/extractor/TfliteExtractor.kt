@@ -52,6 +52,18 @@ open class TfliteExtractor(
                     DeviceType.GPU, DeviceType.NNAPI -> {
                         CompiledModel.Options(Accelerator.GPU, Accelerator.CPU)
                     }
+                    DeviceType.NPU -> {
+                        CompiledModel.Options(Accelerator.NPU, Accelerator.GPU, Accelerator.CPU).apply {
+                            try {
+                                qualcommOptions = CompiledModel.QualcommOptions(
+                                    htpPerformanceMode = CompiledModel.QualcommOptions.HtpPerformanceMode.BURST,
+                                    optimizationLevel = CompiledModel.QualcommOptions.OptimizationLevel.HTP_OPTIMIZE_FOR_INFERENCE
+                                )
+                            } catch (e: Throwable) {
+                                Log.w(TAG, "Qualcomm NPU options not applicable: ${e.message}")
+                            }
+                        }
+                    }
                 }
                 model = try {
                     CompiledModel.create(

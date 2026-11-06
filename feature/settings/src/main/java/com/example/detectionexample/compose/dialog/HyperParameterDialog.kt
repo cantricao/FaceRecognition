@@ -52,6 +52,7 @@ fun HyperParameterDialog(
         listOf(
             ("CPU" to true),
             ("GPU" to true),
+            ("NPU" to (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S)),
             ("NNAPI" to (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P))
         )
     }

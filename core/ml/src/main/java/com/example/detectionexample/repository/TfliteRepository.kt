@@ -54,6 +54,7 @@ class TfliteRepository @Inject constructor(@ApplicationContext val context: Cont
         device = when (name) {
             "CPU" -> DeviceType.CPU
             "GPU" -> DeviceType.GPU
+            "NPU" -> DeviceType.NPU
             else -> DeviceType.NNAPI
         }
         createModel()
