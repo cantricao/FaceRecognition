@@ -1,0 +1,69 @@
+plugins {
+    id 'com.android.library'
+    id 'com.google.devtools.ksp'
+    id 'dagger.hilt.android.plugin'
+    id 'org.jetbrains.kotlin.plugin.compose'
+}
+
+android {
+    namespace 'com.example.detectionexample.feature.video'
+    useLibrary 'android.car'
+
+    buildFeatures {
+        compose true
+    }
+}
+
+dependencies {
+    implementation project(':core:model')
+    implementation project(':core:common')
+    implementation project(':core:camera')
+    implementation project(':core:ml')
+    implementation project(':core:data')
+    implementation project(':core:ui')
+
+    implementation libs.androidx.core.ktx
+    implementation libs.androidx.appcompat
+
+    // Compose
+    implementation libs.androidx.compose.ui
+    implementation libs.androidx.compose.material
+    implementation libs.androidx.compose.material3
+    implementation libs.androidx.compose.material.icons.core
+    implementation libs.androidx.compose.material.icons.extended
+    implementation libs.androidx.compose.ui.tooling.preview
+    debugImplementation libs.androidx.compose.ui.tooling
+
+    // Media3
+    implementation libs.androidx.media3.exoplayer
+    implementation libs.androidx.media3.session
+    implementation libs.androidx.media3.cast
+    implementation libs.androidx.media3.ui
+    implementation libs.androidx.media3.ui.compose
+    implementation libs.androidx.media3.ui.compose.material3
+    implementation libs.androidx.media3.transformer
+    implementation libs.androidx.media3.effect
+
+    // Hilt
+    implementation libs.hilt.android
+    ksp libs.hilt.compiler
+    implementation libs.androidx.hilt.navigation.compose
+
+    // Lifecycle
+    implementation libs.androidx.lifecycle.runtime.ktx
+    implementation libs.androidx.lifecycle.viewmodel.ktx
+    implementation libs.androidx.lifecycle.viewmodel.compose
+    implementation libs.androidx.lifecycle.viewmodel.savedstate
+
+    testImplementation libs.junit
+    testImplementation libs.androidx.test.core
+    testImplementation libs.mockk
+    testImplementation libs.robolectric
+    testImplementation libs.kotlinx.coroutines.test
+}
+
+tasks.withType(org.jetbrains.kotlin.gradle.tasks.KotlinCompile).configureEach {
+    compilerOptions {
+        freeCompilerArgs.add("-Xskip-metadata-version-check")
+    }
+}
