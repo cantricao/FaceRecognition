@@ -9,7 +9,6 @@ import androidx.datastore.preferences.core.PreferenceDataStoreFactory
 import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.emptyPreferences
 import androidx.datastore.preferences.preferencesDataStoreFile
-import androidx.startup.Initializer
 import androidx.work.Configuration
 import androidx.work.WorkManager
 import dagger.Module
@@ -26,7 +25,7 @@ private const val USER_PREFERENCES = "user_preferences"
 
 @Module
 @InstallIn(SingletonComponent::class)
-class AppModule : Initializer<WorkManager> {
+object AppModule {
 
     @Singleton
     @Provides
@@ -43,14 +42,14 @@ class AppModule : Initializer<WorkManager> {
 
     @Singleton
     @Provides
-    override fun create(@ApplicationContext context: Context): WorkManager {
-        val configuration = Configuration.Builder().build()
-        WorkManager.initialize(context, configuration)
-        Log.d("Hilt Init", "WorkManager initialized by Hilt this time")
+    fun provideWorkManager(@ApplicationContext context: Context): WorkManager {
+        try {
+            val configuration = Configuration.Builder().build()
+            WorkManager.initialize(context, configuration)
+            Log.d("Hilt Init", "WorkManager initialized by Hilt this time")
+        } catch (e: IllegalStateException) {
+            // Already initialized
+        }
         return WorkManager.getInstance(context)
-    }
-
-    override fun dependencies(): List<Class<out Initializer<*>>> {
-        return emptyList()
     }
 }

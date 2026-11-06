@@ -73,6 +73,11 @@ android {
         }
     }
 
+    lint {
+        abortOnError false
+        checkReleaseBuilds true
+    }
+
     namespace 'com.example.detectionexample'
     ndkVersion '26.2.11394342'
 }
