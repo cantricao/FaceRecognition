@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Canonical Layout: Image Text List -->
+    <integer name="sample_text_with_image_list_target_cell_width">4</integer>
+    <integer name="sample_text_with_image_list_target_cell_height">2</integer>
+    <dimen name="sample_text_with_image_list_widget_min_width">256dp</dimen>
+    <dimen name="sample_text_with_image_list_widget_min_height">115dp</dimen>
+    <dimen name="sample_text_with_image_widget_list_min_resize_width">120dp</dimen>
+    <dimen name="sample_text_with_image_list_widget_min_resize_height">115dp</dimen>
+    <dimen name="sample_text_with_image_list_widget_max_resize_width">624dp</dimen>
+    <dimen name="sample_text_with_image_list_widget_max_resize_height">422dp</dimen>
+</resources>

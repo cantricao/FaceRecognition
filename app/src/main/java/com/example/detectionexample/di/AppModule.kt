@@ -26,7 +26,7 @@ private const val USER_PREFERENCES = "user_preferences"
 
 @Module
 @InstallIn(SingletonComponent::class)
-class AppModule  : Initializer<WorkManager> {
+class AppModule : Initializer<WorkManager> {
 
     @Singleton
     @Provides
@@ -53,5 +53,4 @@ class AppModule  : Initializer<WorkManager> {
     override fun dependencies(): List<Class<out Initializer<*>>> {
         return emptyList()
     }
-
 }

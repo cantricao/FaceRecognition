@@ -1,0 +1,50 @@
+# Baseline Profile for FaceRecognition
+# Critical Startup & Hot Path Rules
+Lcom/example/detectionexample/MainActivity;
+HSPLcom/example/detectionexample/MainActivity;-><init>()V
+HSPLcom/example/detectionexample/MainActivity;->onCreate(Landroid/os/Bundle;)V
+HSPLcom/example/detectionexample/MainActivity;->onNewIntent(Landroid/content/Intent;)V
+Lcom/example/detectionexample/MainApplication;
+HSPLcom/example/detectionexample/MainApplication;-><init>()V
+HSPLcom/example/detectionexample/MainApplication;->getCameraXConfig()Landroidx/camera/core/CameraXConfig;
+HSPLcom/example/detectionexample/MainApplication;->getWorkManagerConfiguration()Landroidx/work/Configuration;
+
+# Navigation & App Scaffold
+Lcom/example/detectionexample/navigation/NavigationState;
+HSPLcom/example/detectionexample/navigation/NavigationState;-><init>(Landroidx/navigation3/runtime/NavKey;Landroidx/compose/runtime/MutableState;Ljava/util/Map;)V
+Lcom/example/detectionexample/navigation/Navigator;
+HSPLcom/example/detectionexample/navigation/Navigator;->navigate(Landroidx/navigation3/runtime/NavKey;)V
+Lcom/example/detectionexample/compose/FaceRecognitionAppKt;
+HSPLcom/example/detectionexample/compose/FaceRecognitionAppKt;->FaceRecognitionApp(Landroidx/compose/ui/Modifier;Landroidx/compose/runtime/Composer;II)V
+
+# Feature Screens
+Lcom/example/detectionexample/compose/camera/CameraPreviewKt;
+HSPLcom/example/detectionexample/compose/camera/CameraPreviewKt;->CameraPreview(Landroidx/compose/ui/Modifier;Lcom/example/detectionexample/viewmodels/AnalysisViewModel;Lcom/example/detectionexample/viewmodels/CameraXViewModel;Landroidx/compose/runtime/Composer;II)V
+Lcom/example/detectionexample/compose/video/VideoPlayerKt;
+
+# ViewModels & Coroutine Pipelines
+Lcom/example/detectionexample/viewmodels/CameraXViewModel;
+HSPLcom/example/detectionexample/viewmodels/CameraXViewModel;-><init>(Landroid/app/Application;)V
+HSPLcom/example/detectionexample/viewmodels/CameraXViewModel;->getCameraUiState()Lkotlinx/coroutines/flow/Flow;
+Lcom/example/detectionexample/viewmodels/AnalysisViewModel;
+HSPLcom/example/detectionexample/viewmodels/AnalysisViewModel;-><init>(Lcom/example/detectionexample/repository/TrackedObjectRepository;Lcom/example/detectionexample/repository/RecognizedPersonRepository;Lcom/example/detectionexample/repository/ExtractorRepository;Lcom/example/detectionexample/repository/TfliteRepository;)V
+HSPLcom/example/detectionexample/viewmodels/AnalysisViewModel;->observeTrackedObject(JZLkotlinx/coroutines/flow/Flow;)V
+
+# ML Detectors & Extractors
+Lcom/example/detectionexample/detector/BlazeFaceTfliteDetector;
+HSPLcom/example/detectionexample/detector/BlazeFaceTfliteDetector;-><init>(Landroid/content/Context;Ljava/lang/String;Lcom/example/detectionexample/detector/TfliteDetectorHelper$DetectorListener;)V
+Lcom/example/detectionexample/detector/FaceYuNetOpencvDetector;
+Lcom/example/detectionexample/detector/MobilenetSSDTfliteDetector;
+Lcom/example/detectionexample/detector/TfliteDetectorHelper;
+HSPLcom/example/detectionexample/detector/TfliteDetectorHelper;->detectInImage(Landroid/graphics/Bitmap;)V
+Lcom/example/detectionexample/extractor/TfliteExtractor;
+HSPLcom/example/detectionexample/extractor/TfliteExtractor;->extractImage(Landroid/graphics/Bitmap;)[F
+
+# Core Domain Models & Repositories
+Lcom/example/detectionexample/models/Person;
+Lcom/example/detectionexample/models/Recognition;
+Lcom/example/detectionexample/models/TrackedRecognition;
+Lcom/example/detectionexample/repository/RecognizedPersonRepository;
+HSPLcom/example/detectionexample/repository/RecognizedPersonRepository;->findNearest([FF)Landroid/util/Pair;
+Lcom/example/detectionexample/repository/TrackedObjectRepository;
+HSPLcom/example/detectionexample/repository/TrackedObjectRepository;->trackResults(Lkotlinx/coroutines/flow/Flow;)V

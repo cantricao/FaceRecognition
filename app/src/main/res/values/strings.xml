@@ -13,4 +13,12 @@
     <string name="camera_mode_face_retouch">Face Retouch</string>
     <string name="camera">camera</string>
     <string name="video">video</string>
+    <string name="chat">Assistant</string>
+    <string name="app_functions_display_description">Enables AI agents to search enrolled persons, check database count, manage profiles, and launch live face detection.</string>
+
+    <!-- Jetpack Glance Canonical Widget Strings -->
+    <string name="sample_text_and_image_list_app_widget_name">Recognized Faces</string>
+    <string name="sample_refresh_icon_button_label">Refresh</string>
+    <string name="sample_no_data_text">No enrolled persons</string>
+    <string name="sample_add_button_text">Enroll</string>
 </resources>

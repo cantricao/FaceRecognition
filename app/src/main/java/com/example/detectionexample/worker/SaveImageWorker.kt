@@ -6,6 +6,7 @@ import android.graphics.Canvas
 import android.graphics.Matrix
 import android.graphics.Paint
 import android.provider.MediaStore
+import android.util.Log
 import androidx.core.net.toUri
 import androidx.work.CoroutineWorker
 import androidx.work.ForegroundInfo
@@ -21,6 +22,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.decodeFromString
 import kotlinx.serialization.json.Json
+import java.io.IOException
 
 class SaveImageWorker @AssistedInject constructor(
     @Assisted appContext: Context,
@@ -29,12 +31,16 @@ class SaveImageWorker @AssistedInject constructor(
 
     companion object {
         const val NOTIFICATION_ID = 1
+        private const val TAG = "SaveImageWorker"
+        private const val JPEG_QUALITY = 95
     }
 
     override suspend fun getForegroundInfo(): ForegroundInfo {
         return ForegroundInfo(
-            NOTIFICATION_ID, createNotification(
-                applicationContext, id,
+            NOTIFICATION_ID,
+            createNotification(
+                applicationContext,
+                id,
                 applicationContext.getString(R.string.notification_title_filtering_image)
             )
         )
@@ -42,15 +48,16 @@ class SaveImageWorker @AssistedInject constructor(
 
     override suspend fun doWork(): Result = withContext(Dispatchers.IO) {
         try {
-            val uri = inputData.getString(CameraConfig.KEY_CAPTURE_IMAGE)!!.toUri()
+            val uriString = inputData.getString(CameraConfig.KEY_CAPTURE_IMAGE)
+                ?: return@withContext Result.failure()
+            val uri = uriString.toUri()
             val json = inputData.getString(CameraConfig.KEY_CAPTURE_TRACKER_OBJECT)
             val trackedObjectsState = json?.let {
                 Json.decodeFromString<List<TrackedRecognition>>(it)
-            }
+            } ?: return@withContext Result.failure()
 
             val orientationColumn = arrayOf(MediaStore.Images.Media.ORIENTATION)
-            val cur =
-                applicationContext.contentResolver.query(uri, orientationColumn, null, null, null)
+            val cur = applicationContext.contentResolver.query(uri, orientationColumn, null, null, null)
             val matrix = Matrix()
             if (cur != null && cur.moveToFirst()) {
                 val orientation = cur.getInt(cur.getColumnIndexOrThrow(orientationColumn[0]))
@@ -71,18 +78,20 @@ class SaveImageWorker @AssistedInject constructor(
             val canvas = Canvas(rotatedBitmap)
 
             val overlayBitmap = Util.drawBitmapOverlay(
-                trackedObjectsState!!,
+                trackedObjectsState,
                 rotatedBitmap.width,
                 rotatedBitmap.height
             )
             canvas.drawBitmap(overlayBitmap, Matrix(), Paint(Paint.FILTER_BITMAP_FLAG))
-            applicationContext.contentResolver.openOutputStream(uri).use { bitmapByteArray ->
-                    rotatedBitmap.compress(Bitmap.CompressFormat.JPEG, 95, bitmapByteArray)
-                }
+            applicationContext.contentResolver.openOutputStream(uri)?.use { bitmapByteArray ->
+                rotatedBitmap.compress(Bitmap.CompressFormat.JPEG, JPEG_QUALITY, bitmapByteArray)
+            } ?: return@withContext Result.failure()
             Result.success()
-        } catch (t: Throwable) {
+        } catch (ioe: IOException) {
+            Log.e(TAG, "I/O error saving filtered image", ioe)
             Result.failure()
-        } catch (ex: Exception) {
+        } catch (ise: IllegalStateException) {
+            Log.e(TAG, "Illegal state saving filtered image", ise)
             Result.failure()
         }
     }
