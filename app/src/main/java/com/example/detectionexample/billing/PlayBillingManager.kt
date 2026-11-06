@@ -19,6 +19,7 @@ import com.android.billingclient.api.queryPurchasesAsync
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharedFlow
@@ -56,7 +57,7 @@ class PlayBillingManager(
         const val PRODUCT_UNLOCK_PREMIUM = "unlock_premium_features"
     }
 
-    private val externalScope = CoroutineScope(Dispatchers.Default)
+    private val externalScope: CoroutineScope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
 
     private val _isConnected = MutableStateFlow(false)
     val isConnected: StateFlow<Boolean> = _isConnected.asStateFlow()
@@ -157,30 +158,43 @@ class PlayBillingManager(
     suspend fun queryAvailableProducts() {
         if (!billingClient.isReady) return
 
-        val productList = listOf(
-            QueryProductDetailsParams.Product.newBuilder()
-                .setProductId(PRODUCT_PRO_DETECTION)
-                .setProductType(BillingClient.ProductType.SUBS)
-                .build(),
-            QueryProductDetailsParams.Product.newBuilder()
-                .setProductId(PRODUCT_UNLOCK_PREMIUM)
-                .setProductType(BillingClient.ProductType.INAPP)
-                .build()
-        )
-
-        val params = QueryProductDetailsParams.newBuilder()
-            .setProductList(productList)
-            .build()
-
         try {
-            val result = billingClient.queryProductDetails(params)
-            if (result.billingResult.responseCode == BillingClient.BillingResponseCode.OK) {
-                val detailsList = result.productDetailsList ?: emptyList()
-                _productDetailsMap.value = detailsList.associateBy { it.productId }
-                Log.d(TAG, "Loaded ${detailsList.size} product details via PBL 9.")
-            } else {
-                Log.e(TAG, "Failed to query products: ${result.billingResult.debugMessage}")
+            val detailsList = mutableListOf<ProductDetails>()
+
+            // Query SUBS product details
+            val subsParams = QueryProductDetailsParams.newBuilder()
+                .setProductList(
+                    listOf(
+                        QueryProductDetailsParams.Product.newBuilder()
+                            .setProductId(PRODUCT_PRO_DETECTION)
+                            .setProductType(BillingClient.ProductType.SUBS)
+                            .build()
+                    )
+                )
+                .build()
+            val subsResult = billingClient.queryProductDetails(subsParams)
+            if (subsResult.billingResult.responseCode == BillingClient.BillingResponseCode.OK) {
+                subsResult.productDetailsList?.let { detailsList.addAll(it) }
             }
+
+            // Query INAPP product details
+            val inAppParams = QueryProductDetailsParams.newBuilder()
+                .setProductList(
+                    listOf(
+                        QueryProductDetailsParams.Product.newBuilder()
+                            .setProductId(PRODUCT_UNLOCK_PREMIUM)
+                            .setProductType(BillingClient.ProductType.INAPP)
+                            .build()
+                    )
+                )
+                .build()
+            val inAppResult = billingClient.queryProductDetails(inAppParams)
+            if (inAppResult.billingResult.responseCode == BillingClient.BillingResponseCode.OK) {
+                inAppResult.productDetailsList?.let { detailsList.addAll(it) }
+            }
+
+            _productDetailsMap.value = detailsList.associateBy { it.productId }
+            Log.d(TAG, "Loaded ${detailsList.size} product details via PBL 9.")
         } catch (e: Exception) {
             Log.e(TAG, "Exception querying products", e)
         }
@@ -192,27 +206,31 @@ class PlayBillingManager(
     suspend fun refreshPurchases() {
         if (!billingClient.isReady) return
 
-        val allPurchases = mutableListOf<Purchase>()
+        try {
+            val allPurchases = mutableListOf<Purchase>()
 
-        // Query INAPP purchases
-        val inappParams = QueryPurchasesParams.newBuilder()
-            .setProductType(BillingClient.ProductType.INAPP)
-            .build()
-        val inappResult = billingClient.queryPurchasesAsync(inappParams)
-        if (inappResult.billingResult.responseCode == BillingClient.BillingResponseCode.OK) {
-            allPurchases.addAll(inappResult.purchasesList)
+            // Query INAPP purchases
+            val inappParams = QueryPurchasesParams.newBuilder()
+                .setProductType(BillingClient.ProductType.INAPP)
+                .build()
+            val inappResult = billingClient.queryPurchasesAsync(inappParams)
+            if (inappResult.billingResult.responseCode == BillingClient.BillingResponseCode.OK) {
+                allPurchases.addAll(inappResult.purchasesList)
+            }
+
+            // Query SUBS purchases
+            val subsParams = QueryPurchasesParams.newBuilder()
+                .setProductType(BillingClient.ProductType.SUBS)
+                .build()
+            val subsResult = billingClient.queryPurchasesAsync(subsParams)
+            if (subsResult.billingResult.responseCode == BillingClient.BillingResponseCode.OK) {
+                allPurchases.addAll(subsResult.purchasesList)
+            }
+
+            _purchases.value = allPurchases
+        } catch (e: Exception) {
+            Log.e(TAG, "Exception refreshing purchases", e)
         }
-
-        // Query SUBS purchases
-        val subsParams = QueryPurchasesParams.newBuilder()
-            .setProductType(BillingClient.ProductType.SUBS)
-            .build()
-        val subsResult = billingClient.queryPurchasesAsync(subsParams)
-        if (subsResult.billingResult.responseCode == BillingClient.BillingResponseCode.OK) {
-            allPurchases.addAll(subsResult.purchasesList)
-        }
-
-        _purchases.value = allPurchases
     }
 
     /**

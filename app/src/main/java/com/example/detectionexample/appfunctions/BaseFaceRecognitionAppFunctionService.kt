@@ -89,17 +89,21 @@ abstract class BaseFaceRecognitionAppFunctionService : AppFunctionService() {
     @AppFunctionDeclaration(isDescribedByKDoc = true)
     suspend fun deletePersonById(
         personId: String,
-    ): Boolean = withContext(Dispatchers.IO) {
+    ): Boolean {
         if (personId.isBlank()) {
             throw AppFunctionExceptionFactory.createInvalidArgument("personId must not be blank")
         }
-        val person = recognizedPersonRepository.getPersonById(personId)
-            ?: throw AppFunctionExceptionFactory.createElementNotFound("No registered person found with ID '$personId'")
+        val person = withContext(Dispatchers.IO) {
+            recognizedPersonRepository.getPersonById(personId)
+        } ?: throw AppFunctionExceptionFactory.createElementNotFound("No registered person found with ID '$personId'")
 
-        try {
-            recognizedPersonRepository.deletePerson(person)
+        return try {
+            withContext(Dispatchers.IO) {
+                recognizedPersonRepository.deletePerson(person)
+            }
             true
         } catch (e: Exception) {
+            if (e is androidx.appfunctions.AppFunctionException) throw e
             throw AppFunctionExceptionFactory.createInvalidArgument(
                 "Failed to delete person with ID '$personId': ${e.message}"
             )
