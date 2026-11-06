@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<wearwidget-provider
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    label="@string/face_recognition_widget_label"
+    description="@string/face_recognition_widget_desc"
+    preferredType="LARGE">
+    <container
+        type="SMALL"
+        previewImage="@drawable/face_recognition_widget_preview_small" />
+    <container
+        type="LARGE"
+        previewImage="@drawable/face_recognition_widget_preview_large" />
+</wearwidget-provider>

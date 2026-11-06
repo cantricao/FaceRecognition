@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="wear_app_name">Face Recon Wear</string>
+    <string name="wear_title_controls">Face Controls</string>
+    <string name="wear_title_identities">Identities</string>
+    <string name="wear_live_detection">Live Detection</string>
+    <string name="wear_enrolled_faces">Enrolled Faces</string>
+    <string name="wear_sync_status">Sync Status</string>
+    <string name="wear_more">More</string>
+    <string name="face_recognition_widget_label">Face Recognition</string>
+    <string name="face_recognition_widget_desc">Monitor face detection status and quick controls</string>
+</resources>
