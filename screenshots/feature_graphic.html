@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=1024, height=500">
+<title>FaceRecognition - Feature Graphic (1024x500)</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@600;700&display=swap" rel="stylesheet">
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    width: 1024px;
+    height: 500px;
+    overflow: hidden;
+    background: radial-gradient(circle at 75% 30%, #15382B 0%, #0B1017 50%, #040608 100%);
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+    color: #FFFFFF;
+    position: relative;
+    user-select: none;
+  }
+
+  /* Left Hero Text Section */
+  .left-hero {
+    position: absolute;
+    left: 64px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 480px;
+    z-index: 20;
+  }
+  .feature-kicker {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    background: rgba(0, 230, 118, 0.14);
+    border: 1px solid rgba(0, 230, 118, 0.4);
+    padding: 6px 16px;
+    border-radius: 999px;
+    color: #00E676;
+    font-size: 13px;
+    font-weight: 800;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    margin-bottom: 18px;
+  }
+  .feature-title {
+    font-size: 52px;
+    font-weight: 900;
+    line-height: 1.05;
+    letter-spacing: -0.04em;
+    margin-bottom: 16px;
+  }
+  .feature-title span.accent {
+    background: linear-gradient(135deg, #00E676 0%, #00F5D4 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+  .feature-desc {
+    font-size: 18px;
+    font-weight: 500;
+    color: #94A3B8;
+    line-height: 1.45;
+    margin-bottom: 24px;
+  }
+  .feature-pills-row {
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
+  }
+  .feature-pill-badge {
+    background: rgba(15, 23, 42, 0.85);
+    border: 1px solid rgba(0, 230, 118, 0.3);
+    backdrop-filter: blur(10px);
+    padding: 6px 14px;
+    border-radius: 12px;
+    font-size: 12px;
+    font-weight: 700;
+    color: #E2E8F0;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  /* Right Devices Showcase */
+  .right-devices {
+    position: absolute;
+    right: 40px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 440px;
+    height: 440px;
+  }
+
+  /* Center Phone */
+  .phone-frame {
+    position: absolute;
+    right: 70px;
+    top: 20px;
+    width: 230px;
+    height: 410px;
+    background: #000000;
+    border-radius: 40px;
+    padding: 8px;
+    box-shadow: 0 25px 60px rgba(0,0,0,0.85), 0 0 0 2px rgba(255,255,255,0.15), 0 0 40px rgba(0, 230, 118, 0.2);
+    z-index: 10;
+  }
+  .phone-screen {
+    width: 100%;
+    height: 100%;
+    background: #090D14;
+    border-radius: 32px;
+    overflow: hidden;
+    position: relative;
+    display: flex;
+    flex-direction: column;
+  }
+
+  /* Wear OS Watch Foreground */
+  .watch-frame {
+    position: absolute;
+    right: 230px;
+    bottom: 30px;
+    width: 140px;
+    height: 140px;
+    background: radial-gradient(circle, #17202B 0%, #080C10 100%);
+    border-radius: 50%;
+    border: 5px solid #283344;
+    box-shadow: 0 16px 40px rgba(0,0,0,0.85), 0 0 0 2px rgba(0, 230, 118, 0.4);
+    z-index: 20;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    padding: 12px;
+  }
+
+  /* Tablet Edge Background */
+  .tablet-frame {
+    position: absolute;
+    right: 0;
+    top: 50px;
+    width: 200px;
+    height: 300px;
+    background: #10161F;
+    border-radius: 24px;
+    border: 3px solid #1E293B;
+    opacity: 0.65;
+    transform: rotate(5deg);
+    padding: 12px;
+    z-index: 5;
+  }
+</style>
+</head>
+<body>
+
+  <!-- Left Content -->
+  <div class="left-hero">
+    <div class="feature-kicker">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><path d="m9 12 2 2 4-4"/></svg>
+      Google Play Multi-Device Suite
+    </div>
+    <div class="feature-title">
+      Instant Face<br><span class="accent">Recognition</span>
+    </div>
+    <div class="feature-desc">
+      On-device 60 FPS machine learning. Private biometrics across your Phone, Tablet, Watch & Auto.
+    </div>
+    <div class="feature-pills-row">
+      <div class="feature-pill-badge">
+        <span style="color: #00E676;">🟢</span> 100% Private (No Cloud)
+      </div>
+      <div class="feature-pill-badge">
+        <span style="color: #38BDF8;">⚡</span> 12ms LiteRT Inference
+      </div>
+      <div class="feature-pill-badge">
+        <span style="color: #A78BFA;">⌚</span> Wear OS 5 Ready
+      </div>
+    </div>
+  </div>
+
+  <!-- Right Devices Showcase -->
+  <div class="right-devices">
+    
+    <!-- Tablet in background -->
+    <div class="tablet-frame">
+      <div style="font-size: 10px; font-weight: 700; color: #64748B; text-transform: uppercase;">Telemetry</div>
+      <div style="margin-top: 8px; background: #17212D; padding: 6px 8px; border-radius: 6px; font-size: 10px;">
+        <span style="color: #00E676;">Alex Chen</span> · 99.4%
+      </div>
+      <div style="margin-top: 6px; background: #17212D; padding: 6px 8px; border-radius: 6px; font-size: 10px;">
+        <span style="color: #00E676;">Sarah J.</span> · 98.7%
+      </div>
+    </div>
+
+    <!-- Phone Hero -->
+    <div class="phone-frame">
+      <div class="phone-screen">
+        <div style="flex: 1; position: relative; background: radial-gradient(circle at 50% 38%, #162432 0%, #0E141D 70%, #07090D 100%); display: flex; align-items: center; justify-content: center;">
+          <!-- Scan Line -->
+          <div style="position: absolute; left: 0; right: 0; top: 38%; height: 2px; background: linear-gradient(90deg, transparent, #00E676, transparent); box-shadow: 0 0 10px #00E676;"></div>
+          
+          <!-- Face Box -->
+          <div style="width: 130px; height: 160px; border: 2px solid #00E676; border-radius: 14px; position: relative; display: flex; flex-direction: column; align-items: center; justify-content: center;">
+            <div style="position: absolute; top: -16px; background: #00E676; color: #051A10; font-size: 10px; font-weight: 800; padding: 2px 8px; border-radius: 999px;">
+              Alex Chen · 99%
+            </div>
+            <svg width="60" height="70" viewBox="0 0 100 120" fill="none" opacity="0.4">
+              <ellipse cx="50" cy="50" rx="35" ry="45" stroke="#FFFFFF" stroke-width="2"/>
+              <circle cx="38" cy="45" r="4" fill="#FFFFFF"/>
+              <circle cx="62" cy="45" r="4" fill="#FFFFFF"/>
+              <path d="M40 76 Q50 84 60 76" stroke="#FFFFFF" stroke-width="2" fill="none"/>
+            </svg>
+            <div style="position: absolute; bottom: -14px; background: rgba(0,0,0,0.8); border: 1px solid #00E676; font-family: 'JetBrains Mono', monospace; font-size: 8px; color: #00E676; padding: 1px 6px; border-radius: 4px;">
+              60.2 FPS
+            </div>
+          </div>
+        </div>
+
+        <div style="padding: 8px 12px; background: #111721; display: flex; justify-content: space-between; font-size: 9px; font-weight: 700; color: #94A3B8;">
+          <span style="color: #00E676;">● Active</span>
+          <span>LiteRT GPU</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Wear OS Watch -->
+    <div class="watch-frame">
+      <div style="font-size: 8px; font-weight: 800; color: #00E676; text-transform: uppercase;">Wear OS</div>
+      <div style="font-size: 20px; font-weight: 900; color: #FFFFFF; margin: 1px 0;">2</div>
+      <div style="font-size: 8.5px; color: #94A3B8;">Verified</div>
+      <div style="margin-top: 4px; background: rgba(0, 230, 118, 0.2); border: 1px solid #00E676; color: #00E676; font-size: 7.5px; font-weight: 700; padding: 2px 8px; border-radius: 999px;">
+        Active
+      </div>
+    </div>
+
+  </div>
+
+</body>
+</html>

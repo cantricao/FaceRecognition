@@ -1,0 +1,6 @@
+Screenshot 01: Instant face recognition with 60 FPS LiteRT inference, real-time bounding box tracking, and Wear OS companion preview.
+Screenshot 02: Built for every Google screen with adaptive layouts across phones, foldables, tablets, Wear OS smartwatches, and cars.
+Screenshot 03: 100% private biometric database stored encrypted in local DataStore with zero network calls and sub-millisecond matching.
+Screenshot 04: Batch video analysis with hardware-accelerated Media3 playback, face detection heatmap timeline, and Cast support.
+Screenshot 05: Wear OS companion app showing active wrist identity monitoring, quick verification alerts, and Wear Compose M3 complications.
+Screenshot 06: Pro-grade precision with tunable cosine distance threshold sliders, LiteRT GPU acceleration, and BlazeFace configuration.

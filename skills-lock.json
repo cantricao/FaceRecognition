@@ -1,6 +1,12 @@
 {
   "version": 1,
   "skills": {
+    "app-store-screenshots": {
+      "source": "ceorkm/aso-shots",
+      "sourceType": "github",
+      "skillPath": "skills/app-store-screenshots/SKILL.md",
+      "computedHash": "391a6207b726162adfb3d6907ebdbe2dc0491898856cb82d2150636df85eeb12"
+    },
     "claude-android-ninja": {
       "source": "drjacky/claude-android-ninja",
       "sourceType": "github",

@@ -1,0 +1,861 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>FaceRecognition - Store Screenshots Set (Direction B)</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@500;600;700&display=swap" rel="stylesheet">
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    background: #06080B;
+    color: #E2E8F0;
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    padding: 30px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+  header {
+    text-align: center;
+    max-width: 1100px;
+    margin-bottom: 30px;
+  }
+  h1 {
+    font-size: 32px;
+    font-weight: 900;
+    letter-spacing: -0.03em;
+    margin-bottom: 8px;
+    background: linear-gradient(135deg, #FFFFFF 40%, #00E676 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+  p.subtitle {
+    font-size: 15px;
+    color: #94A3B8;
+  }
+  #stage {
+    display: flex;
+    gap: 28px;
+    justify-content: center;
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    padding: 10px 10px 40px;
+    max-width: 100%;
+  }
+
+  /* 9:16 Aspect Ratio Panel: 540px x 960px (Exports perfectly to 1080x1920) */
+  .panel {
+    flex: 0 0 540px;
+    width: 540px;
+    height: 960px;
+    border-radius: 40px;
+    position: relative;
+    overflow: hidden;
+    background: radial-gradient(circle at 50% 16%, #132E24 0%, #0B1015 52%, #05070A 100%);
+    box-shadow: 0 30px 70px rgba(0,0,0,0.8), 0 0 0 1px rgba(255,255,255,0.08);
+    display: flex;
+    flex-direction: column;
+    user-select: none;
+  }
+
+  /* Top Typography & Copy Header */
+  .top-header {
+    padding: 52px 36px 16px;
+    text-align: center;
+    position: relative;
+    z-index: 20;
+  }
+  .kicker {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: rgba(0, 230, 118, 0.12);
+    border: 1px solid rgba(0, 230, 118, 0.35);
+    padding: 5px 14px;
+    border-radius: 999px;
+    color: #00E676;
+    font-size: 12.5px;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    margin-bottom: 14px;
+  }
+  .headline {
+    font-size: 38px;
+    font-weight: 900;
+    line-height: 1.12;
+    letter-spacing: -0.035em;
+    color: #FFFFFF;
+    margin-bottom: 10px;
+  }
+  .headline span.accent {
+    background: linear-gradient(135deg, #00E676 0%, #00F5D4 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+  .subline {
+    font-size: 16px;
+    font-weight: 500;
+    color: #94A3B8;
+    line-height: 1.4;
+  }
+
+  /* Interactive Stage Area */
+  .device-stage {
+    position: relative;
+    flex: 1;
+    width: 100%;
+    margin-top: 10px;
+  }
+
+  /* Phone Frame Geometry */
+  .phone-wrapper {
+    position: absolute;
+    left: 50%;
+    transform: translateX(-50%);
+    bottom: -30px;
+    width: 340px;
+    height: 610px;
+    background: #000000;
+    border-radius: 52px;
+    padding: 10px;
+    box-shadow: 0 35px 80px rgba(0,0,0,0.85), 0 0 0 2px rgba(255,255,255,0.15), 0 0 50px rgba(0, 230, 118, 0.12);
+    z-index: 10;
+  }
+  .phone-screen {
+    width: 100%;
+    height: 100%;
+    background: #0B0E14;
+    border-radius: 44px;
+    overflow: hidden;
+    position: relative;
+    display: flex;
+    flex-direction: column;
+  }
+
+  /* Universal Viewfinder */
+  .viewfinder {
+    position: relative;
+    flex: 1;
+    background: radial-gradient(circle at 50% 38%, #162432 0%, #0E141D 70%, #07090D 100%);
+    overflow: hidden;
+  }
+  .laser-scan {
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 36%;
+    height: 2px;
+    background: linear-gradient(90deg, transparent, #00E676, transparent);
+    box-shadow: 0 0 14px #00E676;
+    opacity: 0.85;
+  }
+
+  /* Face Target Silhouette & Box */
+  .face-target {
+    position: absolute;
+    left: 50%;
+    top: 40%;
+    transform: translate(-50%, -50%);
+    width: 190px;
+    height: 230px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+  }
+  .bbox-frame {
+    position: absolute;
+    inset: 12px 18px;
+    border: 2px solid rgba(0, 230, 118, 0.75);
+    border-radius: 18px;
+    box-shadow: 0 0 24px rgba(0, 230, 118, 0.28), inset 0 0 16px rgba(0, 230, 118, 0.1);
+  }
+  .bbox-corner {
+    position: absolute;
+    width: 16px;
+    height: 16px;
+    border-color: #00E676;
+    border-style: solid;
+  }
+  .tl { top: -2px; left: -2px; border-width: 3.5px 0 0 3.5px; border-top-left-radius: 14px; }
+  .tr { top: -2px; right: -2px; border-width: 3.5px 3.5px 0 0; border-top-right-radius: 14px; }
+  .bl { bottom: -2px; left: -2px; border-width: 0 0 3.5px 3.5px; border-bottom-left-radius: 14px; }
+  .br { bottom: -2px; right: -2px; border-width: 0 3.5px 3.5px 0; border-bottom-right-radius: 14px; }
+
+  .identity-pill {
+    position: absolute;
+    top: -26px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: #00E676;
+    color: #051A10;
+    font-weight: 800;
+    font-size: 12px;
+    padding: 3.5px 12px;
+    border-radius: 999px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    white-space: nowrap;
+    box-shadow: 0 4px 14px rgba(0, 230, 118, 0.45);
+  }
+  .identity-pill .dot {
+    width: 6.5px;
+    height: 6.5px;
+    border-radius: 50%;
+    background: #051A10;
+  }
+  .telemetry-tag {
+    position: absolute;
+    bottom: -24px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: rgba(11, 14, 20, 0.88);
+    border: 1px solid rgba(0, 230, 118, 0.4);
+    backdrop-filter: blur(8px);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 9px;
+    font-weight: 600;
+    color: #00E676;
+    padding: 2.5px 10px;
+    border-radius: 6px;
+    white-space: nowrap;
+  }
+
+  /* Camera UI Bottom Bar */
+  .camera-bar {
+    padding: 14px 18px;
+    background: rgba(14, 19, 27, 0.96);
+    border-top: 1px solid rgba(255,255,255,0.08);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .stat-pill {
+    background: rgba(255,255,255,0.07);
+    padding: 4px 12px;
+    border-radius: 8px;
+    font-size: 11px;
+    font-weight: 600;
+    color: #E2E8F0;
+  }
+
+  /* Floating UI Chips & Trust Elements */
+  .floating-pill {
+    position: absolute;
+    background: rgba(15, 23, 42, 0.88);
+    border: 1px solid rgba(0, 230, 118, 0.35);
+    backdrop-filter: blur(14px);
+    border-radius: 16px;
+    padding: 10px 16px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    box-shadow: 0 16px 36px rgba(0,0,0,0.5);
+    z-index: 25;
+  }
+  .pill-title {
+    font-size: 12.5px;
+    font-weight: 800;
+    color: #FFFFFF;
+  }
+  .pill-desc {
+    font-size: 10.5px;
+    color: #94A3B8;
+  }
+
+  /* Smartwatch Vector (Wear OS) */
+  .watch-mockup {
+    position: absolute;
+    background: radial-gradient(circle, #17202B 0%, #080C10 100%);
+    border-radius: 50%;
+    border: 6px solid #283344;
+    box-shadow: 0 20px 48px rgba(0,0,0,0.85), 0 0 0 2px rgba(0, 230, 118, 0.35);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    z-index: 30;
+  }
+  .watch-dial {
+    width: 100%;
+    height: 100%;
+    padding: 16px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+  }
+
+  /* Tablet Backdrop Vector */
+  .tablet-mockup {
+    position: absolute;
+    background: #10161F;
+    border-radius: 32px;
+    border: 4px solid #1E293B;
+    box-shadow: 0 24px 50px rgba(0,0,0,0.6);
+    overflow: hidden;
+  }
+
+  /* Navigation Bar / Drawer in App */
+  .app-topbar {
+    padding: 12px 16px;
+    background: #111721;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 1px solid rgba(255,255,255,0.06);
+  }
+  .app-title {
+    font-size: 13px;
+    font-weight: 800;
+    color: #FFFFFF;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>FaceRecognition · App Store & Google Play Screenshot Suite</h1>
+  <p class="subtitle">Direction B (Google Multi-Device Ecosystem: Onyx & Luminous Emerald). Formatted to exact 9:16 aspect ratio (540×960 base / 1080×1920 export).</p>
+</header>
+
+<div id="stage">
+
+  <!-- ==========================================
+       SCREENSHOT 01: THE HOOK
+       ========================================== -->
+  <div class="panel" id="panel-01">
+    <div class="top-header">
+      <div class="kicker">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><path d="m9 12 2 2 4-4"/></svg>
+        LiteRT On-Device ML
+      </div>
+      <div class="headline">Instant Face <span class="accent">Recognition</span></div>
+      <div class="subline">Real-time 60 FPS on-device artificial intelligence</div>
+    </div>
+
+    <div class="device-stage">
+      <!-- Tablet Edge Behind -->
+      <div class="tablet-mockup" style="left: -80px; top: 30px; width: 300px; height: 420px; opacity: 0.75; transform: rotate(-5deg);">
+        <div class="app-topbar">
+          <span style="font-size: 11px; font-weight: 700; color: #64748B;">TELEMETRY INSPECTOR</span>
+          <span style="font-size: 10px; color: #00E676; font-weight: 700;">ACTIVE</span>
+        </div>
+        <div style="padding: 14px; display: flex; flex-direction: column; gap: 8px;">
+          <div style="background: #17212D; padding: 10px; border-radius: 12px; display: flex; justify-content: space-between; font-size: 11px;">
+            <span>Alex Chen</span>
+            <strong style="color: #00E676;">99.4% Match</strong>
+          </div>
+          <div style="background: #17212D; padding: 10px; border-radius: 12px; display: flex; justify-content: space-between; font-size: 11px;">
+            <span>Sarah Jenkins</span>
+            <strong style="color: #00E676;">98.7% Match</strong>
+          </div>
+          <div style="background: #17212D; padding: 10px; border-radius: 12px; display: flex; justify-content: space-between; font-size: 11px;">
+            <span>Inference Time</span>
+            <strong style="color: #38BDF8;">12.4 ms</strong>
+          </div>
+        </div>
+      </div>
+
+      <!-- Center Phone Hero -->
+      <div class="phone-wrapper">
+        <div class="phone-screen">
+          <div class="viewfinder">
+            <div class="laser-scan"></div>
+            
+            <div class="face-target">
+              <svg width="120" height="140" viewBox="0 0 100 120" fill="none" opacity="0.45">
+                <ellipse cx="50" cy="50" rx="35" ry="45" stroke="#FFFFFF" stroke-width="1.5" stroke-dasharray="3 3"/>
+                <circle cx="38" cy="45" r="4" fill="#FFFFFF"/>
+                <circle cx="62" cy="45" r="4" fill="#FFFFFF"/>
+                <path d="M47 54 L53 54 L50 63 Z" stroke="#FFFFFF" stroke-width="1.2"/>
+                <path d="M40 76 Q50 84 60 76" stroke="#FFFFFF" stroke-width="1.8" fill="none"/>
+              </svg>
+
+              <div class="bbox-frame">
+                <div class="bbox-corner tl"></div>
+                <div class="bbox-corner tr"></div>
+                <div class="bbox-corner bl"></div>
+                <div class="bbox-corner br"></div>
+                
+                <div class="identity-pill">
+                  <span class="dot"></span>
+                  Alex Chen · 99.4%
+                </div>
+
+                <div class="telemetry-tag">
+                  BBox: [142, 280 - 410, 560]
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="camera-bar">
+            <div class="stat-pill" style="color: #00E676;">🟢 2 Faces In Frame</div>
+            <div class="stat-pill">60.2 FPS</div>
+            <div class="stat-pill">LiteRT GPU</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Foreground Wear OS Smartwatch -->
+      <div class="watch-mockup" style="right: 18px; bottom: 35px; width: 160px; height: 160px;">
+        <div class="watch-dial">
+          <div style="font-size: 9px; font-weight: 800; color: #00E676; text-transform: uppercase; letter-spacing: 0.08em;">Wear OS</div>
+          <div style="font-size: 24px; font-weight: 900; color: #FFFFFF; margin: 2px 0;">2</div>
+          <div style="font-size: 9.5px; color: #94A3B8;">Identities Verified</div>
+          <div style="margin-top: 6px; background: rgba(0, 230, 118, 0.2); border: 1px solid rgba(0, 230, 118, 0.5); color: #00E676; font-size: 9px; font-weight: 700; padding: 3px 12px; border-radius: 999px;">
+            Open App
+          </div>
+        </div>
+      </div>
+
+      <!-- Trust Badge -->
+      <div class="floating-pill" style="left: 20px; bottom: 35px;">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#00E676" stroke-width="2">
+          <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+        </svg>
+        <div>
+          <div class="pill-title">100% On-Device AI</div>
+          <div class="pill-desc">Zero Cloud Latency · Private</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+
+  <!-- ==========================================
+       SCREENSHOT 02: MULTI-DEVICE ECOSYSTEM
+       ========================================== -->
+  <div class="panel" id="panel-02">
+    <div class="top-header">
+      <div class="kicker">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect width="18" height="18" x="3" y="3" rx="2"/><path d="M3 9h18"/><path d="M9 21V9"/></svg>
+        Google Ecosystem
+      </div>
+      <div class="headline">Built for <span class="accent">Every Screen</span></div>
+      <div class="subline">Phone, Tablet, Wear OS & Auto continuity</div>
+    </div>
+
+    <div class="device-stage">
+      <!-- Tablet Central Mockup -->
+      <div class="tablet-mockup" style="left: 50%; transform: translateX(-50%); top: 10px; width: 440px; height: 320px; z-index: 5;">
+        <div class="app-topbar">
+          <div class="app-title">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="#00E676"><circle cx="12" cy="12" r="10"/></svg>
+            FaceRecognition Studio (Large Screen)
+          </div>
+          <span style="font-size: 11px; background: rgba(0, 230, 118, 0.2); color: #00E676; padding: 2px 8px; border-radius: 6px;">Adaptive Two-Pane</span>
+        </div>
+        <div style="display: flex; height: 100%;">
+          <!-- Left side viewfinder -->
+          <div style="flex: 1.2; background: #0A0E14; position: relative; border-right: 1px solid rgba(255,255,255,0.06); padding: 12px; display: flex; align-items: center; justify-content: center;">
+            <div style="width: 140px; height: 160px; border: 2px solid #00E676; border-radius: 14px; position: relative; display: flex; align-items: center; justify-content: center;">
+              <span style="font-size: 10px; color: #00E676; font-weight: 700;">Primary Stream</span>
+            </div>
+          </div>
+          <!-- Right side inspector -->
+          <div style="flex: 1; background: #111721; padding: 14px; display: flex; flex-direction: column; gap: 8px;">
+            <div style="font-size: 10px; font-weight: 700; color: #64748B; text-transform: uppercase;">Real-time Telemetry</div>
+            <div style="background: #17212D; border-radius: 8px; padding: 8px; font-size: 11px;">
+              <div>Alex Chen</div>
+              <div style="color: #00E676; font-size: 10px;">Cosine: 0.994</div>
+            </div>
+            <div style="background: #17212D; border-radius: 8px; padding: 8px; font-size: 11px;">
+              <div>Sarah Jenkins</div>
+              <div style="color: #00E676; font-size: 10px;">Cosine: 0.987</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Phone Foreground -->
+      <div class="phone-wrapper" style="left: 28%; bottom: -50px; width: 260px; height: 460px; z-index: 15;">
+        <div class="phone-screen">
+          <div class="app-topbar">
+            <span style="font-size: 10px; font-weight: 700; color: #FFFFFF;">Live Detection</span>
+            <span style="font-size: 9px; color: #00E676;">60 FPS</span>
+          </div>
+          <div class="viewfinder" style="display: flex; align-items: center; justify-content: center;">
+            <div style="width: 110px; height: 130px; border: 2px solid #00E676; border-radius: 12px; position: relative;">
+              <div class="identity-pill" style="top: -20px; font-size: 10px; padding: 2px 8px;">Alex C. · 99%</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Wear OS Watch Floating Right -->
+      <div class="watch-mockup" style="right: 24px; bottom: 60px; width: 170px; height: 170px; z-index: 20;">
+        <div class="watch-dial">
+          <div style="font-size: 9px; font-weight: 800; color: #00E676; text-transform: uppercase;">Wear OS 5</div>
+          <div style="font-size: 26px; font-weight: 900; color: #FFFFFF; margin: 3px 0;">SYNC</div>
+          <div style="font-size: 10px; color: #94A3B8;">Wrist Telemetry</div>
+          <div style="margin-top: 8px; background: rgba(0, 230, 118, 0.2); border: 1px solid rgba(0, 230, 118, 0.5); color: #00E676; font-size: 9.5px; font-weight: 700; padding: 4px 14px; border-radius: 999px;">
+            Connected
+          </div>
+        </div>
+      </div>
+
+      <!-- Feature Pill -->
+      <div class="floating-pill" style="left: 24px; bottom: 25px; z-index: 30;">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#00E676" stroke-width="2">
+          <path d="M18 10h-1.26A8 8 0 1 0 9 20h9a5 5 0 0 0 0-10z"/>
+        </svg>
+        <div>
+          <div class="pill-title">Navigation 3 Adaptive</div>
+          <div class="pill-desc">Optimized for Foldables & Tablets</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+
+  <!-- ==========================================
+       SCREENSHOT 03: PRIVACY & DATABASE
+       ========================================== -->
+  <div class="panel" id="panel-03">
+    <div class="top-header">
+      <div class="kicker">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+        Security & Privacy
+      </div>
+      <div class="headline">100% Private. <span class="accent">Zero Cloud.</span></div>
+      <div class="subline">Biometric embeddings never leave your device</div>
+    </div>
+
+    <div class="device-stage">
+      <div class="phone-wrapper">
+        <div class="phone-screen">
+          <div class="app-topbar">
+            <div class="app-title">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#00E676" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+              Enrolled Identities
+            </div>
+            <span style="font-size: 11px; color: #00E676; font-weight: 700;">+ Register</span>
+          </div>
+
+          <!-- Identities List Mockup -->
+          <div style="padding: 16px; display: flex; flex-direction: column; gap: 10px; background: #0B0E14; flex: 1;">
+            
+            <div style="background: #151D28; border: 1px solid rgba(0, 230, 118, 0.25); border-radius: 14px; padding: 12px; display: flex; align-items: center; justify-content: space-between;">
+              <div style="display: flex; align-items: center; gap: 12px;">
+                <div style="width: 38px; height: 38px; border-radius: 50%; background: #1E2B3C; display: flex; align-items: center; justify-content: center; font-weight: 800; color: #00E676; font-size: 14px;">AC</div>
+                <div>
+                  <div style="font-size: 13px; font-weight: 700; color: #FFFFFF;">Alex Chen</div>
+                  <div style="font-size: 10.5px; color: #64748B;">512-dim embedding · Local</div>
+                </div>
+              </div>
+              <span style="background: rgba(0, 230, 118, 0.15); color: #00E676; font-size: 10px; font-weight: 700; padding: 3px 8px; border-radius: 6px;">VERIFIED</span>
+            </div>
+
+            <div style="background: #151D28; border: 1px solid rgba(255,255,255,0.06); border-radius: 14px; padding: 12px; display: flex; align-items: center; justify-content: space-between;">
+              <div style="display: flex; align-items: center; gap: 12px;">
+                <div style="width: 38px; height: 38px; border-radius: 50%; background: #1E2B3C; display: flex; align-items: center; justify-content: center; font-weight: 800; color: #38BDF8; font-size: 14px;">SJ</div>
+                <div>
+                  <div style="font-size: 13px; font-weight: 700; color: #FFFFFF;">Sarah Jenkins</div>
+                  <div style="font-size: 10.5px; color: #64748B;">512-dim embedding · Local</div>
+                </div>
+              </div>
+              <span style="background: rgba(0, 230, 118, 0.15); color: #00E676; font-size: 10px; font-weight: 700; padding: 3px 8px; border-radius: 6px;">VERIFIED</span>
+            </div>
+
+            <div style="background: #151D28; border: 1px solid rgba(255,255,255,0.06); border-radius: 14px; padding: 12px; display: flex; align-items: center; justify-content: space-between;">
+              <div style="display: flex; align-items: center; gap: 12px;">
+                <div style="width: 38px; height: 38px; border-radius: 50%; background: #1E2B3C; display: flex; align-items: center; justify-content: center; font-weight: 800; color: #A78BFA; font-size: 14px;">DK</div>
+                <div>
+                  <div style="font-size: 13px; font-weight: 700; color: #FFFFFF;">David Kim</div>
+                  <div style="font-size: 10.5px; color: #64748B;">512-dim embedding · Local</div>
+                </div>
+              </div>
+              <span style="background: rgba(0, 230, 118, 0.15); color: #00E676; font-size: 10px; font-weight: 700; padding: 3px 8px; border-radius: 6px;">VERIFIED</span>
+            </div>
+
+            <div style="background: #151D28; border: 1px solid rgba(255,255,255,0.06); border-radius: 14px; padding: 12px; display: flex; align-items: center; justify-content: space-between;">
+              <div style="display: flex; align-items: center; gap: 12px;">
+                <div style="width: 38px; height: 38px; border-radius: 50%; background: #1E2B3C; display: flex; align-items: center; justify-content: center; font-weight: 800; color: #F43F5E; font-size: 14px;">ER</div>
+                <div>
+                  <div style="font-size: 13px; font-weight: 700; color: #FFFFFF;">Elena Rostova</div>
+                  <div style="font-size: 10.5px; color: #64748B;">512-dim embedding · Local</div>
+                </div>
+              </div>
+              <span style="background: rgba(0, 230, 118, 0.15); color: #00E676; font-size: 10px; font-weight: 700; padding: 3px 8px; border-radius: 6px;">VERIFIED</span>
+            </div>
+
+          </div>
+
+          <div style="padding: 14px; background: #111721; border-top: 1px solid rgba(255,255,255,0.08); text-align: center;">
+            <span style="font-size: 11px; font-weight: 700; color: #94A3B8;">Encrypted Android DataStore Storage</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Floating Privacy Callouts -->
+      <div class="floating-pill" style="left: 18px; bottom: 180px;">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#00E676" stroke-width="2">
+          <rect width="18" height="11" x="3" y="11" rx="2" ry="2"/>
+          <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+        </svg>
+        <div>
+          <div class="pill-title">Zero Network Access</div>
+          <div class="pill-desc">No external telemetry or data uploads</div>
+        </div>
+      </div>
+
+      <div class="floating-pill" style="right: 18px; bottom: 35px;">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#00E676" stroke-width="2">
+          <polyline points="20 6 9 17 4 12"/>
+        </svg>
+        <div>
+          <div class="pill-title">Instant On-Device Search</div>
+          <div class="pill-desc">Sub-millisecond cosine matching</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+
+  <!-- ==========================================
+       SCREENSHOT 04: VIDEO & MEDIA ANALYSIS
+       ========================================== -->
+  <div class="panel" id="panel-04">
+    <div class="top-header">
+      <div class="kicker">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+        Batch Video Pipeline
+      </div>
+      <div class="headline">Batch Video <span class="accent">Analysis</span></div>
+      <div class="subline">Scan recorded footage at full hardware speed</div>
+    </div>
+
+    <div class="device-stage">
+      <div class="phone-wrapper">
+        <div class="phone-screen">
+          <div class="app-topbar">
+            <span style="font-size: 11px; font-weight: 700; color: #FFFFFF;">Media3 Video Inspector</span>
+            <span style="font-size: 10px; background: rgba(0, 230, 118, 0.2); color: #00E676; padding: 2px 8px; border-radius: 6px;">GPU DECODE</span>
+          </div>
+
+          <!-- Video Player Simulation -->
+          <div style="flex: 1; background: #0A0D13; position: relative; overflow: hidden; display: flex; flex-direction: column;">
+            <div style="flex: 1; position: relative; display: flex; align-items: center; justify-content: center;">
+              
+              <!-- Simulated video frame with multiple faces -->
+              <div style="position: absolute; left: 24px; top: 40px; width: 100px; height: 120px; border: 2px solid #00E676; border-radius: 10px;">
+                <div class="identity-pill" style="top: -22px; font-size: 9.5px; padding: 2px 8px;">Alex C. · 99%</div>
+              </div>
+
+              <div style="position: absolute; right: 28px; top: 60px; width: 90px; height: 110px; border: 2px solid #38BDF8; border-radius: 10px;">
+                <div class="identity-pill" style="top: -22px; background: #38BDF8; color: #082F49; font-size: 9.5px; padding: 2px 8px;">Sarah J. · 98%</div>
+              </div>
+
+              <svg width="48" height="48" viewBox="0 0 24 24" fill="rgba(255,255,255,0.7)" style="opacity: 0.6;"><circle cx="12" cy="12" r="10"/><polygon points="10 8 16 12 10 16 10 8"/></svg>
+            </div>
+
+            <!-- Scrubber & Heatmap Markers -->
+            <div style="padding: 14px; background: #131A25; border-top: 1px solid rgba(255,255,255,0.06);">
+              <div style="display: flex; justify-content: space-between; font-size: 10px; color: #94A3B8; margin-bottom: 6px;">
+                <span>01:24</span>
+                <span style="color: #00E676; font-weight: 700;">8 Faces Detected</span>
+                <span>04:10</span>
+              </div>
+              <!-- Timeline Bar with Detection Markers -->
+              <div style="height: 6px; background: #222F42; border-radius: 999px; position: relative; overflow: hidden;">
+                <div style="position: absolute; left: 0; top: 0; bottom: 0; width: 34%; background: #00E676;"></div>
+                <div style="position: absolute; left: 12%; top: 0; bottom: 0; width: 4px; background: #FFFFFF;"></div>
+                <div style="position: absolute; left: 34%; top: 0; bottom: 0; width: 4px; background: #FFFFFF;"></div>
+                <div style="position: absolute; left: 62%; top: 0; bottom: 0; width: 6px; background: #00E676;"></div>
+                <div style="position: absolute; left: 85%; top: 0; bottom: 0; width: 6px; background: #00E676;"></div>
+              </div>
+            </div>
+          </div>
+
+          <div class="camera-bar">
+            <div class="stat-pill" style="color: #38BDF8;">Google Cast Ready</div>
+            <div class="stat-pill">Car-Aware Mode</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Floating Pipeline Chips -->
+      <div class="floating-pill" style="left: 20px; bottom: 35px;">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#00E676" stroke-width="2">
+          <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/>
+        </svg>
+        <div>
+          <div class="pill-title">Hardware Acceleration</div>
+          <div class="pill-desc">ExoPlayer + Media3 Pipeline</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+
+  <!-- ==========================================
+       SCREENSHOT 05: WEAR OS COMPANION
+       ========================================== -->
+  <div class="panel" id="panel-05">
+    <div class="top-header">
+      <div class="kicker">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="7"/><polyline points="12 9 12 12 13.5 13.5"/><path d="M16.51 17.35l-.35 3.83a2 2 0 0 1-2 1.82H9.83a2 2 0 0 1-2-1.82l-.35-3.83m.01-10.7l.35-3.83A2 2 0 0 1 9.83 1h4.35a2 2 0 0 1 2 1.82l.35 3.83"/></svg>
+        Wear OS Companion
+      </div>
+      <div class="headline">Glanceable on <span class="accent">Wear OS</span></div>
+      <div class="subline">Instant identity alerts & counters on your wrist</div>
+    </div>
+
+    <div class="device-stage">
+      <!-- Huge Hero Smartwatch -->
+      <div class="watch-mockup" style="left: 50%; transform: translateX(-50%); top: 30px; width: 340px; height: 340px;">
+        <div class="watch-dial" style="padding: 28px;">
+          <!-- Active Status Chip -->
+          <div style="background: rgba(0, 230, 118, 0.15); border: 1px solid rgba(0, 230, 118, 0.4); padding: 4px 14px; border-radius: 999px; display: flex; align-items: center; gap: 6px; margin-bottom: 8px;">
+            <span style="width: 7px; height: 7px; border-radius: 50%; background: #00E676;"></span>
+            <span style="font-size: 11px; font-weight: 800; color: #00E676; text-transform: uppercase;">ACTIVE DETECTOR</span>
+          </div>
+
+          <div style="font-size: 42px; font-weight: 900; color: #FFFFFF; letter-spacing: -0.02em;">3 Faces</div>
+          <div style="font-size: 13px; color: #94A3B8; margin-bottom: 14px;">Identities Verified Live</div>
+
+          <!-- Mini Watch Card -->
+          <div style="background: #17212D; border-radius: 14px; padding: 10px 18px; width: 85%; display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+            <span style="font-size: 13px; font-weight: 700; color: #FFFFFF;">Alex Chen</span>
+            <span style="font-size: 12px; font-weight: 800; color: #00E676;">99%</span>
+          </div>
+
+          <!-- Watch Action Button -->
+          <div style="background: #00E676; color: #051A10; font-size: 12px; font-weight: 800; padding: 8px 24px; border-radius: 999px; box-shadow: 0 4px 16px rgba(0, 230, 118, 0.4);">
+            View Identities
+          </div>
+        </div>
+      </div>
+
+      <!-- Floating Tile Cards -->
+      <div class="floating-pill" style="left: 24px; bottom: 120px;">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#00E676" stroke-width="2">
+          <circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 14 14"/>
+        </svg>
+        <div>
+          <div class="pill-title">Wear OS Tiles & Complications</div>
+          <div class="pill-desc">Real-time status right on your watch face</div>
+        </div>
+      </div>
+
+      <div class="floating-pill" style="right: 24px; bottom: 35px;">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#00E676" stroke-width="2">
+          <path d="M22 12h-4l-3 9L9 3l-3 9H2"/>
+        </svg>
+        <div>
+          <div class="pill-title">Rotary Crown & Haptics</div>
+          <div class="pill-desc">Seamless scrolling with Wear Compose M3</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+
+  <!-- ==========================================
+       SCREENSHOT 06: PRO-GRADE PRECISION
+       ========================================== -->
+  <div class="panel" id="panel-06">
+    <div class="top-header">
+      <div class="kicker">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+        Hyperparameter Tuning
+      </div>
+      <div class="headline">Pro-Grade <span class="accent">Precision</span></div>
+      <div class="subline">Tunable thresholds & custom AI model backends</div>
+    </div>
+
+    <div class="device-stage">
+      <div class="phone-wrapper">
+        <div class="phone-screen">
+          <div class="app-topbar">
+            <span style="font-size: 11px; font-weight: 700; color: #FFFFFF;">Inference Hyperparameters</span>
+            <span style="font-size: 10px; color: #00E676; font-weight: 700;">SAVED</span>
+          </div>
+
+          <!-- Hyperparameter Dialog UI Mockup -->
+          <div style="padding: 16px; background: #0B0E14; flex: 1; display: flex; flex-direction: column; gap: 14px;">
+            
+            <!-- Threshold Slider Card -->
+            <div style="background: #151D28; border: 1px solid rgba(0, 230, 118, 0.3); border-radius: 16px; padding: 14px;">
+              <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                <span style="font-size: 12px; font-weight: 700; color: #FFFFFF;">Cosine Threshold</span>
+                <span style="font-size: 14px; font-weight: 900; color: #00E676; font-family: 'JetBrains Mono', monospace;">0.75</span>
+              </div>
+              <!-- Custom Slider -->
+              <div style="height: 8px; background: #222F42; border-radius: 999px; position: relative;">
+                <div style="width: 75%; height: 100%; background: #00E676; border-radius: 999px;"></div>
+                <div style="position: absolute; left: 75%; top: 50%; transform: translate(-50%, -50%); width: 18px; height: 18px; background: #FFFFFF; border-radius: 50%; border: 3px solid #00E676; box-shadow: 0 2px 8px rgba(0,0,0,0.4);"></div>
+              </div>
+              <div style="display: flex; justify-content: space-between; font-size: 9.5px; color: #64748B; margin-top: 6px;">
+                <span>Lenient (0.50)</span>
+                <span>Strict (0.90)</span>
+              </div>
+            </div>
+
+            <!-- Model Selection Card -->
+            <div style="background: #151D28; border: 1px solid rgba(255,255,255,0.06); border-radius: 16px; padding: 14px;">
+              <div style="font-size: 12px; font-weight: 700; color: #FFFFFF; margin-bottom: 10px;">LiteRT Model Architecture</div>
+              <div style="display: flex; flex-direction: column; gap: 8px;">
+                <div style="background: #1F2B3A; border: 1.5px solid #00E676; border-radius: 10px; padding: 10px; display: flex; justify-content: space-between; align-items: center;">
+                  <div>
+                    <div style="font-size: 12px; font-weight: 700; color: #FFFFFF;">BlazeFace + MobileFaceNet</div>
+                    <div style="font-size: 9.5px; color: #94A3B8;">Ultra-fast 512D Embeddings</div>
+                  </div>
+                  <span style="color: #00E676; font-size: 14px;">✓</span>
+                </div>
+                <div style="background: #121822; border: 1px solid rgba(255,255,255,0.06); border-radius: 10px; padding: 10px; display: flex; justify-content: space-between; align-items: center;">
+                  <div>
+                    <div style="font-size: 12px; font-weight: 700; color: #94A3B8;">MobileNet SSD v2</div>
+                    <div style="font-size: 9.5px; color: #64748B;">Multi-Class Bounding Boxes</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Hardware Acceleration Engine -->
+            <div style="background: #151D28; border: 1px solid rgba(255,255,255,0.06); border-radius: 16px; padding: 14px;">
+              <div style="font-size: 12px; font-weight: 700; color: #FFFFFF; margin-bottom: 8px;">Compute Delegate</div>
+              <div style="display: flex; gap: 6px;">
+                <span style="flex: 1; text-align: center; background: #00E676; color: #051A10; font-size: 11px; font-weight: 800; padding: 6px; border-radius: 8px;">GPU (OpenGLES)</span>
+                <span style="flex: 1; text-align: center; background: #121822; color: #94A3B8; font-size: 11px; font-weight: 700; padding: 6px; border-radius: 8px;">NNAPI / NPU</span>
+                <span style="flex: 1; text-align: center; background: #121822; color: #94A3B8; font-size: 11px; font-weight: 700; padding: 6px; border-radius: 8px;">CPU</span>
+              </div>
+            </div>
+
+          </div>
+
+          <div class="camera-bar">
+            <div class="stat-pill" style="color: #00E676;">Verified Calibration</div>
+            <div class="stat-pill">DataStore Sync</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Trust Badge -->
+      <div class="floating-pill" style="left: 20px; bottom: 35px;">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#00E676" stroke-width="2">
+          <circle cx="12" cy="12" r="10"/><path d="m4.93 4.93 4.24 4.24"/><path d="m14.83 9.17 4.24-4.24"/><path d="m14.83 14.83 4.24 4.24"/><path d="m9.17 14.83-4.24 4.24"/>
+        </svg>
+        <div>
+          <div class="pill-title">CameraX & OpenCV Core</div>
+          <div class="pill-desc">Optimized for Android 15 & 16</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+</body>
+</html>

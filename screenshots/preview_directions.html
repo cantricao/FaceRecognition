@@ -1,0 +1,907 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>FaceRecognition - Screenshot 1 Directions Preview</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    background: #090B0E;
+    color: #E2E8F0;
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    padding: 40px 24px;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+  header {
+    text-align: center;
+    max-width: 960px;
+    margin-bottom: 36px;
+  }
+  h1 {
+    font-size: 32px;
+    font-weight: 800;
+    letter-spacing: -0.02em;
+    margin-bottom: 10px;
+    background: linear-gradient(135deg, #FFFFFF 40%, #00E676 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+  p.subtitle {
+    font-size: 16px;
+    color: #94A3B8;
+    line-height: 1.5;
+  }
+  .stage-container {
+    display: flex;
+    gap: 32px;
+    justify-content: center;
+    flex-wrap: wrap;
+    margin-bottom: 48px;
+  }
+  .direction-card {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+  .direction-label {
+    margin-bottom: 14px;
+    text-align: center;
+  }
+  .direction-title {
+    font-size: 17px;
+    font-weight: 700;
+    color: #F8FAFC;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+  }
+  .badge-recommended {
+    background: rgba(0, 230, 118, 0.15);
+    color: #00E676;
+    border: 1px solid rgba(0, 230, 118, 0.4);
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    padding: 3px 8px;
+    border-radius: 999px;
+  }
+  .direction-desc {
+    font-size: 13px;
+    color: #64748B;
+    margin-top: 4px;
+  }
+
+  /* 9:16 Panel geometry (450px x 800px for preview, scales cleanly to 1080x1920) */
+  .panel {
+    width: 450px;
+    height: 800px;
+    border-radius: 36px;
+    position: relative;
+    overflow: hidden;
+    box-shadow: 0 24px 60px rgba(0,0,0,0.6), 0 0 0 1px rgba(255,255,255,0.08);
+    display: flex;
+    flex-direction: column;
+    user-select: none;
+  }
+
+  /* ========================================================
+     DIRECTION B (HERO: GOOGLE MULTI-DEVICE ECOSYSTEM - ONYX & EMERALD)
+     ======================================================== */
+  .panel-b {
+    background: radial-gradient(circle at 50% 18%, #142E25 0%, #0B0F12 55%, #050709 100%);
+  }
+  .panel-b .top-header {
+    padding: 48px 32px 16px;
+    text-align: center;
+    position: relative;
+    z-index: 10;
+  }
+  .panel-b .kicker {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: rgba(0, 230, 118, 0.12);
+    border: 1px solid rgba(0, 230, 118, 0.3);
+    padding: 5px 14px;
+    border-radius: 999px;
+    color: #00E676;
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    margin-bottom: 14px;
+  }
+  .panel-b .headline {
+    font-size: 34px;
+    font-weight: 900;
+    line-height: 1.12;
+    letter-spacing: -0.03em;
+    color: #FFFFFF;
+    margin-bottom: 10px;
+  }
+  .panel-b .headline span.accent {
+    background: linear-gradient(135deg, #00E676 0%, #00F5D4 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+  .panel-b .subline {
+    font-size: 15px;
+    font-weight: 500;
+    color: #94A3B8;
+    line-height: 1.4;
+  }
+
+  /* Multi-Device Composition Stage */
+  .panel-b .device-stage {
+    position: relative;
+    flex: 1;
+    margin-top: 10px;
+    width: 100%;
+  }
+
+  /* Background Tablet Foldable Edge */
+  .panel-b .tablet-edge {
+    position: absolute;
+    left: -70px;
+    top: 50px;
+    width: 260px;
+    height: 380px;
+    background: #11171E;
+    border-radius: 28px;
+    border: 4px solid #1E293B;
+    box-shadow: 0 20px 40px rgba(0,0,0,0.5);
+    opacity: 0.82;
+    transform: rotate(-6deg);
+    padding: 16px;
+    overflow: hidden;
+  }
+  .tablet-edge .tab-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding-bottom: 10px;
+    border-bottom: 1px solid rgba(255,255,255,0.08);
+  }
+  .tablet-edge .tab-title {
+    font-size: 11px;
+    font-weight: 700;
+    color: #64748B;
+    text-transform: uppercase;
+  }
+  .tablet-edge .tab-row {
+    margin-top: 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+  .tablet-edge .tab-item {
+    background: #17202C;
+    border-radius: 10px;
+    padding: 8px 10px;
+    display: flex;
+    justify-content: space-between;
+    font-size: 11px;
+    color: #94A3B8;
+  }
+
+  /* Center Phone */
+  .panel-b .phone-wrapper {
+    position: absolute;
+    left: 50%;
+    transform: translateX(-50%);
+    bottom: -40px;
+    width: 290px;
+    height: 520px;
+    background: #000000;
+    border-radius: 46px;
+    padding: 8px;
+    box-shadow: 0 30px 70px rgba(0,0,0,0.8), 0 0 0 2px rgba(255,255,255,0.15), 0 0 40px rgba(0, 230, 118, 0.15);
+    z-index: 20;
+  }
+  .panel-b .phone-screen {
+    width: 100%;
+    height: 100%;
+    background: #0B0E14;
+    border-radius: 38px;
+    overflow: hidden;
+    position: relative;
+    display: flex;
+    flex-direction: column;
+  }
+
+  /* Camera Viewfinder Mockup */
+  .viewfinder {
+    position: relative;
+    flex: 1;
+    background: radial-gradient(circle at 50% 40%, #1A2633 0%, #0F141C 75%, #080A0E 100%);
+    overflow: hidden;
+  }
+  /* Laser scan line */
+  .laser-scan {
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 38%;
+    height: 2px;
+    background: linear-gradient(90deg, transparent, #00E676, transparent);
+    box-shadow: 0 0 12px #00E676;
+    opacity: 0.85;
+  }
+  /* Face silhouette */
+  .face-target {
+    position: absolute;
+    left: 50%;
+    top: 42%;
+    transform: translate(-50%, -50%);
+    width: 160px;
+    height: 200px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+  }
+  /* Bounding box */
+  .bbox-frame {
+    position: absolute;
+    inset: 10px 14px;
+    border: 2px solid rgba(0, 230, 118, 0.7);
+    border-radius: 16px;
+    box-shadow: 0 0 20px rgba(0, 230, 118, 0.25), inset 0 0 15px rgba(0, 230, 118, 0.1);
+  }
+  .bbox-corner {
+    position: absolute;
+    width: 14px;
+    height: 14px;
+    border-color: #00E676;
+    border-style: solid;
+  }
+  .tl { top: -2px; left: -2px; border-width: 3px 0 0 3px; border-top-left-radius: 12px; }
+  .tr { top: -2px; right: -2px; border-width: 3px 3px 0 0; border-top-right-radius: 12px; }
+  .bl { bottom: -2px; left: -2px; border-width: 0 0 3px 3px; border-bottom-left-radius: 12px; }
+  .br { bottom: -2px; right: -2px; border-width: 0 3px 3px 0; border-bottom-right-radius: 12px; }
+
+  /* Identity Chip Floating above BBox */
+  .identity-pill {
+    position: absolute;
+    top: -24px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: #00E676;
+    color: #051A10;
+    font-weight: 800;
+    font-size: 11px;
+    padding: 3px 10px;
+    border-radius: 999px;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    white-space: nowrap;
+    box-shadow: 0 4px 12px rgba(0, 230, 118, 0.4);
+  }
+  .identity-pill .dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: #051A10;
+  }
+
+  /* Telemetry Monospace Overlay inside Viewfinder */
+  .telemetry-tag {
+    position: absolute;
+    bottom: -22px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: rgba(11, 14, 20, 0.85);
+    border: 1px solid rgba(0, 230, 118, 0.4);
+    backdrop-filter: blur(8px);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 8.5px;
+    color: #00E676;
+    padding: 2px 8px;
+    border-radius: 6px;
+    white-space: nowrap;
+  }
+
+  /* Camera Bottom Floating Bar */
+  .camera-bar {
+    padding: 12px 14px;
+    background: rgba(15, 20, 28, 0.95);
+    border-top: 1px solid rgba(255,255,255,0.08);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .stat-pill {
+    background: rgba(255,255,255,0.07);
+    padding: 4px 10px;
+    border-radius: 8px;
+    font-size: 10px;
+    font-weight: 600;
+    color: #E2E8F0;
+  }
+
+  /* Foreground Elevated Smartwatch (Wear OS) */
+  .panel-b .watch-wrapper {
+    position: absolute;
+    right: 12px;
+    bottom: 24px;
+    width: 140px;
+    height: 140px;
+    background: radial-gradient(circle, #17202B 0%, #090D12 100%);
+    border-radius: 50%;
+    border: 5px solid #2A3648;
+    box-shadow: 0 16px 36px rgba(0,0,0,0.8), 0 0 0 2px rgba(0, 230, 118, 0.3);
+    z-index: 30;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 14px;
+    text-align: center;
+  }
+  .watch-badge {
+    font-size: 8px;
+    font-weight: 800;
+    text-transform: uppercase;
+    color: #00E676;
+    letter-spacing: 0.08em;
+  }
+  .watch-count {
+    font-size: 20px;
+    font-weight: 900;
+    color: #FFFFFF;
+    margin: 2px 0;
+  }
+  .watch-sub {
+    font-size: 8px;
+    color: #94A3B8;
+  }
+  .watch-pill-btn {
+    margin-top: 6px;
+    background: rgba(0, 230, 118, 0.2);
+    border: 1px solid rgba(0, 230, 118, 0.5);
+    color: #00E676;
+    font-size: 8.5px;
+    font-weight: 700;
+    padding: 3px 10px;
+    border-radius: 999px;
+  }
+
+  /* Floating Badges Overlapping Seams */
+  .panel-b .floating-trust-badge {
+    position: absolute;
+    left: 20px;
+    bottom: 30px;
+    background: rgba(15, 23, 42, 0.88);
+    border: 1px solid rgba(0, 230, 118, 0.35);
+    backdrop-filter: blur(12px);
+    border-radius: 14px;
+    padding: 8px 14px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    box-shadow: 0 12px 28px rgba(0,0,0,0.4);
+    z-index: 25;
+  }
+  .trust-icon {
+    width: 20px;
+    height: 20px;
+    color: #00E676;
+  }
+  .trust-text-top {
+    font-size: 11px;
+    font-weight: 800;
+    color: #FFFFFF;
+  }
+  .trust-text-sub {
+    font-size: 9.5px;
+    color: #94A3B8;
+  }
+
+
+  /* ========================================================
+     DIRECTION A (MODERN M3 PRECISION - DARK SLATE & COBALT)
+     ======================================================== */
+  .panel-a {
+    background: radial-gradient(circle at 50% 15%, #101E38 0%, #090D16 60%, #04060A 100%);
+  }
+  .panel-a .top-header {
+    padding: 48px 32px 16px;
+    text-align: center;
+    position: relative;
+    z-index: 10;
+  }
+  .panel-a .kicker {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: rgba(41, 121, 255, 0.14);
+    border: 1px solid rgba(41, 121, 255, 0.4);
+    padding: 5px 14px;
+    border-radius: 999px;
+    color: #448AFF;
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    margin-bottom: 14px;
+  }
+  .panel-a .headline {
+    font-size: 34px;
+    font-weight: 900;
+    line-height: 1.12;
+    letter-spacing: -0.03em;
+    color: #FFFFFF;
+    margin-bottom: 10px;
+  }
+  .panel-a .headline span.accent {
+    background: linear-gradient(135deg, #448AFF 0%, #82B1FF 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+  .panel-a .subline {
+    font-size: 15px;
+    font-weight: 500;
+    color: #94A3B8;
+  }
+  .panel-a .phone-wrapper {
+    position: absolute;
+    left: 50%;
+    transform: translateX(-50%);
+    bottom: -30px;
+    width: 320px;
+    height: 540px;
+    background: #000000;
+    border-radius: 46px;
+    padding: 8px;
+    box-shadow: 0 30px 70px rgba(0,0,0,0.8), 0 0 0 2px rgba(41, 121, 255, 0.35);
+    z-index: 20;
+  }
+  .panel-a .phone-screen {
+    width: 100%;
+    height: 100%;
+    background: #0B0E17;
+    border-radius: 38px;
+    overflow: hidden;
+    position: relative;
+    display: flex;
+    flex-direction: column;
+  }
+  .panel-a .bbox-frame {
+    border-color: rgba(68, 138, 255, 0.85);
+    box-shadow: 0 0 24px rgba(68, 138, 255, 0.35);
+  }
+  .panel-a .identity-pill {
+    background: #2979FF;
+    color: #FFFFFF;
+    box-shadow: 0 4px 14px rgba(41, 121, 255, 0.5);
+  }
+  .panel-a .identity-pill .dot { background: #FFFFFF; }
+  .panel-a .telemetry-tag {
+    border-color: rgba(68, 138, 255, 0.5);
+    color: #82B1FF;
+  }
+  .panel-a .floating-chip-1 {
+    position: absolute;
+    left: 18px;
+    bottom: 240px;
+    background: rgba(16, 24, 40, 0.9);
+    border: 1px solid rgba(68, 138, 255, 0.4);
+    backdrop-filter: blur(10px);
+    border-radius: 12px;
+    padding: 8px 12px;
+    font-size: 11px;
+    font-weight: 700;
+    color: #E2E8F0;
+    box-shadow: 0 10px 24px rgba(0,0,0,0.5);
+    z-index: 25;
+  }
+  .panel-a .floating-chip-2 {
+    position: absolute;
+    right: 18px;
+    bottom: 120px;
+    background: rgba(16, 24, 40, 0.9);
+    border: 1px solid rgba(68, 138, 255, 0.4);
+    backdrop-filter: blur(10px);
+    border-radius: 12px;
+    padding: 8px 12px;
+    font-size: 11px;
+    font-weight: 700;
+    color: #E2E8F0;
+    box-shadow: 0 10px 24px rgba(0,0,0,0.5);
+    z-index: 25;
+  }
+
+
+  /* ========================================================
+     DIRECTION C (CLEAN FLOATING UI & ADAPTIVE TONES - PORCELAIN)
+     ======================================================== */
+  .panel-c {
+    background: radial-gradient(circle at 50% 12%, #FFFFFF 0%, #F1F5F9 55%, #E2E8F0 100%);
+  }
+  .panel-c .top-header {
+    padding: 48px 32px 16px;
+    text-align: center;
+    position: relative;
+    z-index: 10;
+  }
+  .panel-c .kicker {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: rgba(2, 132, 199, 0.1);
+    border: 1px solid rgba(2, 132, 199, 0.3);
+    padding: 5px 14px;
+    border-radius: 999px;
+    color: #0284C7;
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    margin-bottom: 14px;
+  }
+  .panel-c .headline {
+    font-size: 34px;
+    font-weight: 900;
+    line-height: 1.12;
+    letter-spacing: -0.03em;
+    color: #0F172A;
+    margin-bottom: 10px;
+  }
+  .panel-c .headline span.accent {
+    background: linear-gradient(135deg, #0284C7 0%, #06B6D4 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+  .panel-c .subline {
+    font-size: 15px;
+    font-weight: 500;
+    color: #64748B;
+  }
+  .panel-c .phone-wrapper {
+    position: absolute;
+    left: 50%;
+    transform: translateX(-50%);
+    bottom: -30px;
+    width: 320px;
+    height: 540px;
+    background: #FFFFFF;
+    border-radius: 46px;
+    padding: 8px;
+    box-shadow: 0 30px 60px rgba(15, 23, 42, 0.18), 0 0 0 1px rgba(0,0,0,0.06);
+    z-index: 20;
+  }
+  .panel-c .phone-screen {
+    width: 100%;
+    height: 100%;
+    background: #F8FAFC;
+    border-radius: 38px;
+    overflow: hidden;
+    position: relative;
+    display: flex;
+    flex-direction: column;
+  }
+  .panel-c .viewfinder {
+    background: radial-gradient(circle at 50% 40%, #E2E8F0 0%, #CBD5E1 75%, #94A3B8 100%);
+  }
+  .panel-c .bbox-frame {
+    border-color: #0284C7;
+    box-shadow: 0 0 20px rgba(2, 132, 199, 0.35);
+  }
+  .panel-c .identity-pill {
+    background: #0284C7;
+    color: #FFFFFF;
+    box-shadow: 0 4px 12px rgba(2, 132, 199, 0.3);
+  }
+  .panel-c .identity-pill .dot { background: #FFFFFF; }
+  .panel-c .telemetry-tag {
+    background: rgba(255, 255, 255, 0.9);
+    border-color: #0284C7;
+    color: #0284C7;
+  }
+  .panel-c .camera-bar {
+    background: #FFFFFF;
+    border-top: 1px solid #E2E8F0;
+  }
+  .panel-c .stat-pill {
+    background: #F1F5F9;
+    color: #334155;
+  }
+  .panel-c .floating-card {
+    position: absolute;
+    left: 20px;
+    bottom: 40px;
+    background: #FFFFFF;
+    border-radius: 16px;
+    padding: 12px 16px;
+    box-shadow: 0 16px 36px rgba(0,0,0,0.12), 0 0 0 1px rgba(0,0,0,0.04);
+    z-index: 25;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .panel-c .floating-card-icon {
+    width: 24px;
+    height: 24px;
+    color: #0284C7;
+  }
+  .panel-c .floating-card-title {
+    font-size: 12px;
+    font-weight: 800;
+    color: #0F172A;
+  }
+  .panel-c .floating-card-sub {
+    font-size: 10px;
+    color: #64748B;
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>App Store & Google Play: Direction Comparison</h1>
+  <p class="subtitle">Reviewing Screenshot 1 (The Hook) across 3 design directions. You selected <strong>Direction B</strong> (Google Multi-Device Ecosystem).</p>
+</header>
+
+<div class="stage-container">
+
+  <!-- DIRECTION A -->
+  <div class="direction-card">
+    <div class="direction-label">
+      <div class="direction-title">Direction A · Modern M3 Precision</div>
+      <div class="direction-desc">Dark Slate & Electric Cobalt · High-tech Telemetry</div>
+    </div>
+    <div class="panel panel-a">
+      <div class="top-header">
+        <div class="kicker">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+          LiteRT Inference
+        </div>
+        <div class="headline">Instant Face <span class="accent">Recognition</span></div>
+        <div class="subline">Real-time 60 FPS on-device machine learning</div>
+      </div>
+
+      <div class="device-stage">
+        <div class="phone-wrapper">
+          <div class="phone-screen">
+            <div class="viewfinder">
+              <div class="laser-scan" style="top: 36%; background: linear-gradient(90deg, transparent, #448AFF, transparent); box-shadow: 0 0 12px #448AFF;"></div>
+              
+              <div class="face-target">
+                <!-- Vector stylized face silhouette -->
+                <svg width="110" height="130" viewBox="0 0 100 120" fill="none" opacity="0.35">
+                  <ellipse cx="50" cy="50" rx="35" ry="45" stroke="#FFFFFF" stroke-width="1.5" stroke-dasharray="3 3"/>
+                  <circle cx="38" cy="45" r="4" fill="#FFFFFF"/>
+                  <circle cx="62" cy="45" r="4" fill="#FFFFFF"/>
+                  <path d="M47 54 L53 54 L50 63 Z" stroke="#FFFFFF" stroke-width="1.2"/>
+                  <path d="M40 76 Q50 84 60 76" stroke="#FFFFFF" stroke-width="1.8" fill="none"/>
+                </svg>
+
+                <div class="bbox-frame" style="border-color: rgba(68, 138, 255, 0.85); box-shadow: 0 0 24px rgba(68, 138, 255, 0.35);">
+                  <div class="bbox-corner tl" style="border-color: #448AFF;"></div>
+                  <div class="bbox-corner tr" style="border-color: #448AFF;"></div>
+                  <div class="bbox-corner bl" style="border-color: #448AFF;"></div>
+                  <div class="bbox-corner br" style="border-color: #448AFF;"></div>
+                  
+                  <div class="identity-pill">
+                    <span class="dot"></span>
+                    Alex Chen · 99.4%
+                  </div>
+
+                  <div class="telemetry-tag">
+                    BBox: [142, 280 - 410, 560] · 12ms
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="camera-bar">
+              <div class="stat-pill" style="color: #60A5FA;">🟢 1 Face Active</div>
+              <div class="stat-pill">60.2 FPS</div>
+              <div class="stat-pill">GPU Delegate</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="floating-chip-1">
+          ⚡ 12ms On-Device Latency
+        </div>
+        <div class="floating-chip-2">
+          🔒 100% Private Embeddings
+        </div>
+      </div>
+    </div>
+  </div>
+
+
+  <!-- DIRECTION B (USER SELECTION) -->
+  <div class="direction-card">
+    <div class="direction-label">
+      <div class="direction-title">
+        Direction B · Google Ecosystem
+        <span class="badge-recommended">Selected</span>
+      </div>
+      <div class="direction-desc">Onyx & Luminous Emerald · Phone + Watch + Tablet</div>
+    </div>
+    <div class="panel panel-b">
+      <div class="top-header">
+        <div class="kicker">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><path d="m9 12 2 2 4-4"/></svg>
+          Google Play Multi-Device
+        </div>
+        <div class="headline">Instant Face <span class="accent">Recognition</span></div>
+        <div class="subline">Real-time on-device AI across your devices</div>
+      </div>
+
+      <div class="device-stage">
+        <!-- Tablet Edge in background -->
+        <div class="tablet-edge">
+          <div class="tab-header">
+            <span class="tab-title">Inspector</span>
+            <span style="font-size: 10px; color: #00E676; font-weight: 700;">LIVE</span>
+          </div>
+          <div class="tab-row">
+            <div class="tab-item">
+              <span>Alex Chen</span>
+              <strong style="color: #00E676;">99.4%</strong>
+            </div>
+            <div class="tab-item">
+              <span>Sarah J.</span>
+              <strong style="color: #00E676;">98.7%</strong>
+            </div>
+            <div class="tab-item">
+              <span>Active Feeds</span>
+              <strong>2 Screens</strong>
+            </div>
+          </div>
+        </div>
+
+        <!-- Center Phone -->
+        <div class="phone-wrapper">
+          <div class="phone-screen">
+            <div class="viewfinder">
+              <div class="laser-scan"></div>
+              
+              <div class="face-target">
+                <!-- Vector stylized face silhouette -->
+                <svg width="110" height="130" viewBox="0 0 100 120" fill="none" opacity="0.45">
+                  <ellipse cx="50" cy="50" rx="35" ry="45" stroke="#FFFFFF" stroke-width="1.5" stroke-dasharray="3 3"/>
+                  <circle cx="38" cy="45" r="4" fill="#FFFFFF"/>
+                  <circle cx="62" cy="45" r="4" fill="#FFFFFF"/>
+                  <path d="M47 54 L53 54 L50 63 Z" stroke="#FFFFFF" stroke-width="1.2"/>
+                  <path d="M40 76 Q50 84 60 76" stroke="#FFFFFF" stroke-width="1.8" fill="none"/>
+                </svg>
+
+                <div class="bbox-frame">
+                  <div class="bbox-corner tl"></div>
+                  <div class="bbox-corner tr"></div>
+                  <div class="bbox-corner bl"></div>
+                  <div class="bbox-corner br"></div>
+                  
+                  <div class="identity-pill">
+                    <span class="dot"></span>
+                    Alex Chen · 99.4%
+                  </div>
+
+                  <div class="telemetry-tag">
+                    BBox: [142, 280 - 410, 560]
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="camera-bar">
+              <div class="stat-pill" style="color: #00E676;">🟢 2 Faces In Frame</div>
+              <div class="stat-pill">60 FPS</div>
+              <div class="stat-pill">12ms LiteRT</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Wear OS Smartwatch Floating in foreground -->
+        <div class="watch-wrapper">
+          <div class="watch-badge">Wear OS</div>
+          <div class="watch-count">2</div>
+          <div class="watch-sub">Identities Verified</div>
+          <div class="watch-pill-btn">View Log</div>
+        </div>
+
+        <!-- Bottom Trust Badge -->
+        <div class="floating-trust-badge">
+          <svg class="trust-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+          </svg>
+          <div>
+            <div class="trust-text-top">100% On-Device AI</div>
+            <div class="trust-text-sub">Zero Cloud Latency · Private</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+
+  <!-- DIRECTION C -->
+  <div class="direction-card">
+    <div class="direction-label">
+      <div class="direction-title">Direction C · Clean Floating UI</div>
+      <div class="direction-desc">Porcelain & Deep Cyan · High-Contrast Minimalist</div>
+    </div>
+    <div class="panel panel-c">
+      <div class="top-header">
+        <div class="kicker">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect width="18" height="18" x="3" y="3" rx="2"/><path d="M7 7h10"/><path d="M7 12h10"/><path d="M7 17h10"/></svg>
+          Accessible & Adaptive
+        </div>
+        <div class="headline">Instant Face <span class="accent">Recognition</span></div>
+        <div class="subline">Private biometric detection on your device</div>
+      </div>
+
+      <div class="device-stage">
+        <div class="phone-wrapper">
+          <div class="phone-screen">
+            <div class="viewfinder">
+              <div class="laser-scan" style="top: 36%; background: linear-gradient(90deg, transparent, #0284C7, transparent); box-shadow: 0 0 12px #0284C7;"></div>
+              
+              <div class="face-target">
+                <!-- Vector stylized face silhouette -->
+                <svg width="110" height="130" viewBox="0 0 100 120" fill="none" opacity="0.35">
+                  <ellipse cx="50" cy="50" rx="35" ry="45" stroke="#0F172A" stroke-width="1.5" stroke-dasharray="3 3"/>
+                  <circle cx="38" cy="45" r="4" fill="#0F172A"/>
+                  <circle cx="62" cy="45" r="4" fill="#0F172A"/>
+                  <path d="M47 54 L53 54 L50 63 Z" stroke="#0F172A" stroke-width="1.2"/>
+                  <path d="M40 76 Q50 84 60 76" stroke="#0F172A" stroke-width="1.8" fill="none"/>
+                </svg>
+
+                <div class="bbox-frame">
+                  <div class="bbox-corner tl" style="border-color: #0284C7;"></div>
+                  <div class="bbox-corner tr" style="border-color: #0284C7;"></div>
+                  <div class="bbox-corner bl" style="border-color: #0284C7;"></div>
+                  <div class="bbox-corner br" style="border-color: #0284C7;"></div>
+                  
+                  <div class="identity-pill">
+                    <span class="dot"></span>
+                    Alex Chen · 99.4%
+                  </div>
+
+                  <div class="telemetry-tag">
+                    BBox: [142, 280 - 410, 560]
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="camera-bar">
+              <div class="stat-pill" style="color: #0284C7; font-weight: 700;">🟢 Active Stream</div>
+              <div class="stat-pill">60 FPS</div>
+              <div class="stat-pill">12ms LiteRT</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="floating-card">
+          <svg class="floating-card-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+          </svg>
+          <div>
+            <div class="floating-card-title">Encrypted Biometrics</div>
+            <div class="floating-card-sub">Data never leaves your phone</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+</body>
+</html>

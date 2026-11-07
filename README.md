@@ -1,3 +1,7 @@
+<p align="center">
+  <img src="screenshots/export/feature_graphic.png" alt="FaceRecognition Feature Graphic" width="100%" />
+</p>
+
 # FaceRecognition ⚡
 ### Enterprise On-Device Face Detection, Recognition & Vision Intelligence Platform for Android
 
@@ -14,9 +18,37 @@
 
 ---
 
+## 📸 App Store & Google Play Experience
+
+Designed following Google Play Best Multi-Device and Material Design Award principles, **FaceRecognition** delivers high-contrast glanceable typography, accessible WCAG AAA hierarchy, and seamless ecosystem continuity across all Google form factors.
+
+<p align="center">
+  <img src="screenshots/export/full_set_preview.png" alt="FaceRecognition Store Screenshots Showcase" width="100%" />
+</p>
+
+<div align="center">
+
+| 01 · Instant Face Recognition | 02 · Built for Every Screen | 03 · 100% Private. Zero Cloud. |
+| :---: | :---: | :---: |
+| <img src="screenshots/export/google-play-phone/01.png" width="280" /> | <img src="screenshots/export/google-play-phone/02.png" width="280" /> | <img src="screenshots/export/google-play-phone/03.png" width="280" /> |
+| **Real-time 60 FPS On-Device ML**<br/>Live CameraX HUD, bounding box tracking, and Wear OS companion preview. | **Adaptive Across Form Factors**<br/>Dynamic Navigation 3 suite for phones, foldables, tablets, Wear OS & Auto. | **Biometric Isolation at Rest**<br/>Encrypted Android DataStore storage with zero network biometrics. |
+
+| 04 · Batch Video Analysis | 05 · Glanceable on Wear OS | 06 · Pro-Grade Precision |
+| :---: | :---: | :---: |
+| <img src="screenshots/export/google-play-phone/04.png" width="280" /> | <img src="screenshots/export/google-play-phone/05.png" width="280" /> | <img src="screenshots/export/google-play-phone/06.png" width="280" /> |
+| **Media3 Hardware Pipeline**<br/>Scrub recorded footage with real-time face detection heatmaps and Cast. | **Wear OS 5 Smartwatch Sync**<br/>Active identity counters, rotary crown navigation, and glanceable complications. | **Hyperparameter Calibration**<br/>Tunable cosine distance sliders (0.75), LiteRT GPU/NPU, and BlazeFace model backends. |
+
+</div>
+
+> [!TIP]
+> Inspect the interactive HTML suite at [`screenshots/full_set.html`](screenshots/full_set.html) or review production-ready export folders in [`screenshots/export/`](screenshots/export/).
+
+---
+
 ## 📑 Table of Contents
 
 - [Executive Summary](#-executive-summary)
+- [App Store & Google Play Experience](#-app-store--google-play-experience)
 - [Edge Vision & ML Pipeline](#-edge-vision--ml-pipeline)
   - [Hardware Acceleration Hierarchy](#hardware-acceleration-hierarchy)
   - [Vision Models & Feature Extractors](#vision-models--feature-extractors)
@@ -39,7 +71,7 @@
 
 ## 📌 Executive Summary
 
-**FaceRecognition** is an enterprise-grade Android platform designed for real-time edge computer vision, facial detection, 128-dimensional biometric embedding extraction, and multi-identity tracking. Engineered from the ground up on modern **Clean Architecture** and reactive unidirectional data flow (UDF), the platform guarantees **sub-millisecond local inference with 100% biometric privacy**—zero camera frames, raw video feeds, or facial feature embeddings ever leave the physical device.
+**FaceRecognition** is an enterprise-grade Android platform designed for real-time edge computer vision, facial detection, 128-dimensional biometric embedding extraction, and multi-identity tracking. Engineered on modern **Clean Architecture** and reactive unidirectional data flow (UDF), the platform guarantees **sub-millisecond local inference with 100% biometric privacy**—zero camera frames, raw video feeds, or facial feature embeddings ever leave the physical device.
 
 ### Key Capabilities
 - ⚡ **Zero-Cloud Latency & Maximum Privacy**: 100% local on-device inference using Google LiteRT (`CompiledModel`).
@@ -203,7 +235,7 @@ The platform delivers optimized user experiences across the entire Android hardw
 
 ## 🧪 Continuous Integration & Testing Strategy
 
-Quality assurance is enforced across 5 rigorous automated testing tiers:
+Quality assurance is enforced across 5 automated testing tiers:
 
 ```mermaid
 flowchart TD
@@ -294,6 +326,7 @@ adb -s <wear-device-id> install -r wear/build/outputs/apk/debug/wear-debug.apk
 For detailed architectural standards, branch workflows, and agent execution guidelines:
 - 📖 [AGENTS.md](AGENTS.md) — Architectural conventions, DI, and agent pair-programming rules.
 - 📖 [docs/testing.md](docs/testing.md) — Comprehensive testing strategy, Robolectric properties, and screenshot matrix details.
+- 📖 [screenshots/alt-text.txt](screenshots/alt-text.txt) — Google Play Store accessibility copy.
 
 ---
 
