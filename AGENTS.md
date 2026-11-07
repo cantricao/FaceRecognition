@@ -27,7 +27,7 @@ Welcome to the **FaceRecognition** repository. This document outlines architectu
   - **Predictive Back**: AndroidX NavigationEvent (`androidx.navigationevent:1.2.0`).
   - **On-Device Machine Learning**: Google LiteRT runtime (`com.google.ai.edge.litert:2.3.0`) using bundled `CompiledModel` with GPU and CPU delegates (BlazeFace, MobileNet SSD, MobileFaceNet).
   - **Dependency Injection**: Google Dagger Hilt (`2.60.1`).
-  - **Storage**: Scoped Storage with DataStore Preferences (`androidx.datastore:1.0.0`) and MediaStore.
+  - **Storage**: Scoped Storage with DataStore Preferences (`androidx.datastore:1.1.3`) and MediaStore.
 
 ---
 

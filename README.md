@@ -9,27 +9,98 @@
 [![Jetpack Compose](https://img.shields.io/badge/Jetpack%20Compose-Material%203-4285F4.svg?logo=jetpackcompose&logoColor=white)](https://developer.android.com/jetpack/compose)
 [![Navigation 3](https://img.shields.io/badge/Navigation%203-1.2.0-4285F4.svg)](https://developer.android.com/guide/navigation)
 [![LiteRT](https://img.shields.io/badge/Google%20LiteRT-2.3.0-FF6F00.svg)](https://ai.google.dev/edge/litert)
+[![Detekt](https://img.shields.io/badge/Detekt-Quality%20Passed-brightgreen.svg)](https://detekt.dev)
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](LICENSE)
+
+---
+
+## 📑 Table of Contents
+
+- [Executive Summary](#-executive-summary)
+- [Edge Vision & ML Pipeline](#-edge-vision--ml-pipeline)
+  - [Hardware Acceleration Hierarchy](#hardware-acceleration-hierarchy)
+  - [Vision Models & Feature Extractors](#vision-models--feature-extractors)
+  - [End-to-End Processing Architecture](#end-to-end-processing-architecture)
+- [Modular Clean Architecture](#-modular-clean-architecture)
+  - [Module Dependency Graph](#module-dependency-graph)
+  - [Module Responsibilities](#module-responsibilities)
+- [Multi-Platform & Adaptive Form Factors](#-multi-platform--adaptive-form-factors)
+- [Enterprise Security & Play Store Compliance](#-enterprise-security--play-store-compliance)
+- [Continuous Integration & Testing Strategy](#-continuous-integration--testing-strategy)
+  - [CI/CD Workflow Architecture](#cicd-workflow-architecture)
+  - [Verification Commands](#verification-commands)
+- [Getting Started](#-getting-started)
+  - [Prerequisites](#prerequisites)
+  - [Building and Running](#building-and-running)
+- [Developer Guidelines](#-developer-guidelines)
+- [License](#-license)
 
 ---
 
 ## 📌 Executive Summary
 
-**FaceRecognition** is a modern, modular, production-ready enterprise Android platform designed for real-time edge computer vision, facial detection, identity embedding extraction, and multi-object tracking. Engineered from the ground up to follow **Clean Architecture** and strict reactive unidirectionality, the application delivers **sub-millisecond local inference with 100% data privacy**—zero video streams or biometric embeddings ever leave the physical device.
+**FaceRecognition** is an enterprise-grade Android platform designed for real-time edge computer vision, facial detection, 128-dimensional biometric embedding extraction, and multi-identity tracking. Engineered from the ground up on modern **Clean Architecture** and reactive unidirectional data flow (UDF), the platform guarantees **sub-millisecond local inference with 100% biometric privacy**—zero camera frames, raw video feeds, or facial feature embeddings ever leave the physical device.
 
-The platform natively adapts across the entire Android device ecosystem:
-- 📱 **Smartphones & Foldables**: Responsive edge-to-edge UI with AndroidX Navigation 3 & Adaptive Navigation Suite.
-- 💻 **Tablets & Desktop/ChromeOS**: Multi-pane navigation rails, hardware keyboard shortcuts, and pointer gestures.
-- 🚗 **Android Automotive OS & Android Auto**: Parked application integration with `CarUxRestrictions` compliance.
-- 📺 **Android TV**: Dedicated 10-foot hero layout using Jetpack Compose for TV.
-- ⌚ **Wear OS**: Standalone companion application with Glance Wear widgets and `TransformingLazyColumn`.
-- 🕶️ **Android XR / Smart Glasses**: Spatial camera overlays and projected display experiences via Compose Glimmer.
+### Key Capabilities
+- ⚡ **Zero-Cloud Latency & Maximum Privacy**: 100% local on-device inference using Google LiteRT (`CompiledModel`).
+- 🚀 **Hardware NPU Acceleration**: Native Qualcomm Hexagon Tensor Processor (HTP) execution with burst frequency scaling and VTCM cache utilization.
+- 🔄 **Resilient Multi-Tier Fallback**: Automatic single-thread isolated fallback: `NPU` ➔ `GPU (OpenCL/Vulkan)` ➔ `CPU (XNNPACK)`.
+- 📐 **100% Declarative Jetpack Compose UI**: Complete Material 3 design system, Navigation 3, and Predictive Back animations.
+- 🌐 **Adaptive Multi-Form-Factor Support**: Single codebase dynamically scaling across phones, foldables, tablets, desktop/ChromeOS, Android Automotive OS, Android TV, Wear OS, and Android XR smart glasses.
+- 🛡️ **Zero Broad Storage Permissions**: Full compliance with Google Play Store Scoped Storage policies and Android Photo Picker contracts.
+- 🤖 **On-Device Assistant Integration**: Native Jetpack AppFunctions schemas allowing system AI agents (Gemini Nano) to query identity profiles securely.
 
 ---
 
-## 🏛️ Architecture & Modularization
+## ⚡ Edge Vision & ML Pipeline
 
-The repository is organized into a highly scalable multi-module architecture:
+```mermaid
+flowchart LR
+    A["CameraX / Video Frame<br/>(YUV_420_888 / RGBA)"] --> B["Grafika OpenGL ES 2.0<br/>Surface Texture Program"]
+    B --> C{"LiteRT 2.3.0<br/>Hardware Dispatcher"}
+    
+    C -->|Priority 1| D1["Qualcomm Snapdragon NPU<br/>(HTP Burst Mode)"]
+    C -->|Fallback 2| D2["Adreno / Mali GPU<br/>(OpenCL / Vulkan)"]
+    C -->|Fallback 3| D3["ARM Multi-Core CPU<br/>(XNNPACK Multi-Thread)"]
+    
+    D1 --> E["Face Detector<br/>(BlazeFace / OpenCV YuNet)"]
+    D2 --> E
+    D3 --> E
+    
+    E --> F["Face Cropping &<br/>Tensor Normalization"]
+    F --> G["MobileFaceNet Extractor<br/>(128-d FP32 Embedding)"]
+    G --> H["Local Vector Store<br/>(Cosine / Euclidean Match)"]
+    H --> I["Compose Canvas Overlay<br/>(Bounding Box + Identity Label)"]
+```
+
+### Hardware Acceleration Hierarchy
+
+The vision engine leverages Google LiteRT 2.3.0 `CompiledModel` with hardware accelerator options:
+
+| Tier | Accelerator | Target Hardware | Optimization Flags / Delegates |
+| :---: | :--- | :--- | :--- |
+| **Tier 1** | `Accelerator.NPU` | Qualcomm Snapdragon Hexagon DSP/NPU | `HtpPerformanceMode.BURST`, `OptimizationLevel.HTP_OPTIMIZE_FOR_INFERENCE`, ConvHMX, VTCM Cache. |
+| **Tier 2** | `Accelerator.GPU` | Qualcomm Adreno, ARM Mali | OpenCL backend, 16-bit floating-point precision mode, zero memory copy buffers. |
+| **Tier 3** | `Accelerator.CPU` | 64-bit ARMv8/v9 Multi-core | XNNPACK delegate, single-thread task dispatcher affinity with multi-threaded kernel execution. |
+
+### Vision Models & Feature Extractors
+
+1. **Facial Detectors**:
+   - **BlazeFace (Front & Back)**: Sub-millisecond mobile face locator with 6 facial landmarks (eyes, ears, nose tip, mouth center).
+   - **OpenCV YuNet**: High-accuracy lightweight face detector with robust 5-point landmark alignment.
+   - **MobileNet SSD**: Multi-category object detector supporting simultaneous bounding-box localization.
+2. **Feature Extractor**:
+   - **MobileFaceNet**: Transforms aligned 112×112 face crops into dense 128-dimensional normalized floating-point embeddings.
+3. **Vector Distance & Identity Matching**:
+   - **Cosine Similarity / Euclidean Distance**: Configurable distance metric thresholds ($0.60$ – $0.85$) with fast in-memory nearest-neighbor matching against enrolled identity profiles in DataStore.
+
+---
+
+## 🏛️ Modular Clean Architecture
+
+The codebase adheres strictly to Android Enterprise Clean Architecture principles, partitioned into 11 decoupled Gradle modules:
+
+### Module Dependency Graph
 
 ```mermaid
 graph TD
@@ -82,119 +153,147 @@ graph TD
 
 ### Module Responsibilities
 
-| Module | Type | Description |
-| :--- | :--- | :--- |
-| [`:app`](file:///C:/Users/admin/FaceRecognition/app) | Application | Application entry point, Dagger Hilt dependency graph, Navigation 3 backstack coordinator, AppFunctions, Glance home widget, TV, and XR activities. |
-| [`:feature:detection`](file:///C:/Users/admin/FaceRecognition/feature/detection) | Android Library | Camera preview screen, dynamic bounding box rendering, recognition states, and camera lifecycle coordination. |
-| [`:feature:video`](file:///C:/Users/admin/FaceRecognition/feature/video) | Android Library | Video file analysis, Media3 ExoPlayer surface integration, Car-aware driving restrictions, and Google Cast playback. |
-| [`:feature:settings`](file:///C:/Users/admin/FaceRecognition/feature/settings) | Android Library | Enrolled identity gallery management, threshold sliders, model selection, and dataset import/export. |
-| [`:core:camera`](file:///C:/Users/admin/FaceRecognition/core/camera) | Android Library | CameraX pipeline, Grafika hardware OpenGL ES rendering (`EglCore`, `Texture2dProgram`), GLSL shaders, and `AnalysisViewModel`. |
-| [`:core:ml`](file:///C:/Users/admin/FaceRecognition/core/ml) | Android Library | Google LiteRT runtime (`CompiledModel`), BlazeFace, MobileNet SSD, MobileFaceNet embedding extractor, and OpenCV YuNet. |
-| [`:core:data`](file:///C:/Users/admin/FaceRecognition/core/data) | Android Library | Local persistence using DataStore Preferences and Room SQLite database with nearest-neighbor vector search. |
-| [`:core:ui`](file:///C:/Users/admin/FaceRecognition/core/ui) | Android Library | Material 3 typography, color schemes, adaptive preview annotations, and runtime permission dialogs. |
-| [`:core:model`](file:///C:/Users/admin/FaceRecognition/core/model) | Android Library | Pure Kotlin domain models (`Person`, `Recognition`, `TrackedRecognition`) and serialization handlers. |
-| [`:core:common`](file:///C:/Users/admin/FaceRecognition/core/common) | Android Library | Shared coroutine dispatchers (`@IoDispatcher`, `@DefaultDispatcher`), tracing utilities, and scoped executors. |
-| [`:wear`](file:///C:/Users/admin/FaceRecognition/wear) | Application | Standalone Wear OS app with Compose Material 3, rotary scroll inputs, and Remote Compose Glance widget. |
+| Module | Type | Description | Key Technologies |
+| :--- | :--- | :--- | :--- |
+| [`:app`](file:///C:/Users/admin/FaceRecognition/app) | Application | Application entry point, Dagger Hilt dependency graph, Navigation 3 coordinator, AppFunctions, Glance widgets, TV & XR entry activities. | Hilt 2.60.1, Navigation 3, AppFunctions |
+| [`:feature:detection`](file:///C:/Users/admin/FaceRecognition/feature/detection) | Library | Camera preview screen, real-time bounding box canvas overlay, confidence scoring, and camera lifecycle bindings. | CameraX 1.4, Compose UI 1.7.8 |
+| [`:feature:video`](file:///C:/Users/admin/FaceRecognition/feature/video) | Library | Video file analysis, ExoPlayer surface integration, Automotive driving restrictions, and Google Cast streaming. | Media3 1.5, Cast SDK |
+| [`:feature:settings`](file:///C:/Users/admin/FaceRecognition/feature/settings) | Library | Enrolled identity gallery management, hyperparameter sliders (thresholds, delegate selection), and dataset import/export. | Compose Material 3 1.3.1 |
+| [`:core:camera`](file:///C:/Users/admin/FaceRecognition/core/camera) | Library | High-speed CameraX frame analysis pipeline, Grafika hardware OpenGL ES rendering (`EglCore`, `Texture2dProgram`), GLSL shaders. | OpenGL ES 2.0, Grafika, Camera2 |
+| [`:core:ml`](file:///C:/Users/admin/FaceRecognition/core/ml) | Library | Google LiteRT runtime (`CompiledModel`), Qualcomm NPU HTP burst options, BlazeFace, MobileNet SSD, and MobileFaceNet. | LiteRT 2.3.0, OpenCV YuNet |
+| [`:core:data`](file:///C:/Users/admin/FaceRecognition/core/data) | Library | Local identity persistence using DataStore Preferences and nearest-neighbor vector search. | DataStore 1.1.3, Scoped Storage |
+| [`:core:ui`](file:///C:/Users/admin/FaceRecognition/core/ui) | Library | Centralized Material 3 typography, color schemes, adaptive layout wrappers, and runtime permission dialogs. | Compose Material 3, Adaptive |
+| [`:core:model`](file:///C:/Users/admin/FaceRecognition/core/model) | Library | Pure Kotlin domain models (`Person`, `Recognition`, `TrackedRecognition`) and serialization handlers. | Kotlinx Serialization 1.7.3 |
+| [`:core:common`](file:///C:/Users/admin/FaceRecognition/core/common) | Library | Shared coroutine dispatchers (`@IoDispatcher`, `@DefaultDispatcher`, `@MainDispatcher`), executors, and tracing utilities. | Coroutines 1.9.0 |
+| [`:wear`](file:///C:/Users/admin/FaceRecognition/wear) | Application | Standalone Wear OS companion app with Wear Compose Material 3, rotary inputs, and Glance Wear remote widgets. | Wear Compose 1.4, Glance Wear |
 
 ---
 
-## ⚡ Edge Machine Learning & Vision Pipeline
+## 📱 Multi-Platform & Adaptive Form Factors
 
-1. **Detection**:
-   - **BlazeFace (Front & Back)**: Sub-millisecond face bounding-box locator optimized for mobile front-facing lenses.
-   - **OpenCV YuNet**: High-accuracy lightweight face detector with landmark estimation.
-   - **MobileNet SSD**: General object detector supporting multi-class bounding box regression.
-2. **Feature Extraction**:
-   - **MobileFaceNet**: Generates compact 128-dimensional normalized floating-point embedding vectors.
-   - **Vector Nearest Neighbor**: High-speed cosine and Euclidean distance matching with configurable cosine similarity threshold.
-3. **LiteRT Runtime & Hardware Acceleration**:
-   - Bundled with `com.google.ai.edge.litert:2.3.0` (`litert-api`, `litert-gpu`, and `litert-support`).
-   - **Multi-Tier Accelerator Hierarchy**: Prioritizes `Accelerator.NPU` -> `Accelerator.GPU` -> `Accelerator.CPU`.
-   - **Qualcomm Snapdragon NPU (HTP)**: Configured with `CompiledModel.QualcommOptions` for Hexagon Tensor Processor burst performance modes, ConvHMX, and VTCM optimization.
-   - **Graceful Hardware Fallback**: Automatic single-thread confined fallback to OpenCL/Vulkan GPU and multi-threaded CPU (`xnnPack` optimized) when hardware NPU/GPU compilation is unsupported.
-4. **On-Device Generative AI (Gemini Nano)**:
-   - Deep integration with `mlkit.genai.prompt` and `mlkit.genai.agent` for local conversational querying of detected identities without network roundtrips.
-   - **AppFunctions**: Standardized Android 16/17 schema declarations allowing Google Assistant and system AI agents to search or inspect registered profiles securely.
+The platform delivers optimized user experiences across the entire Android hardware spectrum:
 
----
-
-## 📱 Multi-Platform & Form-Factor Capabilities
-
-- **Jetpack Navigation 3 & Predictive Back**:
-  - Strongly-typed destination routing with `@Serializable` subclasses of `NavKey`.
-  - Seamless predictive back animations using `androidx.navigationevent`.
-  - Material 3 Adaptive Navigation Suite: renders a Bottom Navigation Bar on compact devices (phones) and dynamically elevates to a Navigation Rail on foldables and tablets.
-- **Android Automotive OS / Cars**:
-  - Parked video analytics that automatically pause and mute when vehicle gear state shifts out of park (`CarUxRestrictionsManager`).
-- **Jetpack Glance Widgets**:
-  - Home screen widget utilizing Canonical Layouts (`ImageTextListAppWidget`).
-  - Wear OS home screen tiles using Glance Wear.
-- **Play Integrity & Security**:
-  - Zero broad storage permissions declared (`READ_EXTERNAL_STORAGE` / `WRITE_EXTERNAL_STORAGE` removed for API > 28).
-  - Modern Android Photo Picker (`ActivityResultContracts.PickMultipleVisualMedia`) integration.
-  - Google Credential Manager (Restore Credentials and Verified Email SD-JWT parser).
+- 📱 **Smartphones & Foldables**:
+  - Edge-to-edge layout with full system bar transparency.
+  - Strongly-typed destination routing via **AndroidX Navigation 3** (`androidx.navigation3`).
+  - Seamless predictive back animations with `androidx.navigationevent`.
+  - Dynamic navigation morphing: renders a bottom navigation bar on compact screens and switches to a navigation rail on foldables/tablets.
+- 💻 **Tablets & Desktop / ChromeOS**:
+  - Two-pane list-detail views, hardware keyboard navigation shortcuts, and pointer hover/wheel interactions.
+- 🚗 **Android Automotive OS & Android Auto**:
+  - Compliance with `CarUxRestrictionsManager`: parked video processing automatically pauses and mutes video output when shifting out of park.
+- 📺 **Android TV**:
+  - Dedicated 10-foot hero layout built with Jetpack Compose for TV (`androidx.tv`).
+- ⌚ **Wear OS**:
+  - Companion watch application featuring `TransformingLazyColumn`, rotary crown scrolling, and glanceable ambient mode support.
+- 🕶️ **Android XR / Smart Glasses**:
+  - Projected spatial display overlays powered by Jetpack Compose Glimmer.
 
 ---
 
-## 🧪 Testing Strategy & Quality Assurance
+## 🛡️ Enterprise Security & Play Store Compliance
 
-Automated testing is maintained across multiple complementary tiers:
+- **Zero Broad Storage Permissions**: `READ_EXTERNAL_STORAGE` and `WRITE_EXTERNAL_STORAGE` are strictly omitted for API > 28.
+- **Android Photo Picker**: Media imports use `ActivityResultContracts.PickMultipleVisualMedia` for sandboxed, permissionless asset selection.
+- **Biometric Isolation**: Facial feature embeddings are serialized locally into app-specific private storage (`context.filesDir` / DataStore) and encrypted at rest.
+- **Google Credential Manager**: Integrated Restore Credentials and Verified Email SD-JWT token parser for seamless authentication without SMS/OTP friction.
+- **AppFunctions Support**: Exposes typed system function schemas (`SearchPersonsAppFunctionService`, `RegisterPersonAppFunctionService`, `DeletePersonAppFunctionService`) for on-device voice queries and Gemini Nano interactions.
+
+---
+
+## 🧪 Continuous Integration & Testing Strategy
+
+Quality assurance is enforced across 5 rigorous automated testing tiers:
+
+```mermaid
+flowchart TD
+    subgraph "Local Testing & CI Workflow"
+        T1["1. Static Analysis<br/>(Detekt Code Smells)"]
+        T2["2. Unit & ViewModel Tests<br/>(JUnit 4 + Coroutines Turbine)"]
+        T3["3. Compose UI Tests<br/>(Host-Side Robolectric)"]
+        T4["4. Golden Screenshot Tests<br/>(Compose Preview 12-Matrix)"]
+        T5["5. Code Coverage<br/>(JaCoCo Multi-Module Root Report)"]
+        T6["6. Binary Assembly<br/>(assembleDebug + bundleRelease)"]
+    end
+
+    T1 --> T2
+    T2 --> T3
+    T3 --> T4
+    T4 --> T5
+    T5 --> T6
+```
+
+### CI/CD Workflow Architecture
+
+The repository enforces a 4-stage GitHub Actions pipeline on every push and pull request:
+1. **`validate`**: Detekt static code analysis across all Kotlin modules.
+2. **`screenshot-tests`**: Pixel-perfect Composable preview regression verification against golden references.
+3. **`test-and-coverage`**: Parallel execution of JVM unit tests followed by aggregated JaCoCo coverage calculation.
+4. **`build`**: Release App Bundle (`.aab`) and debug APK compilation with R8 verification.
+
+### Verification Commands
+
+All tasks can be executed locally from the repository root:
 
 ```bash
-# 1. Run all host JVM unit & Robolectric Compose tests across all modules
-./gradlew testDebugUnitTest
+# 1. Run Detekt static analysis
+./gradlew detekt
 
-# 2. Generate aggregated multi-module JaCoCo code coverage report
-./gradlew jacocoRootReport
+# 2. Run all host JVM unit & Robolectric tests across all 11 modules
+./gradlew testDebugUnitTest
 
 # 3. Validate Composable UI against golden screenshot references
 ./gradlew :app:validateDebugScreenshotTest
 
-# 4. Update screenshot golden reference images
+# 4. Update golden reference images (upon intentional UI changes)
 ./gradlew :app:updateDebugScreenshotTest
 
-# 5. Run static analysis with Detekt
-./gradlew detekt
+# 5. Generate aggregated multi-module JaCoCo coverage report
+./gradlew jacocoRootReport
 
-# 6. Execute instrumented end-to-end tests on connected emulator or hardware device
-./gradlew connectedDebugAndroidTest
+# 6. Assemble debug APK and release App Bundle
+./gradlew :app:assembleDebug :app:bundleRelease
 ```
-
-For full test architecture and mock harnesses, see the [Testing Strategy & Execution Guide](docs/testing.md).
 
 ---
 
 ## 🚀 Getting Started
 
 ### Prerequisites
-- **Android Studio**: Ladybug (2024.2.1) or Meerkat+
-- **JDK Target**: Java 17 (Eclipse Temurin or Android Studio JBR)
-- **Android SDK Tools**:
-  - Compile SDK: `37`
-  - Min SDK: `24` (Wear OS: `26`)
-  - NDK: `26.2.11394342`
 
-### Building the Project
+| Component | Minimum Version | Recommended Version |
+| :--- | :--- | :--- |
+| **Android Studio** | Ladybug (2024.2.1) | Ladybug Feature Drop / Meerkat+ |
+| **JDK Target** | Java 17 | Eclipse Temurin 17 / Android Studio JBR |
+| **Android SDK** | Compile SDK: `37` | Target SDK: `37` (Min SDK: `24`, Wear: `26`) |
+| **Android NDK** | `26.2.11394342` | Bundled via SDK Manager |
+| **Build System** | AGP `9.1.0` | Gradle `9.3.1` |
+
+### Building and Running
 
 ```bash
-# Clone the repository
+# 1. Clone the repository
 git clone https://github.com/cantricao/FaceRecognition.git
 cd FaceRecognition
 
-# Build debug APK and release App Bundle
-./gradlew :app:assembleDebug :app:bundleRelease
+# 2. Build the debug application APK
+./gradlew :app:assembleDebug
 
-# Build Wear OS companion application
+# 3. Install on a connected physical device or emulator
+adb install -r app/build/outputs/apk/debug/app-debug.apk
+
+# 4. Build and install the Wear OS companion application (optional)
 ./gradlew :wear:assembleDebug
+adb -s <wear-device-id> install -r wear/build/outputs/apk/debug/wear-debug.apk
 ```
 
 ---
 
-## 🤝 Developer Guidelines & AI Pair Programming
+## 🤝 Developer Guidelines
 
-For complete developer onboarding, agent rules, and branch conventions, review:
-- 📖 [AGENTS.md](AGENTS.md)
-- 📖 [docs/testing.md](docs/testing.md)
+For detailed architectural standards, branch workflows, and agent execution guidelines:
+- 📖 [AGENTS.md](AGENTS.md) — Architectural conventions, DI, and agent pair-programming rules.
+- 📖 [docs/testing.md](docs/testing.md) — Comprehensive testing strategy, Robolectric properties, and screenshot matrix details.
 
 ---
 

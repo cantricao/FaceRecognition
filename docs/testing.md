@@ -9,8 +9,8 @@ This document defines the comprehensive automated testing architecture, source s
 | Layer | Framework / Library | Primary Purpose | Source Set |
 | :--- | :--- | :--- | :--- |
 | **Unit Testing** | JUnit 4 (`4.13.2`) + [`MainDispatcherRule`](file:///C:/Users/admin/FaceRecognition/app/src/test/java/com/example/detectionexample/util/MainDispatcherRule.kt) | Isolated testing of business logic, ViewModels, and repositories | `src/test/java/` |
-| **Coroutines & Flows** | `kotlinx-coroutines-test:1.7.1` + `app.cash.turbine:1.0.0` | Deterministic scheduling of coroutines, `StateFlow`, and `SharedFlow` | `src/test/java/` |
-| **Mocking & Fakes** | `io.mockk:mockk:1.13.10` | Constructor fakes and selective dependency mocking | `src/test/java/` |
+| **Coroutines & Flows** | `kotlinx-coroutines-test:1.9.0` + `app.cash.turbine:1.2.0` | Deterministic scheduling of coroutines, `StateFlow`, and `SharedFlow` | `src/test/java/` |
+| **Mocking & Fakes** | `io.mockk:mockk:1.13.16` | Constructor fakes and selective dependency mocking | `src/test/java/` |
 | **Host-Side UI** | `org.robolectric:robolectric:4.14.1` | Running Compose UI tests directly on JVM without an emulator | `src/test/java/` |
 | **Dependency Injection** | Hilt Testing (`2.60.1`) + [`HiltTestRunner`](file:///C:/Users/admin/FaceRecognition/app/src/androidTest/java/com/example/detectionexample/HiltTestRunner.kt) | Component test scoping and test application instantiation | `src/androidTest/java/` |
 | **Screenshot Tests** | `com.android.compose.screenshot:0.0.1-alpha16` | Composable preview rendering and visual regression detection | `src/screenshotTest/kotlin/` |
@@ -73,7 +73,7 @@ Executes all JUnit 4, Robolectric, and Compose behavior tests on the host JVM:
 *Report output:* `app/build/reports/tests/testDebugUnitTest/index.html`
 
 ### 2. Generate Code Coverage Report (JaCoCo)
-Executes local unit tests across all 10 modules and compiles unified instruction/branch coverage metrics:
+Executes local unit tests across all 11 modules and compiles unified instruction/branch coverage metrics:
 ```bash
 ./gradlew jacocoRootReport
 ```
