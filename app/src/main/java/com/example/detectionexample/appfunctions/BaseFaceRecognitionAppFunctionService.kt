@@ -8,6 +8,7 @@ import androidx.appfunctions.AppFunctionInvalidArgumentException
 import androidx.appfunctions.AppFunctionService
 import androidx.appfunctions.AppFunctionServiceEntryPoint
 import com.example.detectionexample.MainActivity
+import com.example.detectionexample.models.Person
 import com.example.detectionexample.repository.RecognizedPersonRepository
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.Dispatchers
@@ -97,13 +98,18 @@ abstract class BaseFaceRecognitionAppFunctionService : AppFunctionService() {
             recognizedPersonRepository.getPersonById(personId)
         } ?: throw AppFunctionExceptionFactory.createElementNotFound("No registered person found with ID '$personId'")
 
+        return executeDelete(person, personId)
+    }
+
+    private suspend fun executeDelete(person: Person, personId: String): Boolean {
         return try {
             withContext(Dispatchers.IO) {
                 recognizedPersonRepository.deletePerson(person)
             }
             true
+        } catch (e: androidx.appfunctions.AppFunctionException) {
+            throw e
         } catch (e: Exception) {
-            if (e is androidx.appfunctions.AppFunctionException) throw e
             throw AppFunctionExceptionFactory.createInvalidArgument(
                 "Failed to delete person with ID '$personId': ${e.message}"
             )
